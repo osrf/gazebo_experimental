@@ -307,6 +307,52 @@ TEST(EntityComponentDatabase, RemoveQueryNoResults)
   ASSERT_EQ(0, query.EntityIds().size());
 }
 
+/////////////////////////////////////////////////
+TEST(EntityComponentDatabase, RemoveComponent)
+{
+  gazebo::ecs::EntityComponentDatabase uut;
+  gazebo::ecs::EntityId id = uut.CreateEntity();
+  auto const type = gazebo::ecs::ComponentFactory::Type<TC1>();
+
+  uut.AddComponent(id, type);
+  EXPECT_NE(nullptr, uut.EntityComponent(id, type));
+
+  uut.RemoveComponent(id, type);
+  EXPECT_EQ(nullptr, uut.EntityComponent(id, type));
+}
+
+/////////////////////////////////////////////////
+TEST(EntityComponentDatabase, DeleteEntity)
+{
+  gazebo::ecs::EntityComponentDatabase uut;
+  gazebo::ecs::EntityId id = uut.CreateEntity();
+  auto const type = gazebo::ecs::ComponentFactory::Type<TC1>();
+
+  uut.AddComponent(id, type);
+  EXPECT_NE(nullptr, uut.EntityComponent(id, type));
+
+  uut.DeleteEntity(id);
+
+  EXPECT_EQ(gazebo::ecs::NO_ENTITY, uut.Entity(id).Id());
+  EXPECT_EQ(nullptr, uut.EntityComponent(id, type));
+}
+
+/////////////////////////////////////////////////
+TEST(EntityComponentDatabase, ReuseSmallestEntityId)
+{
+  gazebo::ecs::EntityComponentDatabase uut;
+  std::vector<gazebo::ecs::EntityId> entities;
+  entities.push_back(uut.CreateEntity());
+  entities.push_back(uut.CreateEntity());
+  entities.push_back(uut.CreateEntity());
+  entities.push_back(uut.CreateEntity());
+  entities.push_back(uut.CreateEntity());
+
+  uut.DeleteEntity(entities[2]);
+  uut.DeleteEntity(entities[3]);
+  EXPECT_EQ(entities[2], uut.CreateEntity());
+}
+
 int main(int argc, char **argv)
 {
   gazebo::ecs::ComponentFactory::Register<TC1>("TC1");

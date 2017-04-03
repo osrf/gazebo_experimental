@@ -58,12 +58,20 @@ class EntityComponentDatabase
   /// \brief returns an id for the entity, or NO_ENTITY on failure
   public: EntityId CreateEntity();
 
+  /// \brief Deletes an existing entity
+  /// \returns true iff the entity existed
+  public: bool DeleteEntity(EntityId _id);
+
   /// \brief Get an Entity instance by Id
   public: ::gazebo::ecs::Entity Entity(EntityId _id) const;
 
   // TODO templated version
   /// \brief Add a new component to an entity
   public: void *AddComponent(EntityId _id, ComponentType _type);
+
+  // TODO templated version
+  /// \brief remove a component from an entity
+  public: bool RemoveComponent(EntityId _id, ComponentType _type);
 
   // TODO templated version
   /// \brief Get a component that's on an entity
