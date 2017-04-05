@@ -22,20 +22,25 @@
 using namespace gazebo;
 using namespace ecs;
 
+// Private data class
 class gazebo::ecs::EntityQueryPrivate
 {
   /// \brief list of component types that must be present on entities
   public: std::set<ComponentType> componentTypes;
 
   /// \brief all entities that matched the query
-  //public: std::vector<const Entity *> entities;
-
   public: std::set<EntityId> entityIds;
 };
 
 /////////////////////////////////////////////////
 EntityQuery::EntityQuery()
 : dataPtr(new EntityQueryPrivate())
+{
+}
+
+/////////////////////////////////////////////////
+EntityQuery::EntityQuery(EntityQuery &&_move)
+: dataPtr(std::move(_move.dataPtr))
 {
 }
 
@@ -47,40 +52,39 @@ EntityQuery::~EntityQuery()
 /////////////////////////////////////////////////
 bool EntityQuery::AddComponent(const std::string &_name)
 {
-  auto type = ComponentFactory::Type(_name);
-
-  bool success = type != NO_COMPONENT;
-
-  if (success)
-    this->AddComponent(type);
-
-  return success;
+  return this->AddComponent(ComponentFactory::Type(_name));
 }
 
 /////////////////////////////////////////////////
-void EntityQuery::AddComponent(ComponentType _type)
+bool EntityQuery::AddComponent(ComponentType _type)
 {
-  this->dataPtr->componentTypes.insert(_type);
+  if (_type != NO_COMPONENT)
+  {
+    this->dataPtr->componentTypes.insert(_type);
+    return true;
+  }
+
+  return false;
 }
 
 /////////////////////////////////////////////////
 bool EntityQuery::operator==(const EntityQuery &_rhs) const
 {
-  // Copy constructor means shared_ptr will have the same address
-  return this->dataPtr == _rhs.dataPtr;
+  return std::equal(this->dataPtr->componentTypes.begin(),
+                    this->dataPtr->componentTypes.end(),
+                    _rhs.dataPtr->componentTypes.begin()) &&
+         std::equal(this->dataPtr->entityIds.begin(),
+                    this->dataPtr->entityIds.end(),
+                    _rhs.dataPtr->entityIds.begin());
 }
 
 /////////////////////////////////////////////////
-bool EntityQuery::AddEntity(EntityId _id)
+bool EntityQuery::AddEntity(const EntityId _id)
 {
-  // Only add unique enities.
-  if (this->dataPtr->entityIds.find(_id) == this->dataPtr->entityIds.end())
-  {
-    //this->dataPtr->entities.push_back(_entity);
+  std::pair<std::set<EntityId>::iterator, bool> result =
     this->dataPtr->entityIds.insert(_id);
-    return true;
-  }
-  return false;
+
+  return result.second;
 }
 
 /////////////////////////////////////////////////
@@ -99,4 +103,17 @@ const std::set<ComponentType> &EntityQuery::ComponentTypes() const
 const std::set<EntityId> &EntityQuery::EntityIds() const
 {
   return this->dataPtr->entityIds;
+}
+
+/////////////////////////////////////////////////
+EntityQuery &EntityQuery::operator=(EntityQuery &&_rhs)
+{
+  this->dataPtr = std::move(_rhs.dataPtr);
+}
+
+/////////////////////////////////////////////////
+bool EntityQuery::IsNull()
+{
+  return this->dataPtr->componentTypes.empty() &&
+         this->dataPtr->entityIds.empty();
 }

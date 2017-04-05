@@ -15,7 +15,6 @@
  *
 */
 
-
 #ifndef GAZEBO_PRIVATE_SYSTEMS_DIVIDEANDPRINTRESULT_HH_
 #define GAZEBO_PRIVATE_SYSTEMS_DIVIDEANDPRINTRESULT_HH_
 
@@ -32,7 +31,8 @@ namespace gazebo
     {
       public: virtual ecs::EntityQuery Init();
 
-      public: virtual void Update(const double _dt, ecs::EntityQuery &_result,
+      public: virtual void Update(const double _dt,
+                  const ecs::EntityQuery &_result,
                   ecs::Manager &_mgr);
     };
   }

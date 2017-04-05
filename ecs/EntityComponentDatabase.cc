@@ -21,7 +21,6 @@
 #include "gazebo/ecs/EntityComponentDatabase.hh"
 #include "gazebo/ecs/EntityQuery.hh"
 
-
 using namespace gazebo::ecs;
 
 class gazebo::ecs::EntityComponentDatabasePrivate
@@ -71,13 +70,16 @@ EntityComponentDatabase::~EntityComponentDatabase()
 }
 
 /////////////////////////////////////////////////
-bool EntityComponentDatabase::AddQuery(const EntityQuery &_query)
+std::pair<EntityQueryId, bool> EntityComponentDatabase::AddQuery(
+    EntityQuery &&_query)
 {
   bool isDuplicate = false;
-  for (auto const &query : this->dataPtr->queries)
+  EntityQueryId result = -1;
+  for (size_t i = 0; i < this->dataPtr->queries.size(); ++i)
   {
-    if (query == _query)
+    if (this->dataPtr->queries[i] == _query)
     {
+      result = i;
       // Already have this query, bail
       isDuplicate = true;
       break;
@@ -86,9 +88,10 @@ bool EntityComponentDatabase::AddQuery(const EntityQuery &_query)
 
   if (!isDuplicate)
   {
-    this->dataPtr->queries.push_back(_query);
-    auto &nonConstQuery = this->dataPtr->queries.back();
     auto const types = _query.ComponentTypes();
+    this->dataPtr->queries.push_back(std::move(_query));
+    result = this->dataPtr->queries.size() - 1;
+    auto &nonConstQuery = this->dataPtr->queries.back();
     for (int id = 0; id < this->dataPtr->entities.size(); ++id)
     {
       if (this->dataPtr->EntityMatches(id, types))
@@ -98,14 +101,19 @@ bool EntityComponentDatabase::AddQuery(const EntityQuery &_query)
     }
   }
 
-  return !isDuplicate;
+  return {result, !isDuplicate};
 }
 
-bool EntityComponentDatabase::RemoveQuery(EntityQuery &_query)
+/////////////////////////////////////////////////
+bool EntityComponentDatabase::RemoveQuery(const EntityQueryId _id)
 {
-  _query.Clear();
-  std::remove(this->dataPtr->queries.begin(),
-              this->dataPtr->queries.end(), _query);
+  if (_id >= 0 && _id < this->dataPtr->queries.size())
+  {
+    this->dataPtr->queries.erase(this->dataPtr->queries.begin() + _id);
+    return true;
+  }
+
+  return false;
 }
 
 /////////////////////////////////////////////////
@@ -192,4 +200,13 @@ void EntityComponentDatabasePrivate::UpdateQueries(EntityId _id)
     if (this->EntityMatches(_id, query.ComponentTypes()))
       query.AddEntity(_id);
   }
+}
+
+/////////////////////////////////////////////////
+const EntityQuery &EntityComponentDatabase::Query(
+    const EntityQueryId _index) const
+{
+  if (_index >= 0 && _index < this->dataPtr->queries.size())
+    return this->dataPtr->queries[_index];
+  return EntityQueryNull;
 }
