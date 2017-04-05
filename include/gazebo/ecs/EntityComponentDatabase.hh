@@ -25,55 +25,56 @@
 
 namespace gazebo
 {
-namespace ecs
-{
+  namespace ecs
+  {
+    /// \brief Forward declaration
+    class EntityQuery;
 
-/// \brief Forward declaration
-class EntityQuery;
+    /// \brief Forward declaration
+    class EntityComponentDatabasePrivate;
 
-/// \brief Forward declaration
-class EntityComponentDatabasePrivate;
+    /// \brief Stores and retrieves entities/components efficiently
+    ///
+    /// This class stores entities and components, and provides efficient
+    /// queries for retrieving them.
+    class EntityComponentDatabase
+    {
+      /// \brief Constructor
+      public: EntityComponentDatabase();
 
-/// \brief Stores and retrieves entities/components efficiently
-///
-/// This class stores entities and components, and provides efficient
-/// queries for retrieving them.
-class EntityComponentDatabase
-{
-  /// \brief Constructor
-  public: EntityComponentDatabase();
+      /// \brief Destructor
+      public: ~EntityComponentDatabase();
 
-  /// \brief Destructor
-  public: ~EntityComponentDatabase();
+      /// \brief Add a query for entities
+      /// \param[in] _query
+      /// \returns True if query was successfully added.
+      public: bool AddQuery(const EntityQuery &_query);
 
-  /// \brief Add a query for entities
-  /// \returns true if query was successfully added
-  public: bool AddQuery(const EntityQuery &_query);
+      /// \brief Remove a query for entities
+      /// \param[in,out] _query Clears the given query, and removes from the
+      /// query list.
+      /// \returns True if query was successfully removed
+      public: bool RemoveQuery(EntityQuery &_query);
 
-  /// \brief remove a query for entities
-  /// \returns true if query was successfully removed
-  public: bool RemoveQuery(EntityQuery &_query);
+      /// \brief Creates a new entity
+      /// \brief returns an id for the entity, or NO_ENTITY on failure
+      public: EntityId CreateEntity();
 
-  /// \brief Creates a new entity
-  /// \brief returns an id for the entity, or NO_ENTITY on failure
-  public: EntityId CreateEntity();
+      /// \brief Get an Entity instance by Id
+      public: ::gazebo::ecs::Entity Entity(EntityId _id) const;
 
-  /// \brief Get an Entity instance by Id
-  public: ::gazebo::ecs::Entity Entity(EntityId _id) const;
+      // TODO templated version
+      /// \brief Add a new component to an entity
+      public: void *AddComponent(EntityId _id, ComponentType _type);
 
-  // TODO templated version
-  /// \brief Add a new component to an entity
-  public: void *AddComponent(EntityId _id, ComponentType _type);
+      // TODO templated version
+      /// \brief Get a component that's on an entity
+      public: void *EntityComponent(EntityId _id, ComponentType _type) const;
 
-  // TODO templated version
-  /// \brief Get a component that's on an entity
-  public: void *EntityComponent(EntityId _id, ComponentType _type) const;
-
-  /// \brief Private IMPLementation pointer
-  private: std::shared_ptr<EntityComponentDatabasePrivate> impl;
-};
-
-}
+      /// \brief Private IMPLementation pointer
+      private: std::unique_ptr<EntityComponentDatabasePrivate> dataPtr;
+    };
+  }
 }
 
 #endif

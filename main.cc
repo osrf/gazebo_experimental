@@ -32,7 +32,7 @@ int main(int argc, char **argv)
   gazebo::ecs::Manager manager;
 
   // Something to deal with loading plugins
-  ignition::common::plugin::PluginLoader pm;
+  ignition::common::PluginLoader pm;
 
   // TODO Componentizer
 

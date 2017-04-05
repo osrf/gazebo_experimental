@@ -26,78 +26,73 @@
 #include <typeinfo>
 #include <vector>
 
-
-
 namespace gazebo
 {
   namespace ecs
   {
+    /// \brief ID to refer to a component type
+    typedef int ComponentType;
 
-  /// \brief ID to refer to a component type
-  typedef int ComponentType;
+    /// \brief Special value returned to say there is no component
+    static const ComponentType NO_COMPONENT = -1;
 
-  /// \brief Special value returned to say there is no component
-  static const ComponentType NO_COMPONENT = -1;
+    /// \brief forward declaration for friendship
+    class ComponentFactory;
 
-  /// \brief forward declaration for friendship
-  class ComponentFactory;
+    /// \brief Holds information about a component type
+    class ComponentTypeInfo
+    {
+      /// \brief Constructs without allocating memory
+      public: std::function<void (void*)> constructor;
 
+      /// \brief Destructs component without freeing memory
+      public: std::function<void (void*)> destructor;
 
-  /// \brief Holds information about a component type
-  class ComponentTypeInfo
-  {
-    /// \brief Constructs without allocating memory
-    public: std::function<void (void*)> constructor;
+      /// \brief Moves component from one memory location to another
+      public: std::function<void (void*, void*)> mover;
 
-    /// \brief Destructs component without freeing memory
-    public: std::function<void (void*)> destructor;
+      /// \brief Size of an instantiated component in bytes
+      public: std::size_t size;
 
-    /// \brief Moves component from one memory location to another
-    public: std::function<void (void*, void*)> mover;
+      /// \brief Name of the component type
+      public: std::string name;
 
-    /// \brief Size of an instantiated component in bytes
-    public: std::size_t size;
+      friend ComponentFactory;
 
-    /// \brief Name of the component type
-    public: std::string name;
-
-    friend ComponentFactory;
-
-    private: template <typename T>
-            static ComponentTypeInfo From()
-            {
-              ComponentTypeInfo info;
-              info.constructor = [](void *_location)
+      private: template <typename T>
+              static ComponentTypeInfo From()
               {
-                // placement new operator, doesn't allocate memory
-                new (_location) T();
-              };
-
-              info.destructor = [](void *_location)
-              {
-                // explicit call to destructor without freeing memory
-                static_cast<T*>(_location)->~T();
-              };
-
-              // Store size so space can be allocated elsewhere
-              info.size = sizeof(T);
-
-              info.mover = [](void const *_from, void *_to)
-              {
-                // Move component from one location to another
-                // Making a lambda for this allows the compiler to unroll
-                // the loop completely, which probably makes no difference
-                // because components will probably be small (< 32 bytes)
-                for (int i = 0; i < sizeof(T); ++i)
+                ComponentTypeInfo info;
+                info.constructor = [](void *_location)
                 {
-                  static_cast<char*>(_to)[i] =
-                    static_cast<char const*>(_from)[i];
-                }
-              };
-              return info;
-            }
-  };
+                  // placement new operator, doesn't allocate memory
+                  new (_location) T();
+                };
 
+                info.destructor = [](void *_location)
+                {
+                  // explicit call to destructor without freeing memory
+                  static_cast<T*>(_location)->~T();
+                };
+
+                // Store size so space can be allocated elsewhere
+                info.size = sizeof(T);
+
+                info.mover = [](void const *_from, void *_to)
+                {
+                  // Move component from one location to another
+                  // Making a lambda for this allows the compiler to unroll
+                  // the loop completely, which probably makes no difference
+                  // because components will probably be small (< 32 bytes)
+                  for (int i = 0; i < sizeof(T); ++i)
+                  {
+                    static_cast<char*>(_to)[i] =
+                      static_cast<char const*>(_from)[i];
+                  }
+                };
+                return info;
+              }
+    };
 
     /// \brief A factor that registers and creates components.
     class ComponentFactory

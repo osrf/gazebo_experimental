@@ -20,6 +20,7 @@
 
 #include <memory>
 #include <vector>
+#include <set>
 #include "gazebo/ecs/Entity.hh"
 #include "gazebo/ecs/ComponentFactory.hh"
 
