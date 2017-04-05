@@ -122,7 +122,7 @@ void *Manager::EntityComponent(EntityId _id, ComponentType _type)
 }
 
 /////////////////////////////////////////////////
-gazebo::ecs::Entity Manager::Entity(const EntityId _id) const
+gazebo::ecs::Entity &Manager::Entity(const EntityId _id) const
 {
   return this->dataPtr->database.Entity(_id);
 }

@@ -58,7 +58,7 @@ namespace gazebo
 
       /// \brief Returns an entity instance with the given ID
       /// \returns Entity with id set to NO_ENTITY if entity does not exist
-      public: gazebo::ecs::Entity Entity(const EntityId _id) const;
+      public: gazebo::ecs::Entity &Entity(const EntityId _id) const;
 
       public: template <typename T>
               T *AddComponent(EntityId _id)

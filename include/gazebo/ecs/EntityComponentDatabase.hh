@@ -69,7 +69,7 @@ namespace gazebo
       public: EntityId CreateEntity();
 
       /// \brief Get an Entity instance by Id
-      public: ::gazebo::ecs::Entity Entity(EntityId _id) const;
+      public: ::gazebo::ecs::Entity &Entity(EntityId _id) const;
 
       // TODO templated version
       /// \brief Add a new component to an entity

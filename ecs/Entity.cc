@@ -34,10 +34,22 @@ class gazebo::ecs::EntityPrivate
 /////////////////////////////////////////////////
 // TODO database to allocate id
 Entity::Entity(EntityComponentDatabase *_mgr, EntityId _id)
+: dataPtr(new EntityPrivate())
 {
-  this->dataPtr.reset(new EntityPrivate());
   this->dataPtr->database = _mgr;
   this->dataPtr->id = _id;
+}
+
+/////////////////////////////////////////////////
+Entity::Entity()
+: dataPtr(new EntityPrivate())
+{
+}
+
+/////////////////////////////////////////////////
+Entity::Entity(Entity &&_entity)
+: dataPtr(std::move(_entity.dataPtr))
+{
 }
 
 /////////////////////////////////////////////////
