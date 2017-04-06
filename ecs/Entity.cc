@@ -20,27 +20,24 @@
 
 using namespace gazebo::ecs;
 
-
 /// \brief Private class for PIMPL
 class gazebo::ecs::EntityPrivate
 {
   // TODO weak ptr?
   /// \brief The database that created this entity
   public: EntityComponentDatabase *database;
-  
+
   /// \brief ID of entity
   public: EntityId id;
 };
-
-
 
 /////////////////////////////////////////////////
 // TODO database to allocate id
 Entity::Entity(EntityComponentDatabase *_mgr, EntityId _id)
 {
-  this->impl.reset(new EntityPrivate());
-  this->impl->database = _mgr;
-  this->impl->id = _id;
+  this->dataPtr.reset(new EntityPrivate());
+  this->dataPtr->database = _mgr;
+  this->dataPtr->id = _id;
 }
 
 /////////////////////////////////////////////////
@@ -51,17 +48,17 @@ Entity::~Entity()
 /////////////////////////////////////////////////
 EntityId Entity::Id() const
 {
-  return this->impl->id;
+  return this->dataPtr->id;
 }
 
 /////////////////////////////////////////////////
 void *Entity::Component(const ComponentType &_type)
 {
-  return this->impl->database->EntityComponent(this->impl->id, _type);
+  return this->dataPtr->database->EntityComponent(this->dataPtr->id, _type);
 }
 
 /////////////////////////////////////////////////
 void *Entity::AddComponent(const ComponentType &_type)
 {
-  return this->impl->database->AddComponent(this->impl->id, _type);
+  return this->dataPtr->database->AddComponent(this->dataPtr->id, _type);
 }

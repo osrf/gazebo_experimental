@@ -18,10 +18,7 @@
 #ifndef GAZEBO_ECS_ENTITY_HH_
 #define GAZEBO_ECS_ENTITY_HH_
 
-#include <map>
 #include <memory>
-#include <set>
-#include <vector>
 #include "gazebo/ecs/ComponentFactory.hh"
 
 namespace gazebo
@@ -31,18 +28,14 @@ namespace gazebo
     /// \brief An entity is an id!
     typedef int EntityId;
 
-
     /// \brief For results which there is no entity
     const EntityId NO_ENTITY = -1;
-
 
     /// \brief Forward Declaration
     class EntityPrivate;
 
-
     /// \brief Forward Declaration
     class EntityComponentDatabase;
-
 
     /// \brief A convenience class for working with entities
     class Entity
@@ -80,7 +73,7 @@ namespace gazebo
       public: void *AddComponent(const ComponentType&);
 
       /// \brief PIMPL pattern
-      private: std::shared_ptr<EntityPrivate> impl;
+      private: std::shared_ptr<EntityPrivate> dataPtr;
 
       /// \brief Constructor. Use Manager::CreateEntity() instead
       private: Entity(EntityComponentDatabase *_mgr, EntityId _id);

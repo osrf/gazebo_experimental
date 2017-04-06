@@ -47,8 +47,8 @@ class gazebo::ecs::EntityComponentDatabasePrivate
 };
 
 /////////////////////////////////////////////////
-EntityComponentDatabase::EntityComponentDatabase() :
-  impl(new EntityComponentDatabasePrivate)
+EntityComponentDatabase::EntityComponentDatabase()
+: dataPtr(new EntityComponentDatabasePrivate)
 {
 }
 
@@ -56,12 +56,12 @@ EntityComponentDatabase::EntityComponentDatabase() :
 EntityComponentDatabase::~EntityComponentDatabase()
 {
   // Call destructor on the components
-  for (auto const &kv : this->impl->componentIndices)
+  for (auto const &kv : this->dataPtr->componentIndices)
   {
     const ComponentType &type = kv.first.second;
     const int index = kv.second;
 
-    char *storage = this->impl->components[index];
+    char *storage = this->dataPtr->components[index];
     void *data = static_cast<void*>(storage);
 
     ComponentTypeInfo info = ComponentFactory::TypeInfo(type);
@@ -74,7 +74,7 @@ EntityComponentDatabase::~EntityComponentDatabase()
 bool EntityComponentDatabase::AddQuery(const EntityQuery &_query)
 {
   bool isDuplicate = false;
-  for (auto const &query : this->impl->queries)
+  for (auto const &query : this->dataPtr->queries)
   {
     if (query == _query)
     {
@@ -83,42 +83,45 @@ bool EntityComponentDatabase::AddQuery(const EntityQuery &_query)
       break;
     }
   }
+
   if (!isDuplicate)
   {
-    this->impl->queries.push_back(_query);
-    auto &nonConstQuery = this->impl->queries.back();
+    this->dataPtr->queries.push_back(_query);
+    auto &nonConstQuery = this->dataPtr->queries.back();
     auto const types = _query.ComponentTypes();
-    for (int id = 0; id < this->impl->entities.size(); ++id)
+    for (int id = 0; id < this->dataPtr->entities.size(); ++id)
     {
-      if (this->impl->EntityMatches(id, types))
+      if (this->dataPtr->EntityMatches(id, types))
       {
         nonConstQuery.AddEntity(id);
       }
     }
   }
+
   return !isDuplicate;
 }
 
 bool EntityComponentDatabase::RemoveQuery(EntityQuery &_query)
 {
   _query.Clear();
-  std::remove(this->impl->queries.begin(), this->impl->queries.end(), _query);
+  std::remove(this->dataPtr->queries.begin(),
+              this->dataPtr->queries.end(), _query);
 }
 
 /////////////////////////////////////////////////
 EntityId EntityComponentDatabase::CreateEntity()
 {
   // TODO Reuse deleted entity ids
-  EntityId id = this->impl->entities.size();
-  this->impl->entities.push_back(gazebo::ecs::Entity(this, id));
+  EntityId id = this->dataPtr->entities.size();
+  this->dataPtr->entities.push_back(gazebo::ecs::Entity(this, id));
   return id;
 }
 
 /////////////////////////////////////////////////
 gazebo::ecs::Entity EntityComponentDatabase::Entity(EntityId _id) const
 {
-  if (_id >= 0 && _id < this->impl->entities.size())
-    return this->impl->entities[_id];
+  if (_id >= 0 && _id < this->dataPtr->entities.size())
+    return this->dataPtr->entities[_id];
   else
   {
     return gazebo::ecs::Entity(
@@ -131,8 +134,8 @@ void *EntityComponentDatabase::AddComponent(EntityId _id, ComponentType _type)
 {
   void *component = nullptr;
   auto key = std::make_pair(_id, _type);
-  if (this->impl->componentIndices.find(key) ==
-      this->impl->componentIndices.end())
+  if (this->dataPtr->componentIndices.find(key) ==
+      this->dataPtr->componentIndices.end())
   {
     // Allocate memory and call constructor
     ComponentTypeInfo info = ComponentFactory::TypeInfo(_type);
@@ -141,10 +144,10 @@ void *EntityComponentDatabase::AddComponent(EntityId _id, ComponentType _type)
     component = static_cast<void *>(storage);
     info.constructor(component);
 
-    auto index = this->impl->components.size();
-    this->impl->componentIndices[key] = index;
-    this->impl->components.push_back(storage);
-    this->impl->UpdateQueries(_id);
+    auto index = this->dataPtr->components.size();
+    this->dataPtr->componentIndices[key] = index;
+    this->dataPtr->components.push_back(storage);
+    this->dataPtr->UpdateQueries(_id);
   }
 
   return component;
@@ -156,11 +159,11 @@ void *EntityComponentDatabase::EntityComponent(EntityId _id,
 {
   void *component = nullptr;
   auto key = std::make_pair(_id, _type);
-  if (this->impl->componentIndices.find(key) !=
-      this->impl->componentIndices.end())
+  if (this->dataPtr->componentIndices.find(key) !=
+      this->dataPtr->componentIndices.end())
   {
-    auto index = this->impl->componentIndices[key];
-    char *data = this->impl->components[index];
+    auto index = this->dataPtr->componentIndices[key];
+    char *data = this->dataPtr->components[index];
     component = static_cast<void*>(data);
   }
   return component;
