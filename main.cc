@@ -72,7 +72,7 @@ int main(int argc, char **argv)
     // An entity is just an ID
     gazebo::ecs::EntityId e = manager.CreateEntity();
     // Convenience wrapper for working with an Id
-    gazebo::ecs::Entity entity = manager.Entity(e);
+    gazebo::ecs::Entity &entity = manager.Entity(e);
 
     // TODO manager.CreateEntity<ComponentA, ComponentB, ...>();
 

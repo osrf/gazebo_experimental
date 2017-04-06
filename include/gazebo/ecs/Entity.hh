@@ -40,6 +40,10 @@ namespace gazebo
     /// \brief A convenience class for working with entities
     class Entity
     {
+      public: Entity();
+
+      public: Entity(Entity &&_entity);
+
       /// \brief Destructor
       public: ~Entity();
 
@@ -57,7 +61,7 @@ namespace gazebo
 
       /// \brief Get a component by ComponentType
       /// \returns pointer to a component or nullptr on error
-      public: void *Component(const ComponentType&);
+      private: void *Component(const ComponentType&);
 
       /// \brief Add a component by actual type
       /// \returns pointer to a component or nullptr on error
@@ -72,8 +76,8 @@ namespace gazebo
       /// \returns pointer to a component or nullptr on error
       public: void *AddComponent(const ComponentType&);
 
-      /// \brief PIMPL pattern
-      private: std::shared_ptr<EntityPrivate> dataPtr;
+      /// \brief Private data pointer
+      private: std::unique_ptr<EntityPrivate> dataPtr;
 
       /// \brief Constructor. Use Manager::CreateEntity() instead
       private: Entity(EntityComponentDatabase *_mgr, EntityId _id);
@@ -81,6 +85,8 @@ namespace gazebo
       /// \brief friendship
       friend EntityComponentDatabase;
     };
+
+    static Entity EntityNull;
   }
 }
 #endif

@@ -121,19 +121,19 @@ EntityId EntityComponentDatabase::CreateEntity()
 {
   // TODO Reuse deleted entity ids
   EntityId id = this->dataPtr->entities.size();
-  this->dataPtr->entities.push_back(gazebo::ecs::Entity(this, id));
+  this->dataPtr->entities.push_back(
+      std::move(gazebo::ecs::Entity(this, id)));
   return id;
 }
 
 /////////////////////////////////////////////////
-gazebo::ecs::Entity EntityComponentDatabase::Entity(EntityId _id) const
+gazebo::ecs::Entity &EntityComponentDatabase::Entity(EntityId _id) const
 {
   if (_id >= 0 && _id < this->dataPtr->entities.size())
     return this->dataPtr->entities[_id];
   else
   {
-    return gazebo::ecs::Entity(
-      const_cast<EntityComponentDatabase*>(this), NO_ENTITY);
+    return EntityNull;
   }
 }
 
