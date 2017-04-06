@@ -50,7 +50,7 @@ namespace gazebo
       // TODO ECS to put manager into dataPtr
         /// \brief Update all entities matching this system's requirements
       public: virtual void Update(
-                  double _dt, EntityQuery &_result, Manager &_mgr) = 0;
+                  double _dt, const EntityQuery &_result, Manager &_mgr) = 0;
 
       /// \brief No copy constructor
       private: System(const System&) = delete;

@@ -106,12 +106,12 @@ TEST(EntityComponentDatabase, AddDifferentComponentsToDifferentEntities)
   EXPECT_EQ(nullptr, uut.EntityComponent(entities[1], type1));
   EXPECT_EQ(nullptr, uut.EntityComponent(entities[2], type1));
   EXPECT_EQ(nullptr, uut.EntityComponent(entities[3], type1));
-  
+
   EXPECT_EQ(nullptr, uut.EntityComponent(entities[0], type2));
   EXPECT_NE(nullptr, uut.EntityComponent(entities[1], type2));
   EXPECT_EQ(nullptr, uut.EntityComponent(entities[2], type2));
   EXPECT_EQ(nullptr, uut.EntityComponent(entities[3], type2));
-  
+
   EXPECT_EQ(nullptr, uut.EntityComponent(entities[0], type3));
   EXPECT_EQ(nullptr, uut.EntityComponent(entities[1], type3));
   EXPECT_NE(nullptr, uut.EntityComponent(entities[2], type3));
@@ -138,11 +138,11 @@ TEST(EntityComponentDatabase, AddMultipleComponentsToOneEntityId)
   EXPECT_NE(nullptr, uut.EntityComponent(entities[0], type1));
   EXPECT_EQ(nullptr, uut.EntityComponent(entities[1], type1));
   EXPECT_EQ(nullptr, uut.EntityComponent(entities[2], type1));
-  
+
   EXPECT_NE(nullptr, uut.EntityComponent(entities[0], type2));
   EXPECT_EQ(nullptr, uut.EntityComponent(entities[1], type2));
   EXPECT_EQ(nullptr, uut.EntityComponent(entities[2], type2));
-  
+
   EXPECT_NE(nullptr, uut.EntityComponent(entities[0], type3));
   EXPECT_EQ(nullptr, uut.EntityComponent(entities[1], type3));
   EXPECT_EQ(nullptr, uut.EntityComponent(entities[2], type3));
@@ -179,13 +179,19 @@ TEST(EntityComponentDatabase, ComponentsAreInitiallyEditable)
   ASSERT_NE(nullptr, uut.EntityComponent(entity, type1));
   ASSERT_NE(nullptr, uut.EntityComponent(entity, type2));
   ASSERT_NE(nullptr, uut.EntityComponent(entity, type3));
-  
-  EXPECT_EQ(one_one, static_cast<TC1*>(uut.EntityComponent(entity, type1))->itemOne);
-  EXPECT_EQ(two_one, static_cast<TC2*>(uut.EntityComponent(entity, type2))->itemOne);
-  EXPECT_EQ(two_two, static_cast<TC2*>(uut.EntityComponent(entity, type2))->itemTwo);
-  EXPECT_EQ(three_one, static_cast<TC3*>(uut.EntityComponent(entity, type3))->itemOne);
-  EXPECT_EQ(three_two, static_cast<TC3*>(uut.EntityComponent(entity, type3))->itemTwo);
-  EXPECT_EQ(three_three, static_cast<TC3*>(uut.EntityComponent(entity, type3))->itemThree);
+
+  EXPECT_EQ(one_one,
+      static_cast<TC1*>(uut.EntityComponent(entity, type1))->itemOne);
+  EXPECT_EQ(two_one,
+      static_cast<TC2*>(uut.EntityComponent(entity, type2))->itemOne);
+  EXPECT_EQ(two_two,
+      static_cast<TC2*>(uut.EntityComponent(entity, type2))->itemTwo);
+  EXPECT_EQ(three_one,
+      static_cast<TC3*>(uut.EntityComponent(entity, type3))->itemOne);
+  EXPECT_EQ(three_two,
+      static_cast<TC3*>(uut.EntityComponent(entity, type3))->itemTwo);
+  EXPECT_EQ(three_three,
+      static_cast<TC3*>(uut.EntityComponent(entity, type3))->itemThree);
 }
 
 /////////////////////////////////////////////////
@@ -255,14 +261,13 @@ TEST(EntityComponentDatabase, QueryEntities)
   gazebo::ecs::EntityQuery query;
   query.AddComponent(type2);
   query.AddComponent(type3);
+  auto queryAdd = uut.AddQuery(std::move(query));
 
-  uut.AddQuery(query);
-
-  ASSERT_EQ(2, query.EntityIds().size());
+  ASSERT_EQ(2, uut.Query(queryAdd.first).EntityIds().size());
   bool foundE1 = false;
   bool foundE2 = false;
   bool foundE3 = false;
-  for (auto result : query.EntityIds())
+  for (auto result : uut.Query(queryAdd.first).EntityIds())
   {
     if (result == entities[0])
       foundE1 = true;
@@ -301,10 +306,10 @@ TEST(EntityComponentDatabase, RemoveQueryNoResults)
   query.AddComponent(type2);
   query.AddComponent(type3);
 
-  uut.AddQuery(query);
-  uut.RemoveQuery(query);
+  auto result = uut.AddQuery(std::move(query));
+  uut.RemoveQuery(result.first);
 
-  ASSERT_EQ(0, query.EntityIds().size());
+  ASSERT_EQ(0, uut.Query(result.first).EntityIds().size());
 }
 
 int main(int argc, char **argv)

@@ -40,7 +40,7 @@ ecs::EntityQuery AddAndPrintResult::Init()
 
 /////////////////////////////////////////////////
 void AddAndPrintResult::Update(double _dt,
-    ecs::EntityQuery &_query, ecs::Manager &_mgr)
+    const ecs::EntityQuery &_query, ecs::Manager &_mgr)
 {
   // Loop through all of the entities which have the required components
   for (auto const &entityId : _query.EntityIds())

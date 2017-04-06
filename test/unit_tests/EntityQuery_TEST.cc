@@ -45,7 +45,7 @@ TEST(EntityQuery, AddSingleComponent)
 {
   gazebo::ecs::EntityQuery uut;
   uut.AddComponent("TC1");
-  
+
   std::set<gazebo::ecs::ComponentType> types = uut.ComponentTypes();
   ASSERT_EQ(1, types.size());
 
@@ -59,7 +59,7 @@ TEST(EntityQuery, AddTwoComponents)
   gazebo::ecs::EntityQuery uut;
   uut.AddComponent("TC1");
   uut.AddComponent("TC2");
-  
+
   std::set<gazebo::ecs::ComponentType> types = uut.ComponentTypes();
   ASSERT_EQ(2, types.size());
 
@@ -77,18 +77,9 @@ TEST(EntityQuery, DuplicateComponent)
   gazebo::ecs::EntityQuery uut;
   uut.AddComponent("TC1");
   uut.AddComponent("TC1");
-  
+
   std::set<gazebo::ecs::ComponentType> types = uut.ComponentTypes();
   ASSERT_EQ(1, types.size());
-}
-
-/////////////////////////////////////////////////
-TEST(EntityQuery, ShallowCopyQuery)
-{
-  gazebo::ecs::EntityQuery uut;
-  gazebo::ecs::EntityQuery uutCopy(uut);
-
-  EXPECT_TRUE(uutCopy == uut);
 }
 
 /////////////////////////////////////////////////
@@ -97,7 +88,8 @@ TEST(EntityQuery, UnequalQueries)
   gazebo::ecs::EntityQuery uut;
   gazebo::ecs::EntityQuery uut2;
 
-  EXPECT_FALSE(uut2 == uut);
+  EXPECT_TRUE(uut2 == uut);
+  EXPECT_TRUE(uut2 == gazebo::ecs::EntityQueryNull);
 }
 
 /////////////////////////////////////////////////
