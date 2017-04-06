@@ -34,7 +34,11 @@ int main(int argc, char **argv)
   // Something to deal with loading plugins
   ignition::common::PluginLoader pm;
 
-  // TODO Componentizer
+  // TODO Componentizer to register components
+  gazebo::ecs::ComponentFactory::Register<gazebo::components::Triplet>(
+      "gazebo::components::Triplet");
+  gazebo::ecs::ComponentFactory::Register<gazebo::components::Fraction>(
+      "gazebo::components::Fraction");
 
   // First way to load a system: not using a plugin. Useful for testing
   manager.LoadSystem<gazebo::systems::DivideAndPrintResult>();
