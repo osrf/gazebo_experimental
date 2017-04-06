@@ -19,9 +19,6 @@
 #include <utility>
 #include <vector>
 
-#include "gazebo/components/Fraction.hh"
-#include "gazebo/components/Triplet.hh"
-
 #include "gazebo/ecs/EntityComponentDatabase.hh"
 #include "gazebo/ecs/EntityQuery.hh"
 #include "gazebo/ecs/Manager.hh"
@@ -46,12 +43,6 @@ class gazebo::ecs::ManagerPrivate
 Manager::Manager()
 : dataPtr(new ManagerPrivate)
 {
-  // TODO Componentizer to register components
-  ComponentFactory::Register<gazebo::components::Triplet>(
-      "gazebo::components::Triplet");
-
-  ComponentFactory::Register<gazebo::components::Fraction>(
-      "gazebo::components::Fraction");
 }
 
 /////////////////////////////////////////////////
