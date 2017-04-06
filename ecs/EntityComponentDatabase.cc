@@ -78,13 +78,16 @@ EntityComponentDatabase::~EntityComponentDatabase()
 }
 
 /////////////////////////////////////////////////
-bool EntityComponentDatabase::AddQuery(const EntityQuery &_query)
+std::pair<EntityQueryId, bool> EntityComponentDatabase::AddQuery(
+    EntityQuery &&_query)
 {
   bool isDuplicate = false;
-  for (auto const &query : this->dataPtr->queries)
+  EntityQueryId result = -1;
+  for (size_t i = 0; i < this->dataPtr->queries.size(); ++i)
   {
-    if (query == _query)
+    if (this->dataPtr->queries[i] == _query)
     {
+      result = i;
       // Already have this query, bail
       isDuplicate = true;
       break;
@@ -93,9 +96,10 @@ bool EntityComponentDatabase::AddQuery(const EntityQuery &_query)
 
   if (!isDuplicate)
   {
-    this->dataPtr->queries.push_back(_query);
-    auto &nonConstQuery = this->dataPtr->queries.back();
     auto const types = _query.ComponentTypes();
+    this->dataPtr->queries.push_back(std::move(_query));
+    result = this->dataPtr->queries.size() - 1;
+    auto &nonConstQuery = this->dataPtr->queries.back();
     for (int id = 0; id < this->dataPtr->entities.size(); ++id)
     {
       if (this->dataPtr->EntityMatches(id, types))
@@ -104,14 +108,20 @@ bool EntityComponentDatabase::AddQuery(const EntityQuery &_query)
       }
     }
   }
-  return !isDuplicate;
+
+  return {result, !isDuplicate};
 }
 
-bool EntityComponentDatabase::RemoveQuery(EntityQuery &_query)
+/////////////////////////////////////////////////
+bool EntityComponentDatabase::RemoveQuery(const EntityQueryId _id)
 {
-  _query.Clear();
-  std::remove(this->dataPtr->queries.begin(),
-              this->dataPtr->queries.end(), _query);
+  if (_id >= 0 && _id < this->dataPtr->queries.size())
+  {
+    this->dataPtr->queries.erase(this->dataPtr->queries.begin() + _id);
+    return true;
+  }
+
+  return false;
 }
 
 /////////////////////////////////////////////////
@@ -123,13 +133,14 @@ EntityId EntityComponentDatabase::CreateEntity()
     // Reuse the smallest deleted EntityId
     id = *(this->dataPtr->freeIds.begin());
     this->dataPtr->freeIds.erase(this->dataPtr->freeIds.begin());
-    this->dataPtr->entities[id] = gazebo::ecs::Entity(this, id);
+    this->dataPtr->entities[id] = std::move(gazebo::ecs::Entity(this, id));
   }
   else
   {
     // Create a brand new Id
     id = this->dataPtr->entities.size();
-    this->dataPtr->entities.push_back(gazebo::ecs::Entity(this, id));
+    this->dataPtr->entities.push_back(
+        std::move(gazebo::ecs::Entity(this, id)));
   }
   return id;
 }
@@ -151,15 +162,15 @@ bool EntityComponentDatabase::DeleteEntity(EntityId _id)
   return success;
 }
 
+
 /////////////////////////////////////////////////
-gazebo::ecs::Entity EntityComponentDatabase::Entity(EntityId _id) const
+gazebo::ecs::Entity &EntityComponentDatabase::Entity(EntityId _id) const
 {
   if (this->dataPtr->EntityExists(_id))
     return this->dataPtr->entities[_id];
   else
   {
-    return gazebo::ecs::Entity(
-      const_cast<EntityComponentDatabase*>(this), NO_ENTITY);
+    return EntityNull;
   }
 }
 
@@ -263,4 +274,13 @@ bool EntityComponentDatabasePrivate::EntityExists(EntityId _id) const
   bool isWithinRange = _id >= 0 && _id < this->entities.size();
   bool isNotDeleted = this->freeIds.find(_id) == this->freeIds.end();
   return isWithinRange && isNotDeleted;
+}
+
+/////////////////////////////////////////////////
+const EntityQuery &EntityComponentDatabase::Query(
+    const EntityQueryId _index) const
+{
+  if (_index >= 0 && _index < this->dataPtr->queries.size())
+    return this->dataPtr->queries[_index];
+  return EntityQueryNull;
 }

@@ -33,6 +33,9 @@ namespace gazebo
     /// \brief Forward declaration
     class EntityComponentDatabasePrivate;
 
+    /// \brief Id of an EntityQuery
+    using EntityQueryId = int64_t;
+
     /// \brief Stores and retrieves entities/components efficiently
     ///
     /// This class stores entities and components, and provides efficient
@@ -46,15 +49,20 @@ namespace gazebo
       public: ~EntityComponentDatabase();
 
       /// \brief Add a query for entities
-      /// \param[in] _query
-      /// \returns True if query was successfully added.
-      public: bool AddQuery(const EntityQuery &_query);
+      /// \param[in] _query The query to add
+      /// \returns The index of the query and boolean in a pair. The boolean
+      /// is true if query was added, false if the query already existed.
+      public: std::pair<EntityQueryId, bool> AddQuery(EntityQuery &&_query);
+
+      /// \brief Get a query based on an index.
+      /// \param[in] _index Index of the query.
+      /// \return The EntityQuery, or NULL_QUERY on error.
+      public: const EntityQuery &Query(const EntityQueryId _index) const;
 
       /// \brief Remove a query for entities
-      /// \param[in,out] _query Clears the given query, and removes from the
-      /// query list.
+      /// \param[in,out] _id ID of the query to remove.
       /// \returns True if query was successfully removed
-      public: bool RemoveQuery(EntityQuery &_query);
+      public: bool RemoveQuery(const EntityQueryId _id);
 
       /// \brief Creates a new entity
       /// \brief returns an id for the entity, or NO_ENTITY on failure
@@ -65,7 +73,7 @@ namespace gazebo
       public: bool DeleteEntity(EntityId _id);
 
       /// \brief Get an Entity instance by Id
-      public: ::gazebo::ecs::Entity Entity(EntityId _id) const;
+      public: ::gazebo::ecs::Entity &Entity(EntityId _id) const;
 
       // TODO templated version
       /// \brief Add a new component to an entity

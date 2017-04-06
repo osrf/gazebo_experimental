@@ -35,17 +35,17 @@ ecs::EntityQuery DivideAndPrintResult::Init()
   if (!query.AddComponent("gazebo::components::Fraction"))
     std::cerr << "Undefined component[gazebo::components::Fraction]\n";
 
-  return query;
+  return std::move(query);
 }
 
 /////////////////////////////////////////////////
 void DivideAndPrintResult::Update(
-    double _dt, ecs::EntityQuery &_result, ecs::Manager &_mgr)
+    double _dt, const ecs::EntityQuery &_result, ecs::Manager &_mgr)
 {
   // Loop through all of the entities which have the required components
   for (auto const &entityId : _result.EntityIds())
   {
-    auto entity = _mgr.Entity(entityId);
+    auto &entity = _mgr.Entity(entityId);
     auto fraction = entity.Component<gazebo::components::Fraction>();
 
     std::cout << "Dividing " << entityId << ":" <<
@@ -54,4 +54,4 @@ void DivideAndPrintResult::Update(
 }
 
 IGN_COMMON_REGISTER_SINGLE_PLUGIN(gazebo::systems::DivideAndPrintResult,
-                          gazebo::ecs::System)
+                                  gazebo::ecs::System)

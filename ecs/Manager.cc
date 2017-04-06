@@ -33,7 +33,7 @@ class gazebo::ecs::ManagerPrivate
 {
   /// \brief Systems that are added to the manager
   public: std::vector<
-          std::pair<std::unique_ptr<System>, EntityQuery>> systems;
+          std::pair<std::unique_ptr<System>, EntityQueryId>> systems;
 
   /// \brief Handles storage and quering of components
   public: EntityComponentDatabase database;
@@ -63,9 +63,9 @@ bool Manager::DeleteEntity(EntityId _id)
 }
 
 /////////////////////////////////////////////////
-bool Manager::AddQuery(const EntityQuery &_query)
+bool Manager::AddQuery(EntityQuery &&_query)
 {
-  return this->dataPtr->database.AddQuery(_query);
+  return this->dataPtr->database.AddQuery(std::move(_query)).second;
 }
 
 /////////////////////////////////////////////////
@@ -85,7 +85,8 @@ void Manager::UpdateSystems(const double _dt)
   // But this is a prototype, so here's the basic implementation
   for(auto &system : this->dataPtr->systems)
   {
-    system.first->Update(_dt, system.second, *this);
+    system.first->Update(_dt, this->dataPtr->database.Query(system.second),
+        *this);
   }
 }
 
@@ -96,9 +97,9 @@ bool Manager::LoadSystem(std::unique_ptr<System> _sys)
   if (_sys)
   {
     EntityQuery query = _sys->Init();
-    this->dataPtr->database.AddQuery(query);
+    auto result = this->dataPtr->database.AddQuery(std::move(query));
     this->dataPtr->systems.push_back(
-        std::make_pair(std::move(_sys), query));
+        std::make_pair(std::move(_sys), result.first));
     success = true;
   }
   return success;
@@ -117,7 +118,7 @@ void *Manager::EntityComponent(EntityId _id, ComponentType _type)
 }
 
 /////////////////////////////////////////////////
-gazebo::ecs::Entity Manager::Entity(const EntityId _id) const
+gazebo::ecs::Entity &Manager::Entity(const EntityId _id) const
 {
   return this->dataPtr->database.Entity(_id);
 }

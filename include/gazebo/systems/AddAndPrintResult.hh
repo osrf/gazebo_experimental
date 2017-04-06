@@ -31,7 +31,7 @@ namespace gazebo
     {
       public: virtual ecs::EntityQuery Init();
 
-      public: virtual void Update(double _dt, ecs::EntityQuery &_result,
+      public: virtual void Update(double _dt, const ecs::EntityQuery &_result,
                   ecs::Manager &_mgr);
     };
   }
