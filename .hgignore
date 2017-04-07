@@ -1,2 +1,3 @@
 # VIM
+syntax: glob
 .*.sw?
