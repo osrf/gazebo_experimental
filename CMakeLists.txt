@@ -14,10 +14,14 @@ include_directories(${IGNITION-COMMON_INCLUDE_DIRS})
 
 add_subdirectory(ecs)
 add_subdirectory(systems)
+add_subdirectory(dumb_physics)
 add_subdirectory(test)
 
 add_executable(gz_ecs main.cc)
 target_link_libraries(gz_ecs DivideAndPrintResult GazeboECS ${IGNITION-COMMON_LIBRARIES})
+
+add_executable(dummy_demo dummy_demo.cc)
+target_link_libraries(dummy_demo GazeboECS ${IGNITION-COMMON_LIBRARIES})
 
 
 # TODO install rules that don't install gazebo/system/*.hh
