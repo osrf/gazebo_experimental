@@ -128,7 +128,7 @@ bool EntityComponentDatabase::RemoveQuery(const EntityQueryId _id)
 EntityId EntityComponentDatabase::CreateEntity()
 {
   EntityId id;
-  if (this->dataPtr->freeIds.size())
+  if (!this->dataPtr->freeIds.empty())
   {
     // Reuse the smallest deleted EntityId
     id = *(this->dataPtr->freeIds.begin());

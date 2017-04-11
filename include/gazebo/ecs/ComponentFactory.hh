@@ -158,7 +158,7 @@ namespace gazebo
               {
                 std::lock_guard<std::mutex> lock(mtx);
                 std::vector<ComponentType> knownTypes;
-                for (int i = 0; i < typeInfoById.size(); i++)
+                for (int i = 0; i < typeInfoById.size(); ++i)
                 {
                   knownTypes.push_back(i);
                 }
