@@ -354,6 +354,33 @@ TEST(EntityComponentDatabase, RemoveComponent)
 }
 
 /////////////////////////////////////////////////
+TEST(EntityComponentDatabase, RemoveComponentAccessAnother)
+{
+  gazebo::ecs::EntityComponentDatabase uut;
+  gazebo::ecs::EntityId id = uut.CreateEntity();
+  auto const type1 = gazebo::ecs::ComponentFactory::Type<TC1>();
+  auto const type2 = gazebo::ecs::ComponentFactory::Type<TC2>();
+
+  auto c1 = static_cast<TC1*>(uut.AddComponent(id, type1));
+  auto c2 = static_cast<TC2*>(uut.AddComponent(id, type2));
+  ASSERT_NE(nullptr, c1);
+  ASSERT_NE(nullptr, c2);
+
+  c1->itemOne = 1234;
+  c2->itemOne = 5678;
+  c2->itemTwo = 9012;
+
+  uut.RemoveComponent(id, type1);
+  EXPECT_EQ(nullptr, uut.EntityComponent(id, type1));
+
+  // TODO fix removing invalidates other component pointers
+  auto c2_test = static_cast<TC2*>(uut.EntityComponent(id, type2));
+  ASSERT_NE(nullptr, c2_test);
+  EXPECT_EQ(5678, c2_test->itemOne);
+  EXPECT_EQ(9012, c2_test->itemTwo);
+}
+
+/////////////////////////////////////////////////
 TEST(EntityComponentDatabase, DeleteEntity)
 {
   gazebo::ecs::EntityComponentDatabase uut;
