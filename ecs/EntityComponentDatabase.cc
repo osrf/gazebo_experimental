@@ -32,6 +32,8 @@ class gazebo::ecs::EntityComponentDatabasePrivate
   // Map EntityId/ComponentType pair to an index in this->components
   public: std::map<std::pair<EntityId, ComponentType>, int> componentIndices;
   public: std::vector<char*> components;
+  // Map EntityId/ComponentType pair to the state of a component
+  public: std::map<std::pair<EntityId, ComponentType>, Difference> differences;
 
   /// \brief update queries because this entity's components have changed
   public: void UpdateQueries(EntityId _id);
@@ -152,6 +154,9 @@ void *EntityComponentDatabase::AddComponent(EntityId _id, ComponentType _type)
     component = static_cast<void *>(storage);
     info.constructor(component);
 
+    // TODO store metadata adjacent to component data in memory
+    this->dataPtr->differences[key] = WAS_CREATED;
+
     auto index = this->dataPtr->components.size();
     this->dataPtr->componentIndices[key] = index;
     this->dataPtr->components.push_back(storage);
@@ -209,4 +214,35 @@ const EntityQuery &EntityComponentDatabase::Query(
   if (_index >= 0 && _index < this->dataPtr->queries.size())
     return this->dataPtr->queries[_index];
   return EntityQueryNull;
+}
+
+/////////////////////////////////////////////////
+Difference EntityComponentDatabase::IsDifferent(EntityId _id,
+    ComponentType _type) const
+{
+  Difference d = NO_DIFFERENCE;
+  auto key = std::make_pair(_id, _type);
+  auto iter = this->dataPtr->differences.find(key);
+  if (iter != this->dataPtr->differences.end())
+  {
+    d = iter->second;
+  }
+  return d;
+}
+
+/////////////////////////////////////////////////
+void EntityComponentDatabase::UpdateBegin()
+{
+  this->dataPtr->differences.clear();
+}
+
+/////////////////////////////////////////////////
+void EntityComponentDatabase::MarkAsModified(EntityId _id, ComponentType _type)
+{
+  auto key = std::make_pair(_id, _type);
+  auto iter = this->dataPtr->differences.find(key);
+  if (iter == this->dataPtr->differences.end() || iter->second == NO_DIFFERENCE)
+  {
+    this->dataPtr->differences[key] = WAS_MODIFIED;
+  }
 }

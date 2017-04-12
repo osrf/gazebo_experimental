@@ -64,8 +64,15 @@ EntityId Entity::Id() const
 }
 
 /////////////////////////////////////////////////
-void *Entity::Component(const ComponentType &_type)
+void const *Entity::Component(const ComponentType &_type)
 {
+  return this->dataPtr->database->EntityComponent(this->dataPtr->id, _type);
+}
+
+/////////////////////////////////////////////////
+void *Entity::ComponentMutable(const ComponentType &_type)
+{
+  this->dataPtr->database->MarkAsModified(this->dataPtr->id, _type);
   return this->dataPtr->database->EntityComponent(this->dataPtr->id, _type);
 }
 
@@ -73,4 +80,10 @@ void *Entity::Component(const ComponentType &_type)
 void *Entity::AddComponent(const ComponentType &_type)
 {
   return this->dataPtr->database->AddComponent(this->dataPtr->id, _type);
+}
+
+/////////////////////////////////////////////////
+Difference Entity::IsDifferent(ComponentType _type) const
+{
+  return this->dataPtr->database->IsDifferent(this->dataPtr->id, _type);
 }

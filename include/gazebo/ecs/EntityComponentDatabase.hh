@@ -68,6 +68,9 @@ namespace gazebo
       /// \brief returns an id for the entity, or NO_ENTITY on failure
       public: EntityId CreateEntity();
 
+      /// \brief Database clears changed components
+      public: void UpdateBegin();
+
       /// \brief Get an Entity instance by Id
       public: ::gazebo::ecs::Entity &Entity(EntityId _id) const;
 
@@ -78,6 +81,13 @@ namespace gazebo
       // TODO templated version
       /// \brief Get a component that's on an entity
       public: void *EntityComponent(EntityId _id, ComponentType _type) const;
+
+      /// \brief Mark component as modified
+      public: void MarkAsModified(EntityId _id, ComponentType _type);
+
+      // TODO templated version
+      /// \brief Test if a component changed last timestep
+      public: Difference IsDifferent(EntityId _id, ComponentType _type) const;
 
       /// \brief Private IMPLementation pointer
       private: std::unique_ptr<EntityComponentDatabasePrivate> dataPtr;

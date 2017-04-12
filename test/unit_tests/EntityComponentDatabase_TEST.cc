@@ -312,6 +312,25 @@ TEST(EntityComponentDatabase, RemoveQueryNoResults)
   ASSERT_EQ(0, uut.Query(result.first).EntityIds().size());
 }
 
+/////////////////////////////////////////////////
+TEST(EntityComponentDatabase, TrackComponentChanges)
+{
+  gazebo::ecs::EntityComponentDatabase uut;
+  gazebo::ecs::EntityId entity = uut.CreateEntity();
+
+  auto const type1 = gazebo::ecs::ComponentFactory::Type<TC1>();
+  auto const type2 = gazebo::ecs::ComponentFactory::Type<TC2>();
+
+  uut.AddComponent(entity, type1);
+  EXPECT_EQ(gazebo::ecs::WAS_CREATED, uut.IsDifferent(entity, type1));
+
+  uut.UpdateBegin();
+
+  uut.AddComponent(entity, type2);
+  EXPECT_EQ(gazebo::ecs::NO_DIFFERENCE, uut.IsDifferent(entity, type1));
+  EXPECT_EQ(gazebo::ecs::WAS_CREATED, uut.IsDifferent(entity, type2));
+}
+
 int main(int argc, char **argv)
 {
   gazebo::ecs::ComponentFactory::Register<TC1>("TC1");
