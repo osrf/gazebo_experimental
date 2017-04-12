@@ -30,8 +30,11 @@ class gazebo::ecs::EntityComponentDatabasePrivate
   /// \brief instances of entities
   public: std::vector<Entity> entities;
 
-  /// \brief deleted entity ids
+  /// \brief deleted entity ids that can be reused
   public: std::set<EntityId> freeIds;
+
+  /// \brief deleted entity ids that can't yet be reused
+  public: std::set<EntityId> deletedIds;
 
   // TODO better storage of components
   // Map EntityId/ComponentType pair to an index in this->components
@@ -158,7 +161,7 @@ bool EntityComponentDatabase::DeleteEntity(EntityId _id)
     {
       this->RemoveComponent(_id, type);
     }
-    this->dataPtr->freeIds.insert(_id);
+    this->dataPtr->deletedIds.insert(_id);
     success = true;
   }
   return success;
@@ -219,6 +222,9 @@ bool EntityComponentDatabase::RemoveComponent(EntityId _id, ComponentType _type)
     component = static_cast<void *>(storage);
     info.destructor(component);
 
+    // TODO store metadata adjacent to component data in memory
+    this->dataPtr->differences[key] = WAS_DELETED;
+
     // TODO don't deallocate, need smarter storage
     delete [] storage;
     this->dataPtr->components.erase(this->dataPtr->components.begin() + index);
@@ -277,7 +283,8 @@ bool EntityComponentDatabasePrivate::EntityExists(EntityId _id) const
 {
   // True if the vector is big enough to have used this id
   bool isWithinRange = _id >= 0 && _id < this->entities.size();
-  bool isNotDeleted = this->freeIds.find(_id) == this->freeIds.end();
+  bool isNotDeleted = this->freeIds.find(_id) == this->freeIds.end() &&
+    this->deletedIds.find(_id) == this->deletedIds.end();
   return isWithinRange && isNotDeleted;
 }
 
@@ -307,6 +314,10 @@ Difference EntityComponentDatabase::IsDifferent(EntityId _id,
 /////////////////////////////////////////////////
 void EntityComponentDatabase::UpdateBegin()
 {
+  // Deleted ids become free after one update.
+  this->dataPtr->freeIds.insert(this->dataPtr->deletedIds.begin(),
+      this->dataPtr->deletedIds.end());
+  this->dataPtr->deletedIds.clear();
   this->dataPtr->differences.clear();
 }
 

@@ -325,10 +325,18 @@ TEST(EntityComponentDatabase, TrackComponentChanges)
   EXPECT_EQ(gazebo::ecs::WAS_CREATED, uut.IsDifferent(entity, type1));
 
   uut.UpdateBegin();
-
   uut.AddComponent(entity, type2);
   EXPECT_EQ(gazebo::ecs::NO_DIFFERENCE, uut.IsDifferent(entity, type1));
   EXPECT_EQ(gazebo::ecs::WAS_CREATED, uut.IsDifferent(entity, type2));
+
+  uut.UpdateBegin();
+  uut.RemoveComponent(entity, type1);
+  EXPECT_EQ(gazebo::ecs::WAS_DELETED, uut.IsDifferent(entity, type1));
+  EXPECT_EQ(gazebo::ecs::NO_DIFFERENCE, uut.IsDifferent(entity, type2));
+
+  uut.DeleteEntity(entity);
+  uut.UpdateBegin();
+  EXPECT_EQ(gazebo::ecs::WAS_DELETED, uut.IsDifferent(entity, type2));
 }
 
 /////////////////////////////////////////////////
