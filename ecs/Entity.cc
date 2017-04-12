@@ -28,7 +28,7 @@ class gazebo::ecs::EntityPrivate
   public: EntityComponentDatabase *database;
 
   /// \brief ID of entity
-  public: EntityId id;
+  public: EntityId id = NO_ENTITY;
 };
 
 /////////////////////////////////////////////////
@@ -50,6 +50,12 @@ Entity::Entity()
 Entity::Entity(Entity &&_entity)
 : dataPtr(std::move(_entity.dataPtr))
 {
+}
+
+/////////////////////////////////////////////////
+Entity &Entity::operator=(Entity &&_entity)
+{
+  this->dataPtr = std::move(_entity.dataPtr);
 }
 
 /////////////////////////////////////////////////

@@ -38,7 +38,11 @@ namespace gazebo
       public: Manager();
       public: ~Manager();
 
+      /// \brief Creates a new entity
       public: EntityId CreateEntity();
+
+      /// \brief Deletes the given entity
+      public: bool DeleteEntity(EntityId _id);
 
       /// \brief Convenience function to load a system from a type
       ///
