@@ -154,6 +154,17 @@ namespace gazebo
                   return typeInfoById[_type];
               }
 
+      public: static std::vector<ComponentType> Types()
+              {
+                std::lock_guard<std::mutex> lock(mtx);
+                std::vector<ComponentType> knownTypes;
+                for (int i = 0; i < typeInfoById.size(); ++i)
+                {
+                  knownTypes.push_back(i);
+                }
+                return knownTypes;
+              }
+
       /// \brief Lock for thread safety
       public: static std::mutex mtx;
 

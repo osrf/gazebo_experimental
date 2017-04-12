@@ -16,10 +16,12 @@
 */
 
 #include <algorithm>
+#include <set>
 #include <utility>
 
 #include "gazebo/ecs/EntityComponentDatabase.hh"
 #include "gazebo/ecs/EntityQuery.hh"
+
 
 using namespace gazebo::ecs;
 
@@ -28,6 +30,9 @@ class gazebo::ecs::EntityComponentDatabasePrivate
   /// \brief instances of entities
   public: std::vector<Entity> entities;
 
+  /// \brief deleted entity ids
+  public: std::set<EntityId> freeIds;
+
   // TODO better storage of components
   // Map EntityId/ComponentType pair to an index in this->components
   public: std::map<std::pair<EntityId, ComponentType>, int> componentIndices;
@@ -35,6 +40,9 @@ class gazebo::ecs::EntityComponentDatabasePrivate
 
   /// \brief update queries because this entity's components have changed
   public: void UpdateQueries(EntityId _id);
+
+  /// \brief return true iff the entity exists
+  public: bool EntityExists(EntityId _id) const;
 
   /// \brief check if an entity has these components
   /// \returns true iff entity has all components in the set
@@ -119,17 +127,46 @@ bool EntityComponentDatabase::RemoveQuery(const EntityQueryId _id)
 /////////////////////////////////////////////////
 EntityId EntityComponentDatabase::CreateEntity()
 {
-  // TODO Reuse deleted entity ids
-  EntityId id = this->dataPtr->entities.size();
-  this->dataPtr->entities.push_back(
-      std::move(gazebo::ecs::Entity(this, id)));
+  EntityId id;
+  if (!this->dataPtr->freeIds.empty())
+  {
+    // Reuse the smallest deleted EntityId
+    id = *(this->dataPtr->freeIds.begin());
+    this->dataPtr->freeIds.erase(this->dataPtr->freeIds.begin());
+    this->dataPtr->entities[id] = std::move(gazebo::ecs::Entity(this, id));
+  }
+  else
+  {
+    // Create a brand new Id
+    id = this->dataPtr->entities.size();
+    this->dataPtr->entities.push_back(
+        std::move(gazebo::ecs::Entity(this, id)));
+  }
   return id;
 }
 
 /////////////////////////////////////////////////
+bool EntityComponentDatabase::DeleteEntity(EntityId _id)
+{
+  bool success = false;
+  if (this->dataPtr->EntityExists(_id))
+  {
+    std::vector<ComponentType> knownTypes = ComponentFactory::Types();
+    for (const ComponentType type : knownTypes)
+    {
+      this->RemoveComponent(_id, type);
+    }
+    this->dataPtr->freeIds.insert(_id);
+    success = true;
+  }
+  return success;
+}
+
+
+/////////////////////////////////////////////////
 gazebo::ecs::Entity &EntityComponentDatabase::Entity(EntityId _id) const
 {
-  if (_id >= 0 && _id < this->dataPtr->entities.size())
+  if (this->dataPtr->EntityExists(_id))
     return this->dataPtr->entities[_id];
   else
   {
@@ -159,6 +196,34 @@ void *EntityComponentDatabase::AddComponent(EntityId _id, ComponentType _type)
   }
 
   return component;
+}
+
+/////////////////////////////////////////////////
+bool EntityComponentDatabase::RemoveComponent(EntityId _id, ComponentType _type)
+{
+  bool success = false;
+  auto key = std::make_pair(_id, _type);
+  auto valueIter = this->dataPtr->componentIndices.find(key);
+  if (valueIter != this->dataPtr->componentIndices.end())
+  {
+    auto index = valueIter->second;
+    // call destructor
+    void *component = nullptr;
+    ComponentTypeInfo info = ComponentFactory::TypeInfo(_type);
+    char *storage = this->dataPtr->components[index];
+    component = static_cast<void *>(storage);
+    info.destructor(component);
+
+    // TODO don't deallocate, need smarter storage
+    delete [] storage;
+    this->dataPtr->components.erase(this->dataPtr->components.begin() + index);
+    this->dataPtr->componentIndices.erase(valueIter);
+
+    this->dataPtr->UpdateQueries(_id);
+    success = true;
+  }
+
+  return success;
 }
 
 /////////////////////////////////////////////////
@@ -200,6 +265,15 @@ void EntityComponentDatabasePrivate::UpdateQueries(EntityId _id)
     if (this->EntityMatches(_id, query.ComponentTypes()))
       query.AddEntity(_id);
   }
+}
+
+/////////////////////////////////////////////////
+bool EntityComponentDatabasePrivate::EntityExists(EntityId _id) const
+{
+  // True if the vector is big enough to have used this id
+  bool isWithinRange = _id >= 0 && _id < this->entities.size();
+  bool isNotDeleted = this->freeIds.find(_id) == this->freeIds.end();
+  return isWithinRange && isNotDeleted;
 }
 
 /////////////////////////////////////////////////

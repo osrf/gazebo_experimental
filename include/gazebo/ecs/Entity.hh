@@ -44,6 +44,9 @@ namespace gazebo
 
       public: Entity(Entity &&_entity);
 
+      /// \brief Move assignment operator
+      public: Entity &operator=(Entity &&_entity);
+
       /// \brief Destructor
       public: ~Entity();
 

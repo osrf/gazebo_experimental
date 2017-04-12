@@ -56,6 +56,11 @@ EntityId Manager::CreateEntity()
   return this->dataPtr->database.CreateEntity();
 }
 
+/////////////////////////////////////////////////
+bool Manager::DeleteEntity(EntityId _id)
+{
+  return this->dataPtr->database.DeleteEntity(_id);
+}
 
 /////////////////////////////////////////////////
 bool Manager::AddQuery(EntityQuery &&_query)
