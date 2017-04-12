@@ -203,10 +203,10 @@ bool EntityComponentDatabase::RemoveComponent(EntityId _id, ComponentType _type)
 {
   bool success = false;
   auto key = std::make_pair(_id, _type);
-  auto valueIter = this->dataPtr->componentIndices.find(key);
-  if (valueIter != this->dataPtr->componentIndices.end())
+  auto kvIter = this->dataPtr->componentIndices.find(key);
+  if (kvIter != this->dataPtr->componentIndices.end())
   {
-    auto index = valueIter->second;
+    auto index = kvIter->second;
     // call destructor
     void *component = nullptr;
     ComponentTypeInfo info = ComponentFactory::TypeInfo(_type);
@@ -217,7 +217,14 @@ bool EntityComponentDatabase::RemoveComponent(EntityId _id, ComponentType _type)
     // TODO don't deallocate, need smarter storage
     delete [] storage;
     this->dataPtr->components.erase(this->dataPtr->components.begin() + index);
-    this->dataPtr->componentIndices.erase(valueIter);
+    this->dataPtr->componentIndices.erase(kvIter);
+    // Update the indexes beyond
+    for (auto &otherKvIter : this->dataPtr->componentIndices)
+    {
+      int &otherIndex = otherKvIter.second;
+      if (otherIndex > index)
+        --otherIndex;
+    }
 
     this->dataPtr->UpdateQueries(_id);
     success = true;
