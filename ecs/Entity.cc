@@ -78,8 +78,8 @@ void const *Entity::Component(const ComponentType &_type)
 /////////////////////////////////////////////////
 void *Entity::ComponentMutable(const ComponentType &_type)
 {
-  this->dataPtr->database->MarkAsModified(this->dataPtr->id, _type);
-  return this->dataPtr->database->EntityComponent(this->dataPtr->id, _type);
+  return this->dataPtr->database->EntityComponentMutable(this->dataPtr->id,
+      _type);
 }
 
 /////////////////////////////////////////////////

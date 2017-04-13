@@ -71,10 +71,6 @@ namespace gazebo
                 return static_cast<T*>(this->AddComponent(type, _id));
               }
 
-      /// \brief Get component on entity by component type
-      /// \returns pointer to component iff entity has component of that type
-      public: void *EntityComponent(EntityId _id, ComponentType _type);
-
       /// \brief Add component to entity by ComponentType
       /// \returns pointer to component iff it was successfully added
       public: void *AddComponent(ComponentType _type, EntityId _id);

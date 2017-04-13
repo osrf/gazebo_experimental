@@ -48,8 +48,8 @@ namespace gazebo
       /// \brief Destructs component without freeing memory
       public: std::function<void (void*)> destructor;
 
-      /// \brief Moves component from one memory location to another
-      public: std::function<void (void*, void*)> mover;
+      /// \brief Copies component from one memory location to another
+      public: std::function<void (void const *, void*)> copier;
 
       /// \brief Size of an instantiated component in bytes
       public: std::size_t size;
@@ -78,9 +78,9 @@ namespace gazebo
                 // Store size so space can be allocated elsewhere
                 info.size = sizeof(T);
 
-                info.mover = [](void const *_from, void *_to)
+                info.copier = [](void const *_from, void *_to)
                 {
-                  // Move component from one location to another
+                  // Copy component from one location to another
                   // Making a lambda for this allows the compiler to unroll
                   // the loop completely, which probably makes no difference
                   // because components will probably be small (< 32 bytes)

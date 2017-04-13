@@ -25,8 +25,25 @@
 
 using namespace gazebo::ecs;
 
+typedef std::pair<EntityId, ComponentType> StorageKey;
+
 class gazebo::ecs::EntityComponentDatabasePrivate
 {
+  /// \brief entities that are to be created next update
+  public: std::vector<EntityId> toCreateEntities;
+
+  /// \brief entities that are to be deleted next update
+  public: std::set<EntityId> toDeleteEntities;
+
+  /// \brief components that are to be created next update
+  public: std::map<StorageKey, char*> toAddComponents;
+
+  /// \brief components that are to be modified next update
+  public: std::map<StorageKey, char*> toModifyComponents;
+
+  /// \brief components that are to be deleted next update
+  public: std::vector<StorageKey> toRemoveComponents;
+
   /// \brief instances of entities
   public: std::vector<Entity> entities;
 
@@ -38,10 +55,10 @@ class gazebo::ecs::EntityComponentDatabasePrivate
 
   // TODO better storage of components
   // Map EntityId/ComponentType pair to an index in this->components
-  public: std::map<std::pair<EntityId, ComponentType>, int> componentIndices;
+  public: std::map<StorageKey, int> componentIndices;
   public: std::vector<char*> components;
   // Map EntityId/ComponentType pair to the state of a component
-  public: std::map<std::pair<EntityId, ComponentType>, Difference> differences;
+  public: std::map<StorageKey, Difference> differences;
 
   /// \brief update queries because this entity's components have changed
   public: void UpdateQueries(EntityId _id);
@@ -80,6 +97,30 @@ EntityComponentDatabase::~EntityComponentDatabase()
     info.destructor(data);
     delete [] storage;
   }
+
+  // Destruct modified components that never made it to to main storage
+  for (auto const &kv : this->dataPtr->toModifyComponents)
+  {
+    const ComponentType &type = kv.first.second;
+    char *storage = kv.second;
+    void *data = static_cast<void*>(storage);
+
+    ComponentTypeInfo info = ComponentFactory::TypeInfo(type);
+    info.destructor(data);
+    delete [] storage;
+  }
+
+  // Destruct added components that never made it to to main storage
+  for (auto const &kv : this->dataPtr->toAddComponents)
+  {
+    const ComponentType &type = kv.first.second;
+    char *storage = kv.second;
+    void *data = static_cast<void*>(storage);
+
+    ComponentTypeInfo info = ComponentFactory::TypeInfo(type);
+    info.destructor(data);
+    delete [] storage;
+  }
 }
 
 /////////////////////////////////////////////////
@@ -107,7 +148,10 @@ std::pair<EntityQueryId, bool> EntityComponentDatabase::AddQuery(
     auto &nonConstQuery = this->dataPtr->queries.back();
     for (int id = 0; id < this->dataPtr->entities.size(); ++id)
     {
-      if (this->dataPtr->EntityMatches(id, types))
+      // Check that entity is added and has the required components
+      if (!std::binary_search(this->dataPtr->toCreateEntities.begin(),
+            this->dataPtr->toCreateEntities.end(), id) &&
+            this->dataPtr->EntityMatches(id, types))
       {
         nonConstQuery.AddEntity(id);
       }
@@ -147,6 +191,10 @@ EntityId EntityComponentDatabase::CreateEntity()
     this->dataPtr->entities.push_back(
         std::move(gazebo::ecs::Entity(this, id)));
   }
+  // mark this entity as being created
+  this->dataPtr->toCreateEntities.push_back(id);
+  std::sort(this->dataPtr->toCreateEntities.begin(),
+      this->dataPtr->toCreateEntities.end());
   return id;
 }
 
@@ -156,12 +204,19 @@ bool EntityComponentDatabase::DeleteEntity(EntityId _id)
   bool success = false;
   if (this->dataPtr->EntityExists(_id))
   {
-    std::vector<ComponentType> knownTypes = ComponentFactory::Types();
-    for (const ComponentType type : knownTypes)
+    // check if it has already been marked for deletion
+    if (this->dataPtr->toDeleteEntities.find(_id) ==
+          this->dataPtr->toDeleteEntities.end())
     {
-      this->RemoveComponent(_id, type);
+      std::vector<ComponentType> knownTypes = ComponentFactory::Types();
+      for (const ComponentType type : knownTypes)
+      {
+        this->RemoveComponent(_id, type);
+      }
+
+      // Add this to a list of entities to delete
+      this->dataPtr->toDeleteEntities.insert(_id);
     }
-    this->dataPtr->deletedIds.insert(_id);
     success = true;
   }
   return success;
@@ -183,9 +238,12 @@ gazebo::ecs::Entity &EntityComponentDatabase::Entity(EntityId _id) const
 void *EntityComponentDatabase::AddComponent(EntityId _id, ComponentType _type)
 {
   void *component = nullptr;
-  auto key = std::make_pair(_id, _type);
+  StorageKey key = std::make_pair(_id, _type);
+  // if component has not been added already
   if (this->dataPtr->componentIndices.find(key) ==
-      this->dataPtr->componentIndices.end())
+      this->dataPtr->componentIndices.end() &&
+      this->dataPtr->toAddComponents.find(key) ==
+      this->dataPtr->toAddComponents.end())
   {
     // Allocate memory and call constructor
     ComponentTypeInfo info = ComponentFactory::TypeInfo(_type);
@@ -194,13 +252,7 @@ void *EntityComponentDatabase::AddComponent(EntityId _id, ComponentType _type)
     component = static_cast<void *>(storage);
     info.constructor(component);
 
-    // TODO store metadata adjacent to component data in memory
-    this->dataPtr->differences[key] = WAS_CREATED;
-
-    auto index = this->dataPtr->components.size();
-    this->dataPtr->componentIndices[key] = index;
-    this->dataPtr->components.push_back(storage);
-    this->dataPtr->UpdateQueries(_id);
+    this->dataPtr->toAddComponents[key] = storage;
   }
 
   return component;
@@ -210,34 +262,19 @@ void *EntityComponentDatabase::AddComponent(EntityId _id, ComponentType _type)
 bool EntityComponentDatabase::RemoveComponent(EntityId _id, ComponentType _type)
 {
   bool success = false;
-  auto key = std::make_pair(_id, _type);
+  StorageKey key = std::make_pair(_id, _type);
   auto kvIter = this->dataPtr->componentIndices.find(key);
   if (kvIter != this->dataPtr->componentIndices.end())
   {
-    auto index = kvIter->second;
-    // call destructor
-    void *component = nullptr;
-    ComponentTypeInfo info = ComponentFactory::TypeInfo(_type);
-    char *storage = this->dataPtr->components[index];
-    component = static_cast<void *>(storage);
-    info.destructor(component);
-
-    // TODO store metadata adjacent to component data in memory
-    this->dataPtr->differences[key] = WAS_DELETED;
-
-    // TODO don't deallocate, need smarter storage
-    delete [] storage;
-    this->dataPtr->components.erase(this->dataPtr->components.begin() + index);
-    this->dataPtr->componentIndices.erase(kvIter);
-    // Update the indexes beyond
-    for (auto &otherKvIter : this->dataPtr->componentIndices)
+    // Check if it has already been removed
+    if (!std::binary_search(this->dataPtr->toRemoveComponents.begin(),
+          this->dataPtr->toRemoveComponents.end(), key))
     {
-      int &otherIndex = otherKvIter.second;
-      if (otherIndex > index)
-        --otherIndex;
+      // Flag this for removal
+      this->dataPtr->toRemoveComponents.push_back(key);
+      std::sort(this->dataPtr->toRemoveComponents.begin(),
+          this->dataPtr->toRemoveComponents.end());
     }
-
-    this->dataPtr->UpdateQueries(_id);
     success = true;
   }
 
@@ -245,17 +282,48 @@ bool EntityComponentDatabase::RemoveComponent(EntityId _id, ComponentType _type)
 }
 
 /////////////////////////////////////////////////
-void *EntityComponentDatabase::EntityComponent(EntityId _id,
+void const *EntityComponentDatabase::EntityComponent(EntityId _id,
     ComponentType _type) const
 {
-  void *component = nullptr;
-  auto key = std::make_pair(_id, _type);
+  void const *component = nullptr;
+  StorageKey key = std::make_pair(_id, _type);
   if (this->dataPtr->componentIndices.find(key) !=
       this->dataPtr->componentIndices.end())
   {
     auto index = this->dataPtr->componentIndices[key];
     char *data = this->dataPtr->components[index];
-    component = static_cast<void*>(data);
+    component = static_cast<void const *>(data);
+  }
+  return component;
+}
+
+/////////////////////////////////////////////////
+void *EntityComponentDatabase::EntityComponentMutable(EntityId _id,
+    ComponentType _type)
+{
+  void *component = nullptr;
+  StorageKey key = std::make_pair(_id, _type);
+  auto compIter = this->dataPtr->componentIndices.find(key);
+  if (compIter != this->dataPtr->componentIndices.end())
+  {
+    auto modIter = this->dataPtr->toModifyComponents.find(key);
+    if (modIter != this->dataPtr->toModifyComponents.end())
+    {
+      // Already been modified, return pointer to new storage
+      char *storage = modIter->second;
+      component = static_cast<void *>(storage);
+    }
+    else
+    {
+      char const *readOnlyStorage = this->dataPtr->components[compIter->second];
+      void const *readOnlyComp = static_cast<void const *>(readOnlyStorage);
+      // create temporary storage for the updated data
+      ComponentTypeInfo info = ComponentFactory::TypeInfo(_type);
+      char *storage = new char[info.size];
+      component = static_cast<void *>(storage);
+      info.copier(readOnlyComp, component);
+      this->dataPtr->toModifyComponents[key] = storage;
+    }
   }
   return component;
 }
@@ -266,7 +334,7 @@ bool EntityComponentDatabasePrivate::EntityMatches(EntityId _id,
 {
   for (auto const &type : _types)
   {
-    auto key = std::make_pair(_id, type);
+    StorageKey key = std::make_pair(_id, type);
     if (this->componentIndices.find(key) == this->componentIndices.end())
     {
       return false;
@@ -309,7 +377,7 @@ Difference EntityComponentDatabase::IsDifferent(EntityId _id,
     ComponentType _type) const
 {
   Difference d = NO_DIFFERENCE;
-  auto key = std::make_pair(_id, _type);
+  StorageKey key = std::make_pair(_id, _type);
   auto iter = this->dataPtr->differences.find(key);
   if (iter != this->dataPtr->differences.end())
   {
@@ -321,20 +389,77 @@ Difference EntityComponentDatabase::IsDifferent(EntityId _id,
 /////////////////////////////////////////////////
 void EntityComponentDatabase::UpdateBegin()
 {
-  // Deleted ids become free after one update.
+  // Deleted ids can be reused after one update.
   this->dataPtr->freeIds.insert(this->dataPtr->deletedIds.begin(),
       this->dataPtr->deletedIds.end());
   this->dataPtr->deletedIds.clear();
-  this->dataPtr->differences.clear();
-}
 
-/////////////////////////////////////////////////
-void EntityComponentDatabase::MarkAsModified(EntityId _id, ComponentType _type)
-{
-  auto key = std::make_pair(_id, _type);
-  auto iter = this->dataPtr->differences.find(key);
-  if (iter == this->dataPtr->differences.end() || iter->second == NO_DIFFERENCE)
+  // Move toDeleteEntities to deletedIds, effectively deleting them
+  this->dataPtr->deletedIds = std::move(this->dataPtr->toDeleteEntities);
+
+  this->dataPtr->differences.clear();
+
+  // Modify components
+  for (auto const &kv : this->dataPtr->toModifyComponents)
   {
+    StorageKey key = kv.first;
     this->dataPtr->differences[key] = WAS_MODIFIED;
+    // Copy modified components to main storage
+    ComponentTypeInfo info = ComponentFactory::TypeInfo(key.second);
+    char *modifiedStorage = kv.second;
+    this->dataPtr->componentIndices[key] = this->dataPtr->components.size();
+    this->dataPtr->components.push_back(modifiedStorage);
   }
+  this->dataPtr->toModifyComponents.clear();
+
+  // Remove the components for real
+  for (StorageKey key : this->dataPtr->toRemoveComponents)
+  {
+    int index = this->dataPtr->componentIndices.find(key)->second;
+    // call destructor
+    void *component = nullptr;
+    ComponentTypeInfo info = ComponentFactory::TypeInfo(key.second);
+    char *storage = this->dataPtr->components[index];
+    component = static_cast<void *>(storage);
+    info.destructor(component);
+
+    this->dataPtr->differences[key] = WAS_DELETED;
+
+    delete [] storage;
+    this->dataPtr->components.erase(this->dataPtr->components.begin() + index);
+    this->dataPtr->componentIndices.erase(key);
+    // Update the indexes beyond
+    for (auto &kvIter : this->dataPtr->componentIndices)
+    {
+      int &otherIndex = kvIter.second;
+      if (otherIndex > index)
+        --otherIndex;
+    }
+  }
+
+  // Update queries with removed components
+  for (StorageKey key : this->dataPtr->toRemoveComponents)
+  {
+    this->dataPtr->differences[key] = WAS_DELETED;
+    this->dataPtr->UpdateQueries(key.first);
+  }
+  this->dataPtr->toRemoveComponents.clear();
+
+  // Update querys with added components
+  for (auto kv : this->dataPtr->toAddComponents)
+  {
+    char *storage = kv.second;
+    StorageKey key = kv.first;
+    EntityId id = key.first;
+    this->dataPtr->differences[key] = WAS_CREATED;
+    // Add to main storage
+    auto index = this->dataPtr->components.size();
+    this->dataPtr->components.push_back(storage);
+    this->dataPtr->componentIndices[key] = index;
+    this->dataPtr->UpdateQueries(id);
+  }
+  this->dataPtr->toAddComponents.clear();
+
+  // Clearing this effectively creates entities
+  this->dataPtr->toCreateEntities.clear();
 }

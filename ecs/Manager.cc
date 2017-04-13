@@ -115,12 +115,6 @@ void *Manager::AddComponent(ComponentType _type, EntityId _id)
 }
 
 /////////////////////////////////////////////////
-void *Manager::EntityComponent(EntityId _id, ComponentType _type)
-{
-  return this->dataPtr->database.EntityComponent(_id, _type);
-}
-
-/////////////////////////////////////////////////
 gazebo::ecs::Entity &Manager::Entity(const EntityId _id) const
 {
   return this->dataPtr->database.Entity(_id);
