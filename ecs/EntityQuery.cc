@@ -88,6 +88,12 @@ bool EntityQuery::AddEntity(const EntityId _id)
 }
 
 /////////////////////////////////////////////////
+void EntityQuery::RemoveEntity(const EntityId _id)
+{
+  this->dataPtr->entityIds.erase(_id);
+}
+
+/////////////////////////////////////////////////
 void EntityQuery::Clear()
 {
   this->dataPtr->entityIds.clear();

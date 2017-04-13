@@ -78,6 +78,11 @@ namespace gazebo
       /// \return True if the entity was added.
       public: bool AddEntity(const EntityId _id);
 
+      /// \brief Remove an entity.
+      /// \param[in] _id Id of the entity
+      /// \return True if the entity was removed.
+      public: void RemoveEntity(const EntityId _id);
+
       /// \brief Get the entity ids that match this query.
       /// \todo ordered results matching component placement in memory
       /// \return The entities that match the components in this query.

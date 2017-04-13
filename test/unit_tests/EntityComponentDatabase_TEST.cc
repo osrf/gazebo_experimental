@@ -390,6 +390,42 @@ TEST(EntityComponentDatabase, TrackComponentChanges)
 }
 
 /////////////////////////////////////////////////
+TEST(EntityComponentDatabase, QueriesIncludeDeletedEntitiesForOneUpdate)
+{
+  gazebo::ecs::EntityComponentDatabase uut;
+  std::vector<gazebo::ecs::EntityId> entities;
+  entities.push_back(uut.CreateEntity());
+  entities.push_back(uut.CreateEntity());
+  entities.push_back(uut.CreateEntity());
+
+  uut.AddComponent<TC1>(entities[0]);
+  uut.AddComponent<TC1>(entities[1]);
+  uut.AddComponent<TC1>(entities[2]);
+
+
+  gazebo::ecs::EntityQuery query;
+  query.AddComponent("TC1");
+
+  auto result = uut.AddQuery(std::move(query));
+  uut.UpdateBegin();
+  EXPECT_EQ(3, uut.Query(result.first).EntityIds().size());
+
+  uut.DeleteEntity(entities[0]);
+  uut.DeleteEntity(entities[1]);
+  uut.DeleteEntity(entities[2]);
+
+  uut.UpdateBegin();
+  EXPECT_EQ(3, uut.Query(result.first).EntityIds().size());
+  for (auto id : uut.Query(result.first).EntityIds())
+  {
+    EXPECT_EQ(gazebo::ecs::WAS_DELETED, uut.IsDifferent<TC1>(id));
+  }
+
+  uut.UpdateBegin();
+  EXPECT_EQ(0, uut.Query(result.first).EntityIds().size());
+}
+
+/////////////////////////////////////////////////
 TEST(EntityComponentDatabase, ModifyThenRemoveComponent)
 {
   gazebo::ecs::EntityComponentDatabase uut;

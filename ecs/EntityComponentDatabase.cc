@@ -44,6 +44,9 @@ class gazebo::ecs::EntityComponentDatabasePrivate
   /// \brief components that are to be deleted next update
   public: std::vector<StorageKey> toRemoveComponents;
 
+  /// \brief components that were deleted before this update
+  public: std::vector<StorageKey> removedComponents;
+
   /// \brief instances of entities
   public: std::vector<Entity> entities;
 
@@ -332,15 +335,19 @@ void *EntityComponentDatabase::EntityComponentMutable(EntityId _id,
 bool EntityComponentDatabasePrivate::EntityMatches(EntityId _id,
     const std::set<ComponentType> &_types) const
 {
+  bool found = true;
   for (auto const &type : _types)
   {
     StorageKey key = std::make_pair(_id, type);
-    if (this->componentIndices.find(key) == this->componentIndices.end())
+    if (this->componentIndices.find(key) == this->componentIndices.end() &&
+        std::find(this->removedComponents.begin(),
+          this->removedComponents.end(), key) == this->removedComponents.end())
     {
-      return false;
+      found = false;
+      break;
     }
   }
-  return true;
+  return found;
 }
 
 /////////////////////////////////////////////////
@@ -392,7 +399,6 @@ void EntityComponentDatabase::UpdateBegin()
   // Deleted ids can be reused after one update.
   this->dataPtr->freeIds.insert(this->dataPtr->deletedIds.begin(),
       this->dataPtr->deletedIds.end());
-  this->dataPtr->deletedIds.clear();
 
   // Move toDeleteEntities to deletedIds, effectively deleting them
   this->dataPtr->deletedIds = std::move(this->dataPtr->toDeleteEntities);
@@ -437,13 +443,23 @@ void EntityComponentDatabase::UpdateBegin()
     }
   }
 
-  // Update queries with removed components
+  // Update differences with removed components
   for (StorageKey key : this->dataPtr->toRemoveComponents)
   {
     this->dataPtr->differences[key] = WAS_DELETED;
-    this->dataPtr->UpdateQueries(key.first);
   }
-  this->dataPtr->toRemoveComponents.clear();
+  for (StorageKey key : this->dataPtr->removedComponents)
+  {
+    // Update queries with components removed more than 1 update ago
+    for (auto &query : this->dataPtr->queries)
+    {
+      auto const & types = query.ComponentTypes();
+      if (types.find(key.second) != types.end())
+        query.RemoveEntity(key.first);
+    }
+  }
+  this->dataPtr->removedComponents = std::move(
+      this->dataPtr->toRemoveComponents);
 
   // Update querys with added components
   for (auto kv : this->dataPtr->toAddComponents)
