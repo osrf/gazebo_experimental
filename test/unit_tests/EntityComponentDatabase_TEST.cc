@@ -75,13 +75,13 @@ TEST(EntityComponentDatabase, AddComponentToOneEntityId)
   entities.push_back(uut.CreateEntity());
   entities.push_back(uut.CreateEntity());
 
-  auto const type = gazebo::ecs::ComponentFactory::Type<TC1>();
-  uut.AddComponent(entities[2], type);
+  uut.AddComponent<TC1>(entities[2]);
+  uut.Update();
 
-  EXPECT_EQ(nullptr, uut.EntityComponent(entities[0], type));
-  EXPECT_EQ(nullptr, uut.EntityComponent(entities[1], type));
-  EXPECT_NE(nullptr, uut.EntityComponent(entities[2], type));
-  EXPECT_EQ(nullptr, uut.EntityComponent(entities[3], type));
+  EXPECT_EQ(nullptr, uut.EntityComponent<TC1>(entities[0]));
+  EXPECT_EQ(nullptr, uut.EntityComponent<TC1>(entities[1]));
+  EXPECT_NE(nullptr, uut.EntityComponent<TC1>(entities[2]));
+  EXPECT_EQ(nullptr, uut.EntityComponent<TC1>(entities[3]));
 }
 
 /////////////////////////////////////////////////
@@ -98,24 +98,25 @@ TEST(EntityComponentDatabase, AddDifferentComponentsToDifferentEntities)
   auto const type2 = gazebo::ecs::ComponentFactory::Type<TC2>();
   auto const type3 = gazebo::ecs::ComponentFactory::Type<TC3>();
 
-  uut.AddComponent(entities[0], type1);
-  uut.AddComponent(entities[1], type2);
-  uut.AddComponent(entities[2], type3);
+  uut.AddComponent<TC1>(entities[0]);
+  uut.AddComponent<TC2>(entities[1]);
+  uut.AddComponent<TC3>(entities[2]);
+  uut.Update();
 
-  EXPECT_NE(nullptr, uut.EntityComponent(entities[0], type1));
-  EXPECT_EQ(nullptr, uut.EntityComponent(entities[1], type1));
-  EXPECT_EQ(nullptr, uut.EntityComponent(entities[2], type1));
-  EXPECT_EQ(nullptr, uut.EntityComponent(entities[3], type1));
+  EXPECT_NE(nullptr, uut.EntityComponent<TC1>(entities[0]));
+  EXPECT_EQ(nullptr, uut.EntityComponent<TC1>(entities[1]));
+  EXPECT_EQ(nullptr, uut.EntityComponent<TC1>(entities[2]));
+  EXPECT_EQ(nullptr, uut.EntityComponent<TC1>(entities[3]));
 
-  EXPECT_EQ(nullptr, uut.EntityComponent(entities[0], type2));
-  EXPECT_NE(nullptr, uut.EntityComponent(entities[1], type2));
-  EXPECT_EQ(nullptr, uut.EntityComponent(entities[2], type2));
-  EXPECT_EQ(nullptr, uut.EntityComponent(entities[3], type2));
+  EXPECT_EQ(nullptr, uut.EntityComponent<TC2>(entities[0]));
+  EXPECT_NE(nullptr, uut.EntityComponent<TC2>(entities[1]));
+  EXPECT_EQ(nullptr, uut.EntityComponent<TC2>(entities[2]));
+  EXPECT_EQ(nullptr, uut.EntityComponent<TC2>(entities[3]));
 
-  EXPECT_EQ(nullptr, uut.EntityComponent(entities[0], type3));
-  EXPECT_EQ(nullptr, uut.EntityComponent(entities[1], type3));
-  EXPECT_NE(nullptr, uut.EntityComponent(entities[2], type3));
-  EXPECT_EQ(nullptr, uut.EntityComponent(entities[3], type3));
+  EXPECT_EQ(nullptr, uut.EntityComponent<TC3>(entities[0]));
+  EXPECT_EQ(nullptr, uut.EntityComponent<TC3>(entities[1]));
+  EXPECT_NE(nullptr, uut.EntityComponent<TC3>(entities[2]));
+  EXPECT_EQ(nullptr, uut.EntityComponent<TC3>(entities[3]));
 }
 
 /////////////////////////////////////////////////
@@ -127,29 +128,26 @@ TEST(EntityComponentDatabase, AddMultipleComponentsToOneEntityId)
   entities.push_back(uut.CreateEntity());
   entities.push_back(uut.CreateEntity());
 
-  auto const type1 = gazebo::ecs::ComponentFactory::Type<TC1>();
-  auto const type2 = gazebo::ecs::ComponentFactory::Type<TC2>();
-  auto const type3 = gazebo::ecs::ComponentFactory::Type<TC3>();
+  uut.AddComponent<TC1>(entities[0]);
+  uut.AddComponent<TC2>(entities[0]);
+  uut.AddComponent<TC3>(entities[0]);
+  uut.Update();
 
-  uut.AddComponent(entities[0], type1);
-  uut.AddComponent(entities[0], type2);
-  uut.AddComponent(entities[0], type3);
+  EXPECT_NE(nullptr, uut.EntityComponent<TC1>(entities[0]));
+  EXPECT_EQ(nullptr, uut.EntityComponent<TC1>(entities[1]));
+  EXPECT_EQ(nullptr, uut.EntityComponent<TC1>(entities[2]));
 
-  EXPECT_NE(nullptr, uut.EntityComponent(entities[0], type1));
-  EXPECT_EQ(nullptr, uut.EntityComponent(entities[1], type1));
-  EXPECT_EQ(nullptr, uut.EntityComponent(entities[2], type1));
+  EXPECT_NE(nullptr, uut.EntityComponent<TC2>(entities[0]));
+  EXPECT_EQ(nullptr, uut.EntityComponent<TC2>(entities[1]));
+  EXPECT_EQ(nullptr, uut.EntityComponent<TC2>(entities[2]));
 
-  EXPECT_NE(nullptr, uut.EntityComponent(entities[0], type2));
-  EXPECT_EQ(nullptr, uut.EntityComponent(entities[1], type2));
-  EXPECT_EQ(nullptr, uut.EntityComponent(entities[2], type2));
-
-  EXPECT_NE(nullptr, uut.EntityComponent(entities[0], type3));
-  EXPECT_EQ(nullptr, uut.EntityComponent(entities[1], type3));
-  EXPECT_EQ(nullptr, uut.EntityComponent(entities[2], type3));
+  EXPECT_NE(nullptr, uut.EntityComponent<TC3>(entities[0]));
+  EXPECT_EQ(nullptr, uut.EntityComponent<TC3>(entities[1]));
+  EXPECT_EQ(nullptr, uut.EntityComponent<TC3>(entities[2]));
 }
 
 /////////////////////////////////////////////////
-TEST(EntityComponentDatabase, ComponentsAreInitiallyEditable)
+TEST(EntityComponentDatabase, ComponentsAreEditableWhenAdding)
 {
   gazebo::ecs::EntityComponentDatabase uut;
   gazebo::ecs::EntityId entity;
@@ -162,50 +160,57 @@ TEST(EntityComponentDatabase, ComponentsAreInitiallyEditable)
   float three_two = 9;
   float three_three = -147.8f;
 
-  auto const type1 = gazebo::ecs::ComponentFactory::Type<TC1>();
-  auto const type2 = gazebo::ecs::ComponentFactory::Type<TC2>();
-  auto const type3 = gazebo::ecs::ComponentFactory::Type<TC3>();
-
-  auto first = static_cast<TC1*>(uut.AddComponent(entity, type1));
+  auto first = uut.AddComponent<TC1>(entity);
   first->itemOne = one_one;
-  auto second = static_cast<TC2*>(uut.AddComponent(entity, type2));
+  auto second = uut.AddComponent<TC2>(entity);
   second->itemOne = two_one;
   second->itemTwo = two_two;
-  auto third = static_cast<TC3*>(uut.AddComponent(entity, type3));
+  auto third = uut.AddComponent<TC3>(entity);
   third->itemOne = three_one;
   third->itemTwo = three_two;
   third->itemThree = three_three;
 
-  ASSERT_NE(nullptr, uut.EntityComponent(entity, type1));
-  ASSERT_NE(nullptr, uut.EntityComponent(entity, type2));
-  ASSERT_NE(nullptr, uut.EntityComponent(entity, type3));
+  uut.Update();
 
-  EXPECT_EQ(one_one,
-      static_cast<TC1*>(uut.EntityComponent(entity, type1))->itemOne);
-  EXPECT_EQ(two_one,
-      static_cast<TC2*>(uut.EntityComponent(entity, type2))->itemOne);
-  EXPECT_EQ(two_two,
-      static_cast<TC2*>(uut.EntityComponent(entity, type2))->itemTwo);
-  EXPECT_EQ(three_one,
-      static_cast<TC3*>(uut.EntityComponent(entity, type3))->itemOne);
-  EXPECT_EQ(three_two,
-      static_cast<TC3*>(uut.EntityComponent(entity, type3))->itemTwo);
-  EXPECT_EQ(three_three,
-      static_cast<TC3*>(uut.EntityComponent(entity, type3))->itemThree);
+  ASSERT_NE(nullptr, uut.EntityComponent<TC1>(entity));
+  ASSERT_NE(nullptr, uut.EntityComponent<TC2>(entity));
+  ASSERT_NE(nullptr, uut.EntityComponent<TC3>(entity));
+
+  EXPECT_EQ(one_one, uut.EntityComponent<TC1>(entity)->itemOne);
+  EXPECT_EQ(two_one, uut.EntityComponent<TC2>(entity)->itemOne);
+  EXPECT_EQ(two_two, uut.EntityComponent<TC2>(entity)->itemTwo);
+  EXPECT_EQ(three_one, uut.EntityComponent<TC3>(entity)->itemOne);
+  EXPECT_EQ(three_two, uut.EntityComponent<TC3>(entity)->itemTwo);
+  EXPECT_EQ(three_three, uut.EntityComponent<TC3>(entity)->itemThree);
 }
 
 /////////////////////////////////////////////////
-TEST(EntityComponentDatabase, ComponentsAreAlwaysEditable)
+TEST(EntityComponentDatabase, ComponentsAreNotEditableBeforeFirstUpdate)
 {
   gazebo::ecs::EntityComponentDatabase uut;
   gazebo::ecs::EntityId entity;
   entity = uut.CreateEntity();
-  auto const type1 = gazebo::ecs::ComponentFactory::Type<TC1>();
-  auto const type2 = gazebo::ecs::ComponentFactory::Type<TC2>();
-  auto const type3 = gazebo::ecs::ComponentFactory::Type<TC3>();
-  uut.AddComponent(entity, type1);
-  uut.AddComponent(entity, type2);
-  uut.AddComponent(entity, type3);
+
+  auto first = uut.AddComponent<TC1>(entity);
+
+  ASSERT_EQ(nullptr, uut.EntityComponent<TC1>(entity));
+  ASSERT_EQ(nullptr, uut.EntityComponentMutable<TC1>(entity));
+  uut.Update();
+  ASSERT_NE(nullptr, uut.EntityComponent<TC1>(entity));
+  ASSERT_NE(nullptr, uut.EntityComponentMutable<TC1>(entity));
+}
+
+/////////////////////////////////////////////////
+TEST(EntityComponentDatabase, ComponentsAreEditableAfterFirstUpdate)
+{
+  gazebo::ecs::EntityComponentDatabase uut;
+  gazebo::ecs::EntityId entity;
+  entity = uut.CreateEntity();
+
+  uut.AddComponent<TC1>(entity);
+  uut.AddComponent<TC2>(entity);
+  uut.AddComponent<TC3>(entity);
+  uut.Update();
 
   float one_one = 123.0f;
   float two_one = 456.0f;
@@ -214,9 +219,9 @@ TEST(EntityComponentDatabase, ComponentsAreAlwaysEditable)
   float three_two = 9;
   float three_three = -147.8f;
 
-  auto first = static_cast<TC1*>(uut.EntityComponent(entity, type1));
-  auto second = static_cast<TC2*>(uut.EntityComponent(entity, type2));
-  auto third = static_cast<TC3*>(uut.EntityComponent(entity, type3));
+  auto first = uut.EntityComponentMutable<TC1>(entity);
+  auto second = uut.EntityComponentMutable<TC2>(entity);
+  auto third = uut.EntityComponentMutable<TC3>(entity);
 
   ASSERT_NE(nullptr, first);
   ASSERT_NE(nullptr, second);
@@ -228,18 +233,18 @@ TEST(EntityComponentDatabase, ComponentsAreAlwaysEditable)
   third->itemOne = three_one;
   third->itemTwo = three_two;
   third->itemThree = three_three;
+  uut.Update();
 
-
-  EXPECT_EQ(one_one, static_cast<TC1*>(uut.EntityComponent(entity, type1))->itemOne);
-  EXPECT_EQ(two_one, static_cast<TC2*>(uut.EntityComponent(entity, type2))->itemOne);
-  EXPECT_EQ(two_two, static_cast<TC2*>(uut.EntityComponent(entity, type2))->itemTwo);
-  EXPECT_EQ(three_one, static_cast<TC3*>(uut.EntityComponent(entity, type3))->itemOne);
-  EXPECT_EQ(three_two, static_cast<TC3*>(uut.EntityComponent(entity, type3))->itemTwo);
-  EXPECT_EQ(three_three, static_cast<TC3*>(uut.EntityComponent(entity, type3))->itemThree);
+  EXPECT_EQ(one_one, uut.EntityComponent<TC1>(entity)->itemOne);
+  EXPECT_EQ(two_one, uut.EntityComponent<TC2>(entity)->itemOne);
+  EXPECT_EQ(two_two, uut.EntityComponent<TC2>(entity)->itemTwo);
+  EXPECT_EQ(three_one, uut.EntityComponent<TC3>(entity)->itemOne);
+  EXPECT_EQ(three_two, uut.EntityComponent<TC3>(entity)->itemTwo);
+  EXPECT_EQ(three_three, uut.EntityComponent<TC3>(entity)->itemThree);
 }
 
 /////////////////////////////////////////////////
-TEST(EntityComponentDatabase, QueryEntities)
+TEST(EntityComponentDatabase, QueryExistingEntities)
 {
   gazebo::ecs::EntityComponentDatabase uut;
   std::vector<gazebo::ecs::EntityId> entities;
@@ -247,23 +252,64 @@ TEST(EntityComponentDatabase, QueryEntities)
   entities.push_back(uut.CreateEntity());
   entities.push_back(uut.CreateEntity());
 
-  auto const type1 = gazebo::ecs::ComponentFactory::Type<TC1>();
-  auto const type2 = gazebo::ecs::ComponentFactory::Type<TC2>();
-  auto const type3 = gazebo::ecs::ComponentFactory::Type<TC3>();
-
-  uut.AddComponent(entities[0], type1);
-  uut.AddComponent(entities[0], type2);
-  uut.AddComponent(entities[1], type2);
-  uut.AddComponent(entities[0], type3);
-  uut.AddComponent(entities[1], type3);
-  uut.AddComponent(entities[2], type3);
+  uut.AddComponent<TC1>(entities[0]);
+  uut.AddComponent<TC2>(entities[0]);
+  uut.AddComponent<TC2>(entities[1]);
+  uut.AddComponent<TC3>(entities[0]);
+  uut.AddComponent<TC3>(entities[1]);
+  uut.AddComponent<TC3>(entities[2]);
+  uut.Update();
 
   gazebo::ecs::EntityQuery query;
-  query.AddComponent(type2);
-  query.AddComponent(type3);
+  query.AddComponent("TC2");
+  query.AddComponent("TC3");
   auto queryAdd = uut.AddQuery(std::move(query));
 
   ASSERT_EQ(2, uut.Query(queryAdd.first).EntityIds().size());
+  bool foundE1 = false;
+  bool foundE2 = false;
+  bool foundE3 = false;
+  for (auto result : uut.Query(queryAdd.first).EntityIds())
+  {
+    if (result == entities[0])
+      foundE1 = true;
+    else if (result == entities[1])
+      foundE2 = true;
+    else
+      foundE3 = true;
+  }
+
+  EXPECT_TRUE(foundE1);
+  EXPECT_TRUE(foundE2);
+  EXPECT_FALSE(foundE3);
+}
+
+/////////////////////////////////////////////////
+TEST(EntityComponentDatabase, QueryNewEntities)
+{
+  gazebo::ecs::EntityComponentDatabase uut;
+
+  gazebo::ecs::EntityQuery query;
+  query.AddComponent("TC2");
+  query.AddComponent("TC3");
+  auto queryAdd = uut.AddQuery(std::move(query));
+
+  std::vector<gazebo::ecs::EntityId> entities;
+  entities.push_back(uut.CreateEntity());
+  entities.push_back(uut.CreateEntity());
+  entities.push_back(uut.CreateEntity());
+
+  uut.AddComponent<TC1>(entities[0]);
+  uut.AddComponent<TC2>(entities[0]);
+  uut.AddComponent<TC2>(entities[1]);
+  uut.AddComponent<TC3>(entities[0]);
+  uut.AddComponent<TC3>(entities[1]);
+  uut.AddComponent<TC3>(entities[2]);
+
+  EXPECT_EQ(0, uut.Query(queryAdd.first).EntityIds().size());
+  uut.Update();
+  EXPECT_EQ(2, uut.Query(queryAdd.first).EntityIds().size());
+
   bool foundE1 = false;
   bool foundE2 = false;
   bool foundE3 = false;
@@ -291,20 +337,16 @@ TEST(EntityComponentDatabase, RemoveQueryNoResults)
   entities.push_back(uut.CreateEntity());
   entities.push_back(uut.CreateEntity());
 
-  auto const type1 = gazebo::ecs::ComponentFactory::Type<TC1>();
-  auto const type2 = gazebo::ecs::ComponentFactory::Type<TC2>();
-  auto const type3 = gazebo::ecs::ComponentFactory::Type<TC3>();
-
-  uut.AddComponent(entities[0], type1);
-  uut.AddComponent(entities[0], type2);
-  uut.AddComponent(entities[1], type2);
-  uut.AddComponent(entities[0], type3);
-  uut.AddComponent(entities[1], type3);
-  uut.AddComponent(entities[2], type3);
+  uut.AddComponent<TC1>(entities[0]);
+  uut.AddComponent<TC2>(entities[0]);
+  uut.AddComponent<TC2>(entities[1]);
+  uut.AddComponent<TC3>(entities[0]);
+  uut.AddComponent<TC3>(entities[1]);
+  uut.AddComponent<TC3>(entities[2]);
 
   gazebo::ecs::EntityQuery query;
-  query.AddComponent(type2);
-  query.AddComponent(type3);
+  query.AddComponent("TC2");
+  query.AddComponent("TC3");
 
   auto result = uut.AddQuery(std::move(query));
   uut.RemoveQuery(result.first);
@@ -313,17 +355,157 @@ TEST(EntityComponentDatabase, RemoveQueryNoResults)
 }
 
 /////////////////////////////////////////////////
+TEST(EntityComponentDatabase, TrackComponentChanges)
+{
+  gazebo::ecs::EntityComponentDatabase uut;
+  gazebo::ecs::EntityId entity = uut.CreateEntity();
+
+  uut.AddComponent<TC1>(entity);
+  // component is created after this update ends
+  EXPECT_EQ(gazebo::ecs::NO_DIFFERENCE, uut.IsDifferent<TC1>(entity));
+  uut.Update();
+  EXPECT_EQ(gazebo::ecs::WAS_CREATED, uut.IsDifferent<TC1>(entity));
+
+  uut.AddComponent<TC2>(entity);
+  // component is created after this update ends
+  EXPECT_EQ(gazebo::ecs::NO_DIFFERENCE, uut.IsDifferent<TC2>(entity));
+  uut.Update();
+  EXPECT_EQ(gazebo::ecs::WAS_CREATED, uut.IsDifferent<TC2>(entity));
+  EXPECT_EQ(gazebo::ecs::NO_DIFFERENCE, uut.IsDifferent<TC1>(entity));
+
+  uut.Update();
+  uut.RemoveComponent<TC1>(entity);
+  // component is removed after this update ends
+  EXPECT_EQ(gazebo::ecs::NO_DIFFERENCE, uut.IsDifferent<TC1>(entity));
+  EXPECT_EQ(gazebo::ecs::NO_DIFFERENCE, uut.IsDifferent<TC2>(entity));
+  uut.Update();
+  EXPECT_EQ(gazebo::ecs::WAS_DELETED, uut.IsDifferent<TC1>(entity));
+  EXPECT_EQ(gazebo::ecs::NO_DIFFERENCE, uut.IsDifferent<TC2>(entity));
+
+  uut.DeleteEntity(entity);
+  // component and entity are removed after this update ends
+  EXPECT_EQ(gazebo::ecs::NO_DIFFERENCE, uut.IsDifferent<TC2>(entity));
+  uut.Update();
+  EXPECT_EQ(gazebo::ecs::WAS_DELETED, uut.IsDifferent<TC2>(entity));
+}
+
+/////////////////////////////////////////////////
+TEST(EntityComponentDatabase, QueriesIncludeDeletedEntitiesForOneUpdate)
+{
+  gazebo::ecs::EntityComponentDatabase uut;
+  std::vector<gazebo::ecs::EntityId> entities;
+  entities.push_back(uut.CreateEntity());
+  entities.push_back(uut.CreateEntity());
+  entities.push_back(uut.CreateEntity());
+
+  uut.AddComponent<TC1>(entities[0]);
+  uut.AddComponent<TC1>(entities[1]);
+  uut.AddComponent<TC1>(entities[2]);
+
+
+  gazebo::ecs::EntityQuery query;
+  query.AddComponent("TC1");
+
+  auto result = uut.AddQuery(std::move(query));
+  uut.Update();
+  EXPECT_EQ(3, uut.Query(result.first).EntityIds().size());
+
+  uut.DeleteEntity(entities[0]);
+  uut.DeleteEntity(entities[1]);
+  uut.DeleteEntity(entities[2]);
+
+  uut.Update();
+  EXPECT_EQ(3, uut.Query(result.first).EntityIds().size());
+  for (auto id : uut.Query(result.first).EntityIds())
+  {
+    EXPECT_EQ(gazebo::ecs::WAS_DELETED, uut.IsDifferent<TC1>(id));
+  }
+
+  uut.Update();
+  EXPECT_EQ(0, uut.Query(result.first).EntityIds().size());
+}
+
+/////////////////////////////////////////////////
+TEST(EntityComponentDatabase, ModifyThenRemoveComponent)
+{
+  gazebo::ecs::EntityComponentDatabase uut;
+  gazebo::ecs::EntityId entity = uut.CreateEntity();
+  uut.AddComponent<TC1>(entity);
+  uut.Update();
+
+  ASSERT_NE(nullptr, uut.EntityComponentMutable<TC1>(entity));
+  EXPECT_TRUE(uut.RemoveComponent<TC1>(entity));
+
+  uut.Update();
+  EXPECT_EQ(gazebo::ecs::WAS_DELETED, uut.IsDifferent<TC1>(entity));
+  EXPECT_EQ(nullptr, uut.EntityComponent<TC1>(entity));
+}
+
+/////////////////////////////////////////////////
+TEST(EntityComponentDatabase, CreateComponentSetInitialValues)
+{
+  gazebo::ecs::EntityComponentDatabase uut;
+  gazebo::ecs::EntityId entity = uut.CreateEntity();
+  auto comp = uut.AddComponent<TC1>(entity);
+  comp->itemOne = 12345.0;
+
+  uut.Update();
+  auto constComp = uut.EntityComponent<TC1>(entity);
+  ASSERT_NE(nullptr, constComp);
+  EXPECT_FLOAT_EQ(12345.0, comp->itemOne);
+}
+
+/////////////////////////////////////////////////
+TEST(EntityComponentDatabase, MutableComponentHasSetValues)
+{
+  gazebo::ecs::EntityComponentDatabase uut;
+  gazebo::ecs::EntityId entity = uut.CreateEntity();
+  auto comp = uut.AddComponent<TC1>(entity);
+  comp->itemOne = 12345.0;
+  uut.Update();
+
+  comp = uut.EntityComponentMutable<TC1>(entity);
+  ASSERT_NE(nullptr, comp);
+  EXPECT_FLOAT_EQ(12345.0, comp->itemOne);
+}
+
+/////////////////////////////////////////////////
+TEST(EntityComponentDatabase, ModifyComponentHappensNextUpdate)
+{
+  gazebo::ecs::EntityComponentDatabase uut;
+  gazebo::ecs::EntityId entity = uut.CreateEntity();
+  auto comp = uut.AddComponent<TC1>(entity);
+  comp->itemOne = 12345.0;
+  uut.Update();
+
+  comp = uut.EntityComponentMutable<TC1>(entity);
+  ASSERT_NE(nullptr, comp);
+  comp->itemOne = 6789.0;
+
+  EXPECT_EQ(gazebo::ecs::WAS_CREATED, uut.IsDifferent<TC1>(entity));
+  uut.Update();
+  EXPECT_EQ(gazebo::ecs::WAS_MODIFIED, uut.IsDifferent<TC1>(entity));
+
+  auto constComp = uut.EntityComponent<TC1>(entity);
+  ASSERT_NE(nullptr, constComp);
+  EXPECT_FLOAT_EQ(6789.0, constComp->itemOne);
+}
+
+/////////////////////////////////////////////////
 TEST(EntityComponentDatabase, RemoveComponent)
 {
   gazebo::ecs::EntityComponentDatabase uut;
   gazebo::ecs::EntityId id = uut.CreateEntity();
-  auto const type = gazebo::ecs::ComponentFactory::Type<TC1>();
 
-  uut.AddComponent(id, type);
-  EXPECT_NE(nullptr, uut.EntityComponent(id, type));
+  uut.AddComponent<TC1>(id);
+  EXPECT_EQ(nullptr, uut.EntityComponent<TC1>(id));
+  uut.Update();
+  EXPECT_NE(nullptr, uut.EntityComponent<TC1>(id));
 
-  uut.RemoveComponent(id, type);
-  EXPECT_EQ(nullptr, uut.EntityComponent(id, type));
+  uut.RemoveComponent<TC1>(id);
+  EXPECT_NE(nullptr, uut.EntityComponent<TC1>(id));
+  uut.Update();
+  EXPECT_EQ(nullptr, uut.EntityComponent<TC1>(id));
 }
 
 /////////////////////////////////////////////////
@@ -334,8 +516,8 @@ TEST(EntityComponentDatabase, RemoveComponentAccessAnother)
   auto const type1 = gazebo::ecs::ComponentFactory::Type<TC1>();
   auto const type2 = gazebo::ecs::ComponentFactory::Type<TC2>();
 
-  auto c1 = static_cast<TC1*>(uut.AddComponent(id, type1));
-  auto c2 = static_cast<TC2*>(uut.AddComponent(id, type2));
+  auto c1 = uut.AddComponent<TC1>(id);
+  auto c2 = uut.AddComponent<TC2>(id);
   ASSERT_NE(nullptr, c1);
   ASSERT_NE(nullptr, c2);
 
@@ -343,11 +525,17 @@ TEST(EntityComponentDatabase, RemoveComponentAccessAnother)
   c2->itemOne = 5678;
   c2->itemTwo = 9012;
 
-  uut.RemoveComponent(id, type1);
-  EXPECT_EQ(nullptr, uut.EntityComponent(id, type1));
+  uut.Update();
+  uut.RemoveComponent<TC1>(id);
 
-  // TODO fix removing invalidates other component pointers
-  auto c2_test = static_cast<TC2*>(uut.EntityComponent(id, type2));
+  auto c2_test = uut.EntityComponent<TC2>(id);
+  ASSERT_NE(nullptr, c2_test);
+  EXPECT_EQ(5678, c2_test->itemOne);
+  EXPECT_EQ(9012, c2_test->itemTwo);
+
+  uut.Update();
+  EXPECT_EQ(nullptr, uut.EntityComponent<TC1>(id));
+  c2_test = uut.EntityComponent<TC2>(id);
   ASSERT_NE(nullptr, c2_test);
   EXPECT_EQ(5678, c2_test->itemOne);
   EXPECT_EQ(9012, c2_test->itemTwo);
@@ -358,19 +546,21 @@ TEST(EntityComponentDatabase, DeleteEntity)
 {
   gazebo::ecs::EntityComponentDatabase uut;
   gazebo::ecs::EntityId id = uut.CreateEntity();
-  auto const type = gazebo::ecs::ComponentFactory::Type<TC1>();
 
-  uut.AddComponent(id, type);
-  EXPECT_NE(nullptr, uut.EntityComponent(id, type));
+  uut.AddComponent<TC1>(id);
+  EXPECT_EQ(nullptr, uut.EntityComponent<TC1>(id));
+  uut.Update();
+  EXPECT_NE(nullptr, uut.EntityComponent<TC1>(id));
 
   uut.DeleteEntity(id);
-
+  EXPECT_NE(nullptr, uut.EntityComponent<TC1>(id));
+  uut.Update();
   EXPECT_EQ(gazebo::ecs::NO_ENTITY, uut.Entity(id).Id());
-  EXPECT_EQ(nullptr, uut.EntityComponent(id, type));
+  EXPECT_EQ(nullptr, uut.EntityComponent<TC1>(id));
 }
 
 /////////////////////////////////////////////////
-TEST(EntityComponentDatabase, ReuseSmallestEntityId)
+TEST(EntityComponentDatabase, ReuseSmallestAvailableEntityId)
 {
   gazebo::ecs::EntityComponentDatabase uut;
   std::vector<gazebo::ecs::EntityId> entities;
@@ -380,9 +570,23 @@ TEST(EntityComponentDatabase, ReuseSmallestEntityId)
   entities.push_back(uut.CreateEntity());
   entities.push_back(uut.CreateEntity());
 
+  uut.Update();
+
   uut.DeleteEntity(entities[2]);
   uut.DeleteEntity(entities[3]);
-  EXPECT_EQ(entities[2], uut.CreateEntity());
+  // deleted ids not available yet
+  entities.push_back(uut.CreateEntity());
+  EXPECT_EQ(5, entities.back());
+
+  uut.Update();
+  // deleted ids still not availble
+  entities.push_back(uut.CreateEntity());
+  EXPECT_EQ(6, entities.back());
+
+  uut.Update();
+  // Now the deleted ids can be reused
+  EXPECT_EQ(2, uut.CreateEntity());
+  EXPECT_EQ(3, uut.CreateEntity());
 }
 
 int main(int argc, char **argv)
