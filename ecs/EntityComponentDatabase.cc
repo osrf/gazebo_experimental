@@ -443,14 +443,9 @@ void EntityComponentDatabase::UpdateBegin()
     }
   }
 
-  // Update differences with removed components
-  for (StorageKey key : this->dataPtr->toRemoveComponents)
-  {
-    this->dataPtr->differences[key] = WAS_DELETED;
-  }
+  // Update queries with components removed more than 1 update ago
   for (StorageKey key : this->dataPtr->removedComponents)
   {
-    // Update queries with components removed more than 1 update ago
     for (auto &query : this->dataPtr->queries)
     {
       auto const & types = query.ComponentTypes();
