@@ -1,2 +1,4 @@
 add_library(DivideAndPrintResult SHARED DivideAndPrintResult.cc)
 add_library(AddAndPrintResult SHARED AddAndPrintResult.cc)
+add_library(DumbPhysicsPlugin SHARED DumbPhysics.cc)
+target_link_libraries(DumbPhysicsPlugin DumbPhysics)

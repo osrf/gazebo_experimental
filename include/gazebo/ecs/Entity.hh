@@ -76,7 +76,7 @@ namespace gazebo
               T *ComponentMutable()
               {
                 auto type = ComponentFactory::Type<T>();
-                return static_cast<T*>(this->Component(type));
+                return static_cast<T*>(this->ComponentMutable(type));
               }
 
       /// \brief Get a component by ComponentType for reading
@@ -103,10 +103,10 @@ namespace gazebo
       /// \brief Test if a component is different by actual type
       /// \returns the difference if any
       public: template <typename T>
-              Difference IsDifferent(ComponentType _type) const
+              Difference IsDifferent() const
               {
                 auto type = ComponentFactory::Type<T>();
-                return this->IsDifferent(_type);
+                return this->IsDifferent(type);
               }
 
       /// \brief Test if a component changed last timestep
