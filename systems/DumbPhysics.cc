@@ -61,20 +61,25 @@ void DumbPhysics::Update(
   {
     auto &entity = _mgr.Entity(entityId);
     auto const rigidBody = entity.Component<components::RigidBody>();
+    auto difference = entity.IsDifferent<components::RigidBody>();
 
-    // Linking this component to an implementation body by id
-    dumb_physics::Body *body = this->world.GetById(entityId);
+    dumb_physics::Body *body = nullptr;
 
-    if (body)
-    {
-      // TODO Only need to update if the component changed since last sync
-      this->SyncBodies(body, rigidBody);
-    }
-    else
+    if (ecs::WAS_CREATED == difference)
     {
       // Create a dumb_physics::Body if this is new
       auto worldPose = entity.Component<components::WorldPose>();
       body = this->AddBody(entityId, rigidBody, worldPose);
+    }
+    else
+    {
+      body = this->world.GetById(entityId);
+
+      if (ecs::WAS_DELETED == difference)
+        this->world.RemoveBody(body->Id());
+
+      else if (ecs::WAS_MODIFIED == difference)
+        this->SyncBodies(body, rigidBody);
     }
 
     if (body && !body->IsStatic())
@@ -107,11 +112,11 @@ void DumbPhysics::Update(
       auto &entity = _mgr.Entity(entityId);
       // TODO what if something else moved the world pose? How to know that
       //      it changed and the physics world should be updated?
-      auto worldPose = entity.Component<components::WorldPose>();
+      auto worldPose = entity.ComponentMutable<components::WorldPose>();
       worldPose->position = body->Position();
       worldPose->rotation = body->Rotation();
 
-      auto component = entity.Component<components::WorldVelocity>();
+      auto component = entity.ComponentMutable<components::WorldVelocity>();
       component->linear = body->LinearVelocity();
       component->angular = body->AngularVelocity();
     }
