@@ -68,16 +68,72 @@ namespace gazebo
       /// \brief returns an id for the entity, or NO_ENTITY on failure
       public: EntityId CreateEntity();
 
+      /// \brief Deletes an existing entity
+      /// \returns true iff the entity existed
+      public: bool DeleteEntity(EntityId _id);
+
+      /// \brief Database clears changed components
+      public: void Update();
+
       /// \brief Get an Entity instance by Id
       public: ::gazebo::ecs::Entity &Entity(EntityId _id) const;
 
-      // TODO templated version
+      /// \brief Add a new component to an entity by actual type
+      public: template <typename T>
+              T *AddComponent(EntityId _id)
+              {
+                ComponentType type = ComponentFactory::Type<T>();
+                return static_cast<T*>(this->AddComponent(_id, type));
+              }
+
       /// \brief Add a new component to an entity
+      /// \returns pointer to component or nullptr if it already exists
       public: void *AddComponent(EntityId _id, ComponentType _type);
 
-      // TODO templated version
-      /// \brief Get a component that's on an entity
-      public: void *EntityComponent(EntityId _id, ComponentType _type) const;
+      /// \brief remove a component from an entity by actual type
+      public: template <typename T>
+              bool RemoveComponent(EntityId _id)
+              {
+                ComponentType type = ComponentFactory::Type<T>();
+                return this->RemoveComponent(_id, type);
+              }
+
+      /// \brief remove a component from an entity
+      public: bool RemoveComponent(EntityId _id, ComponentType _type);
+
+      /// \brief Get a component that's on an entity for reading only
+      public: template <typename T>
+              T const *EntityComponent(EntityId _id) const
+              {
+                ComponentType type = ComponentFactory::Type<T>();
+                return static_cast<T const *>(this->EntityComponent(_id, type));
+              }
+
+      /// \brief Get a component that's on an entity for reading only
+      public: void const *EntityComponent(EntityId _id,
+                  ComponentType _type) const;
+
+      /// \brief Get a component that's on an entity for reading only
+      public: template <typename T>
+              T *EntityComponentMutable(EntityId _id)
+              {
+                ComponentType type = ComponentFactory::Type<T>();
+                return static_cast<T*>(this->EntityComponentMutable(_id, type));
+              }
+
+      /// \brief Get a component that's on an entity for reading or writing
+      public: void *EntityComponentMutable(EntityId _id, ComponentType _type);
+
+      /// \brief Test if a component changed last timestep
+      public: template <typename T>
+              Difference IsDifferent(EntityId _id) const
+              {
+                ComponentType type = ComponentFactory::Type<T>();
+                return this->IsDifferent(_id, type);
+              }
+
+      /// \brief Test if a component changed last timestep
+      public: Difference IsDifferent(EntityId _id, ComponentType _type) const;
 
       /// \brief Private IMPLementation pointer
       private: std::unique_ptr<EntityComponentDatabasePrivate> dataPtr;

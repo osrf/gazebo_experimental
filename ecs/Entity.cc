@@ -28,7 +28,7 @@ class gazebo::ecs::EntityPrivate
   public: EntityComponentDatabase *database;
 
   /// \brief ID of entity
-  public: EntityId id;
+  public: EntityId id = NO_ENTITY;
 };
 
 /////////////////////////////////////////////////
@@ -53,6 +53,12 @@ Entity::Entity(Entity &&_entity)
 }
 
 /////////////////////////////////////////////////
+Entity &Entity::operator=(Entity &&_entity)
+{
+  this->dataPtr = std::move(_entity.dataPtr);
+}
+
+/////////////////////////////////////////////////
 Entity::~Entity()
 {
 }
@@ -64,13 +70,26 @@ EntityId Entity::Id() const
 }
 
 /////////////////////////////////////////////////
-void *Entity::Component(const ComponentType &_type)
+void const *Entity::Component(const ComponentType &_type)
 {
   return this->dataPtr->database->EntityComponent(this->dataPtr->id, _type);
+}
+
+/////////////////////////////////////////////////
+void *Entity::ComponentMutable(const ComponentType &_type)
+{
+  return this->dataPtr->database->EntityComponentMutable(this->dataPtr->id,
+      _type);
 }
 
 /////////////////////////////////////////////////
 void *Entity::AddComponent(const ComponentType &_type)
 {
   return this->dataPtr->database->AddComponent(this->dataPtr->id, _type);
+}
+
+/////////////////////////////////////////////////
+Difference Entity::IsDifferent(ComponentType _type) const
+{
+  return this->dataPtr->database->IsDifferent(this->dataPtr->id, _type);
 }

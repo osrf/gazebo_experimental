@@ -38,7 +38,11 @@ namespace gazebo
       public: Manager();
       public: ~Manager();
 
+      /// \brief Creates a new entity
       public: EntityId CreateEntity();
+
+      /// \brief Deletes the given entity
+      public: bool DeleteEntity(EntityId _id);
 
       /// \brief Convenience function to load a system from a type
       ///
@@ -66,10 +70,6 @@ namespace gazebo
                 ComponentType type = ComponentFactory::Type<T>();
                 return static_cast<T*>(this->AddComponent(type, _id));
               }
-
-      /// \brief Get component on entity by component type
-      /// \returns pointer to component iff entity has component of that type
-      public: void *EntityComponent(EntityId _id, ComponentType _type);
 
       /// \brief Add component to entity by ComponentType
       /// \returns pointer to component iff it was successfully added

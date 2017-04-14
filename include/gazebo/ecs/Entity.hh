@@ -28,6 +28,14 @@ namespace gazebo
     /// \brief An entity is an id!
     typedef int EntityId;
 
+    /// \brief Describes the changes to an entity or component
+    enum Difference {
+      NO_DIFFERENCE = 0,
+      WAS_CREATED = 1,
+      WAS_DELETED = 2,
+      WAS_MODIFIED = 3
+    };
+
     /// \brief For results which there is no entity
     const EntityId NO_ENTITY = -1;
 
@@ -44,24 +52,40 @@ namespace gazebo
 
       public: Entity(Entity &&_entity);
 
+      /// \brief Move assignment operator
+      public: Entity &operator=(Entity &&_entity);
+
       /// \brief Destructor
       public: ~Entity();
 
       /// \brief Return id of entity
       public: EntityId Id() const;
 
-      /// \brief Get a component by actual type
+      /// \brief Get a component by actual type for reading
       /// \returns pointer to a component or nullptr on error
       public: template <typename T>
-              T *Component()
+              T const *Component()
+              {
+                auto type = ComponentFactory::Type<T>();
+                return static_cast<T const *>(this->Component(type));
+              }
+
+      /// \brief Get a component by actual type for reading or writing
+      /// \returns pointer to a component or nullptr on error
+      public: template <typename T>
+              T *ComponentMutable()
               {
                 auto type = ComponentFactory::Type<T>();
                 return static_cast<T*>(this->Component(type));
               }
 
-      /// \brief Get a component by ComponentType
+      /// \brief Get a component by ComponentType for reading
       /// \returns pointer to a component or nullptr on error
-      private: void *Component(const ComponentType&);
+      private: void const *Component(const ComponentType&);
+
+      /// \brief Get a component by ComponentType for reading or writing
+      /// \returns pointer to a component or nullptr on error
+      private: void *ComponentMutable(const ComponentType&);
 
       /// \brief Add a component by actual type
       /// \returns pointer to a component or nullptr on error
@@ -75,6 +99,18 @@ namespace gazebo
       /// \brief Add a component by ComponentType
       /// \returns pointer to a component or nullptr on error
       public: void *AddComponent(const ComponentType&);
+
+      /// \brief Test if a component is different by actual type
+      /// \returns the difference if any
+      public: template <typename T>
+              Difference IsDifferent(ComponentType _type) const
+              {
+                auto type = ComponentFactory::Type<T>();
+                return this->IsDifferent(_type);
+              }
+
+      /// \brief Test if a component changed last timestep
+      public: Difference IsDifferent(ComponentType _type) const;
 
       /// \brief Private data pointer
       private: std::unique_ptr<EntityPrivate> dataPtr;
