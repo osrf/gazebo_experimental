@@ -73,7 +73,7 @@ namespace gazebo
       public: bool DeleteEntity(EntityId _id);
 
       /// \brief Database clears changed components
-      public: void UpdateBegin();
+      public: void Update();
 
       /// \brief Get an Entity instance by Id
       public: ::gazebo::ecs::Entity &Entity(EntityId _id) const;

@@ -72,7 +72,7 @@ bool Manager::AddQuery(EntityQuery &&_query)
 void Manager::UpdateSystems(const double _dt)
 {
   // Let database do some stuff before starting the new update
-  this->dataPtr->database.UpdateBegin();
+  this->dataPtr->database.Update();
 
   // TODO There is a lot of opportunity for parallelization here
   // In general systems are run sequentially, one after the other

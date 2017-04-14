@@ -76,7 +76,7 @@ TEST(EntityComponentDatabase, AddComponentToOneEntityId)
   entities.push_back(uut.CreateEntity());
 
   uut.AddComponent<TC1>(entities[2]);
-  uut.UpdateBegin();
+  uut.Update();
 
   EXPECT_EQ(nullptr, uut.EntityComponent<TC1>(entities[0]));
   EXPECT_EQ(nullptr, uut.EntityComponent<TC1>(entities[1]));
@@ -101,7 +101,7 @@ TEST(EntityComponentDatabase, AddDifferentComponentsToDifferentEntities)
   uut.AddComponent<TC1>(entities[0]);
   uut.AddComponent<TC2>(entities[1]);
   uut.AddComponent<TC3>(entities[2]);
-  uut.UpdateBegin();
+  uut.Update();
 
   EXPECT_NE(nullptr, uut.EntityComponent<TC1>(entities[0]));
   EXPECT_EQ(nullptr, uut.EntityComponent<TC1>(entities[1]));
@@ -131,7 +131,7 @@ TEST(EntityComponentDatabase, AddMultipleComponentsToOneEntityId)
   uut.AddComponent<TC1>(entities[0]);
   uut.AddComponent<TC2>(entities[0]);
   uut.AddComponent<TC3>(entities[0]);
-  uut.UpdateBegin();
+  uut.Update();
 
   EXPECT_NE(nullptr, uut.EntityComponent<TC1>(entities[0]));
   EXPECT_EQ(nullptr, uut.EntityComponent<TC1>(entities[1]));
@@ -170,7 +170,7 @@ TEST(EntityComponentDatabase, ComponentsAreEditableWhenAdding)
   third->itemTwo = three_two;
   third->itemThree = three_three;
 
-  uut.UpdateBegin();
+  uut.Update();
 
   ASSERT_NE(nullptr, uut.EntityComponent<TC1>(entity));
   ASSERT_NE(nullptr, uut.EntityComponent<TC2>(entity));
@@ -195,7 +195,7 @@ TEST(EntityComponentDatabase, ComponentsAreNotEditableBeforeFirstUpdate)
 
   ASSERT_EQ(nullptr, uut.EntityComponent<TC1>(entity));
   ASSERT_EQ(nullptr, uut.EntityComponentMutable<TC1>(entity));
-  uut.UpdateBegin();
+  uut.Update();
   ASSERT_NE(nullptr, uut.EntityComponent<TC1>(entity));
   ASSERT_NE(nullptr, uut.EntityComponentMutable<TC1>(entity));
 }
@@ -210,7 +210,7 @@ TEST(EntityComponentDatabase, ComponentsAreEditableAfterFirstUpdate)
   uut.AddComponent<TC1>(entity);
   uut.AddComponent<TC2>(entity);
   uut.AddComponent<TC3>(entity);
-  uut.UpdateBegin();
+  uut.Update();
 
   float one_one = 123.0f;
   float two_one = 456.0f;
@@ -233,7 +233,7 @@ TEST(EntityComponentDatabase, ComponentsAreEditableAfterFirstUpdate)
   third->itemOne = three_one;
   third->itemTwo = three_two;
   third->itemThree = three_three;
-  uut.UpdateBegin();
+  uut.Update();
 
   EXPECT_EQ(one_one, uut.EntityComponent<TC1>(entity)->itemOne);
   EXPECT_EQ(two_one, uut.EntityComponent<TC2>(entity)->itemOne);
@@ -258,7 +258,7 @@ TEST(EntityComponentDatabase, QueryExistingEntities)
   uut.AddComponent<TC3>(entities[0]);
   uut.AddComponent<TC3>(entities[1]);
   uut.AddComponent<TC3>(entities[2]);
-  uut.UpdateBegin();
+  uut.Update();
 
   gazebo::ecs::EntityQuery query;
   query.AddComponent("TC2");
@@ -307,7 +307,7 @@ TEST(EntityComponentDatabase, QueryNewEntities)
   uut.AddComponent<TC3>(entities[2]);
 
   EXPECT_EQ(0, uut.Query(queryAdd.first).EntityIds().size());
-  uut.UpdateBegin();
+  uut.Update();
   EXPECT_EQ(2, uut.Query(queryAdd.first).EntityIds().size());
 
   bool foundE1 = false;
@@ -363,29 +363,29 @@ TEST(EntityComponentDatabase, TrackComponentChanges)
   uut.AddComponent<TC1>(entity);
   // component is created after this update ends
   EXPECT_EQ(gazebo::ecs::NO_DIFFERENCE, uut.IsDifferent<TC1>(entity));
-  uut.UpdateBegin();
+  uut.Update();
   EXPECT_EQ(gazebo::ecs::WAS_CREATED, uut.IsDifferent<TC1>(entity));
 
   uut.AddComponent<TC2>(entity);
   // component is created after this update ends
   EXPECT_EQ(gazebo::ecs::NO_DIFFERENCE, uut.IsDifferent<TC2>(entity));
-  uut.UpdateBegin();
+  uut.Update();
   EXPECT_EQ(gazebo::ecs::WAS_CREATED, uut.IsDifferent<TC2>(entity));
   EXPECT_EQ(gazebo::ecs::NO_DIFFERENCE, uut.IsDifferent<TC1>(entity));
 
-  uut.UpdateBegin();
+  uut.Update();
   uut.RemoveComponent<TC1>(entity);
   // component is removed after this update ends
   EXPECT_EQ(gazebo::ecs::NO_DIFFERENCE, uut.IsDifferent<TC1>(entity));
   EXPECT_EQ(gazebo::ecs::NO_DIFFERENCE, uut.IsDifferent<TC2>(entity));
-  uut.UpdateBegin();
+  uut.Update();
   EXPECT_EQ(gazebo::ecs::WAS_DELETED, uut.IsDifferent<TC1>(entity));
   EXPECT_EQ(gazebo::ecs::NO_DIFFERENCE, uut.IsDifferent<TC2>(entity));
 
   uut.DeleteEntity(entity);
   // component and entity are removed after this update ends
   EXPECT_EQ(gazebo::ecs::NO_DIFFERENCE, uut.IsDifferent<TC2>(entity));
-  uut.UpdateBegin();
+  uut.Update();
   EXPECT_EQ(gazebo::ecs::WAS_DELETED, uut.IsDifferent<TC2>(entity));
 }
 
@@ -407,21 +407,21 @@ TEST(EntityComponentDatabase, QueriesIncludeDeletedEntitiesForOneUpdate)
   query.AddComponent("TC1");
 
   auto result = uut.AddQuery(std::move(query));
-  uut.UpdateBegin();
+  uut.Update();
   EXPECT_EQ(3, uut.Query(result.first).EntityIds().size());
 
   uut.DeleteEntity(entities[0]);
   uut.DeleteEntity(entities[1]);
   uut.DeleteEntity(entities[2]);
 
-  uut.UpdateBegin();
+  uut.Update();
   EXPECT_EQ(3, uut.Query(result.first).EntityIds().size());
   for (auto id : uut.Query(result.first).EntityIds())
   {
     EXPECT_EQ(gazebo::ecs::WAS_DELETED, uut.IsDifferent<TC1>(id));
   }
 
-  uut.UpdateBegin();
+  uut.Update();
   EXPECT_EQ(0, uut.Query(result.first).EntityIds().size());
 }
 
@@ -431,12 +431,12 @@ TEST(EntityComponentDatabase, ModifyThenRemoveComponent)
   gazebo::ecs::EntityComponentDatabase uut;
   gazebo::ecs::EntityId entity = uut.CreateEntity();
   uut.AddComponent<TC1>(entity);
-  uut.UpdateBegin();
+  uut.Update();
 
   ASSERT_NE(nullptr, uut.EntityComponentMutable<TC1>(entity));
   EXPECT_TRUE(uut.RemoveComponent<TC1>(entity));
 
-  uut.UpdateBegin();
+  uut.Update();
   EXPECT_EQ(gazebo::ecs::WAS_DELETED, uut.IsDifferent<TC1>(entity));
   EXPECT_EQ(nullptr, uut.EntityComponent<TC1>(entity));
 }
@@ -449,7 +449,7 @@ TEST(EntityComponentDatabase, CreateComponentSetInitialValues)
   auto comp = uut.AddComponent<TC1>(entity);
   comp->itemOne = 12345.0;
 
-  uut.UpdateBegin();
+  uut.Update();
   auto constComp = uut.EntityComponent<TC1>(entity);
   ASSERT_NE(nullptr, constComp);
   EXPECT_FLOAT_EQ(12345.0, comp->itemOne);
@@ -462,7 +462,7 @@ TEST(EntityComponentDatabase, MutableComponentHasSetValues)
   gazebo::ecs::EntityId entity = uut.CreateEntity();
   auto comp = uut.AddComponent<TC1>(entity);
   comp->itemOne = 12345.0;
-  uut.UpdateBegin();
+  uut.Update();
 
   comp = uut.EntityComponentMutable<TC1>(entity);
   ASSERT_NE(nullptr, comp);
@@ -476,14 +476,14 @@ TEST(EntityComponentDatabase, ModifyComponentHappensNextUpdate)
   gazebo::ecs::EntityId entity = uut.CreateEntity();
   auto comp = uut.AddComponent<TC1>(entity);
   comp->itemOne = 12345.0;
-  uut.UpdateBegin();
+  uut.Update();
 
   comp = uut.EntityComponentMutable<TC1>(entity);
   ASSERT_NE(nullptr, comp);
   comp->itemOne = 6789.0;
 
   EXPECT_EQ(gazebo::ecs::WAS_CREATED, uut.IsDifferent<TC1>(entity));
-  uut.UpdateBegin();
+  uut.Update();
   EXPECT_EQ(gazebo::ecs::WAS_MODIFIED, uut.IsDifferent<TC1>(entity));
 
   auto constComp = uut.EntityComponent<TC1>(entity);
@@ -499,12 +499,12 @@ TEST(EntityComponentDatabase, RemoveComponent)
 
   uut.AddComponent<TC1>(id);
   EXPECT_EQ(nullptr, uut.EntityComponent<TC1>(id));
-  uut.UpdateBegin();
+  uut.Update();
   EXPECT_NE(nullptr, uut.EntityComponent<TC1>(id));
 
   uut.RemoveComponent<TC1>(id);
   EXPECT_NE(nullptr, uut.EntityComponent<TC1>(id));
-  uut.UpdateBegin();
+  uut.Update();
   EXPECT_EQ(nullptr, uut.EntityComponent<TC1>(id));
 }
 
@@ -525,7 +525,7 @@ TEST(EntityComponentDatabase, RemoveComponentAccessAnother)
   c2->itemOne = 5678;
   c2->itemTwo = 9012;
 
-  uut.UpdateBegin();
+  uut.Update();
   uut.RemoveComponent<TC1>(id);
 
   auto c2_test = uut.EntityComponent<TC2>(id);
@@ -533,7 +533,7 @@ TEST(EntityComponentDatabase, RemoveComponentAccessAnother)
   EXPECT_EQ(5678, c2_test->itemOne);
   EXPECT_EQ(9012, c2_test->itemTwo);
 
-  uut.UpdateBegin();
+  uut.Update();
   EXPECT_EQ(nullptr, uut.EntityComponent<TC1>(id));
   c2_test = uut.EntityComponent<TC2>(id);
   ASSERT_NE(nullptr, c2_test);
@@ -549,12 +549,12 @@ TEST(EntityComponentDatabase, DeleteEntity)
 
   uut.AddComponent<TC1>(id);
   EXPECT_EQ(nullptr, uut.EntityComponent<TC1>(id));
-  uut.UpdateBegin();
+  uut.Update();
   EXPECT_NE(nullptr, uut.EntityComponent<TC1>(id));
 
   uut.DeleteEntity(id);
   EXPECT_NE(nullptr, uut.EntityComponent<TC1>(id));
-  uut.UpdateBegin();
+  uut.Update();
   EXPECT_EQ(gazebo::ecs::NO_ENTITY, uut.Entity(id).Id());
   EXPECT_EQ(nullptr, uut.EntityComponent<TC1>(id));
 }
@@ -570,7 +570,7 @@ TEST(EntityComponentDatabase, ReuseSmallestAvailableEntityId)
   entities.push_back(uut.CreateEntity());
   entities.push_back(uut.CreateEntity());
 
-  uut.UpdateBegin();
+  uut.Update();
 
   uut.DeleteEntity(entities[2]);
   uut.DeleteEntity(entities[3]);
@@ -578,12 +578,12 @@ TEST(EntityComponentDatabase, ReuseSmallestAvailableEntityId)
   entities.push_back(uut.CreateEntity());
   EXPECT_EQ(5, entities.back());
 
-  uut.UpdateBegin();
+  uut.Update();
   // deleted ids still not availble
   entities.push_back(uut.CreateEntity());
   EXPECT_EQ(6, entities.back());
 
-  uut.UpdateBegin();
+  uut.Update();
   // Now the deleted ids can be reused
   EXPECT_EQ(2, uut.CreateEntity());
   EXPECT_EQ(3, uut.CreateEntity());

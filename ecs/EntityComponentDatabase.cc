@@ -394,7 +394,7 @@ Difference EntityComponentDatabase::IsDifferent(EntityId _id,
 }
 
 /////////////////////////////////////////////////
-void EntityComponentDatabase::UpdateBegin()
+void EntityComponentDatabase::Update()
 {
   // Deleted ids can be reused after one update.
   this->dataPtr->freeIds.insert(this->dataPtr->deletedIds.begin(),
