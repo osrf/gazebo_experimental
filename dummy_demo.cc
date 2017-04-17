@@ -19,6 +19,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <thread>
+#include <utility>
 #include <vector>
 
 #include <ignition/common/PluginLoader.hh>
@@ -27,6 +28,7 @@
 #include "gazebo/components/RigidBody.hh"
 #include "gazebo/components/WorldPose.hh"
 #include "gazebo/components/WorldVelocity.hh"
+#include "gazebo/components/Renderable.hh"
 #include "gazebo/ecs/ComponentFactory.hh"
 #include "gazebo/ecs/Manager.hh"
 
@@ -42,6 +44,8 @@ int main(int argc, char **argv)
       "gazebo::components::WorldPose");
   gazebo::ecs::ComponentFactory::Register<gazebo::components::WorldVelocity>(
       "gazebo::components::WorldVelocity");
+  gazebo::ecs::ComponentFactory::Register<gazebo::components::Renderable>(
+      "gazebo::components::Renderable");
 
   ignition::common::PluginLoader pm;
   const char *path = std::getenv("GAZEBO_PLUGIN_PATH");
@@ -50,19 +54,23 @@ int main(int argc, char **argv)
   else
     std::cerr << "No plugin path given" << std::endl;
 
-  if (pm.LoadLibrary("DumbPhysicsPlugin"))
+  std::vector<std::pair<std::string, std::string> > libs = {
+    {"DumbPhysicsPlugin", "::gazebo::systems::DumbPhysics"},
+    {"DummyRenderingPlugin", "::gazebo::systems::DummyRendering"},
+  };
+
+  for (auto lib : libs)
   {
-    std::unique_ptr<gazebo::ecs::System> sys;
-    sys = pm.Instantiate<gazebo::ecs::System>(
-        "::gazebo::systems::DumbPhysics");
-    if (!manager.LoadSystem(std::move(sys)))
+    if (pm.LoadLibrary(lib.first))
     {
-      std::cerr << "Failed to load plugin from library" << std::endl;
+      std::unique_ptr<gazebo::ecs::System> sys;
+      sys = pm.Instantiate<gazebo::ecs::System>(lib.second);
+      if (!manager.LoadSystem(std::move(sys)))
+        std::cerr << "Failed to load " << lib.second << " from " << lib.first
+          << std::endl;
     }
-  }
-  else
-  {
-    std::cerr << "Failed to load library" << std::endl;
+    else
+      std::cerr << "Failed to load library " << lib.first << std::endl;
   }
 
   // Add 25 spheres
@@ -72,7 +80,8 @@ int main(int argc, char **argv)
     auto body = manager.AddComponent<gazebo::components::RigidBody>(e);
     auto pose = manager.AddComponent<gazebo::components::WorldPose>(e);
     auto vel = manager.AddComponent<gazebo::components::WorldVelocity>(e);
-    if (body && pose && vel)
+    auto renderable = manager.AddComponent<gazebo::components::Renderable>(e);
+    if (body && pose && vel && renderable)
     {
       body->type = gazebo::components::RigidBody::SPHERE;
       body->isStatic = false;
@@ -86,6 +95,13 @@ int main(int argc, char **argv)
       vel->linear.X(ignition::math::Rand::DblUniform(-1.0, 1.0));
       vel->linear.Y(ignition::math::Rand::DblUniform(-1.0, 1.0));
       vel->linear.Z(ignition::math::Rand::DblUniform(-1.0, 1.0));
+
+      renderable->shape = gazebo::components::Renderable::SPHERE;
+      renderable->material = gazebo::components::Renderable::COLOR;
+      renderable->sphere.radius = body->sphere.radius;
+      renderable->color.red = ignition::math::Rand::DblUniform(0.1, 1.0);
+      renderable->color.green = ignition::math::Rand::DblUniform(0.1, 1.0);
+      renderable->color.blue = ignition::math::Rand::DblUniform(0.1, 1.0);
     }
     else
     {

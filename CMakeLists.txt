@@ -9,8 +9,8 @@ enable_testing()
 
 
 find_package(ignition-common0 REQUIRED)
-
-include_directories(${IGNITION-COMMON_INCLUDE_DIRS})
+find_package(ignition-transport3 REQUIRED)
+include_directories(${IGNITION-COMMON_INCLUDE_DIRS} ${IGNITION-TRANSPORT_INCLUDE_DIRS})
 
 add_subdirectory(ecs)
 add_subdirectory(systems)
