@@ -21,12 +21,10 @@
 #include "dumb_physics/Body.hh"
 #include "dumb_physics/World.hh"
 
-#include "gazebo/components/RigidBody.hh"
-#include "gazebo/components/WorldPose.hh"
-#include "gazebo/components/WorldVelocity.hh"
+#include "DumbPhysics.hh"
+
 #include "gazebo/ecs/Manager.hh"
 #include "gazebo/ecs/EntityQuery.hh"
-#include "gazebo/systems/DumbPhysics.hh"
 
 using namespace gazebo;
 using namespace systems;

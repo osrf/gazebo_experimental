@@ -18,6 +18,9 @@
 #ifndef GAZEBO_PRIVATE_SYSTEMS_DUMBPHYSICS_HH_
 #define GAZEBO_PRIVATE_SYSTEMS_DUMBPHYSICS_HH_
 
+#include "gazebo/components/RigidBody.hh"
+#include "gazebo/components/WorldPose.hh"
+#include "gazebo/components/WorldVelocity.hh"
 #include "gazebo/ecs/Entity.hh"
 #include "gazebo/ecs/System.hh"
 #include "dumb_physics/World.hh"
