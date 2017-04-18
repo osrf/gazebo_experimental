@@ -15,38 +15,48 @@
  *
 */
 
-#ifndef GAZEBO_COMPONENTS_RIGIDBODY_HH_
-#define GAZEBO_COMPONENTS_RIGIDBODY_HH_
+#ifndef GAZEBO_COMPONENTS_GEOMETRY_HH_
+#define GAZEBO_COMPONENTS_GEOMETRY_HH_
 
 namespace gazebo
 {
   namespace components
   {
-    /// \brief A body that needs physics simulation
-    struct RigidBody
+    /// \brief A geometry
+    struct Geometry
     {
-      enum Type {
+      /// \brief Possible geometry types
+      enum Type
+      {
+        /// \brief Unknown geometry
         UNKNOWN = 0,
+        /// \brief Sphere geometry
         SPHERE = 1,
+        /// \brief Cube geometry
         CUBE = 2,
-      };
-
-      struct SphereProperties {
-        double radius;
-      };
-
-      struct CubeProperties {
-        double side;
       };
 
       /// \brief the shape of this component
       Type type = UNKNOWN;
-      /// \brief true if the component cannot move or be moved
-      bool isStatic = false;
-      /// \brief mass in kilograms
-      double mass = 1.0;
 
-      union {
+      /// \brief Sphere properties
+      struct SphereProperties
+      {
+        /// \brief Radius in meters
+        double radius;
+      };
+
+      /// \brief Cube properties
+      struct CubeProperties
+      {
+        /// \brief Side length in meters
+        double side;
+      };
+
+      /// \brief Only one set of geometry properties can be defined at a time.
+      union
+      {
+        /// \brief Sphere geometries will have sphere properties
         SphereProperties sphere;
         CubeProperties cube;
       };
@@ -55,6 +65,4 @@ namespace gazebo
 }
 
 #endif
-
-
 
