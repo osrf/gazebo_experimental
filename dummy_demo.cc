@@ -22,6 +22,7 @@
 #include <vector>
 
 #include <ignition/common/PluginLoader.hh>
+#include <ignition/common/SystemPaths.hh>
 #include <ignition/math/Rand.hh>
 
 #include "gazebo/components/RigidBody.hh"
@@ -44,17 +45,16 @@ int main(int argc, char **argv)
       "gazebo::components::WorldVelocity");
 
   ignition::common::PluginLoader pm;
-  const char *path = std::getenv("GAZEBO_PLUGIN_PATH");
-  if (nullptr != path)
-    pm.AddSearchPath(path);
-  else
-    std::cerr << "No plugin path given" << std::endl;
+  ignition::common::SystemPaths sp;
+  sp.SetPluginPathEnv("GAZEBO_PLUGIN_PATH");
 
-  if (pm.LoadLibrary("DumbPhysicsPlugin"))
+  std::string pathToPhysicsLib = sp.FindSharedLibrary("DumbPhysicsPlugin");
+  std::string physicsPluginName = pm.LoadLibrary(pathToPhysicsLib);
+
+  if (physicsPluginName.size())
   {
     std::unique_ptr<gazebo::ecs::System> sys;
-    sys = pm.Instantiate<gazebo::ecs::System>(
-        "::gazebo::systems::DumbPhysics");
+    sys = pm.Instantiate<gazebo::ecs::System>(physicsPluginName);
     if (!manager.LoadSystem(std::move(sys)))
     {
       std::cerr << "Failed to load plugin from library" << std::endl;
