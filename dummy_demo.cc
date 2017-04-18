@@ -22,39 +22,47 @@
 #include <vector>
 
 #include <ignition/common/PluginLoader.hh>
+#include <ignition/common/SystemPaths.hh>
 #include <ignition/math/Rand.hh>
 
-#include "gazebo/components/RigidBody.hh"
+#include "gazebo/components/Inertial.hh"
+#include "gazebo/components/Geometry.hh"
 #include "gazebo/components/WorldPose.hh"
 #include "gazebo/components/WorldVelocity.hh"
 #include "gazebo/ecs/ComponentFactory.hh"
 #include "gazebo/ecs/Manager.hh"
 
-
+// Example of an application with 1 system:
+// * Physics
 int main(int argc, char **argv)
 {
+  // Central ECS manager
   gazebo::ecs::Manager manager;
 
   // TODO Componentizer to register components
-  gazebo::ecs::ComponentFactory::Register<gazebo::components::RigidBody>(
-      "gazebo::components::RigidBody");
+
+  // Register component types
+  gazebo::ecs::ComponentFactory::Register<gazebo::components::Inertial>(
+      "gazebo::components::Inertial");
+  gazebo::ecs::ComponentFactory::Register<gazebo::components::Geometry>(
+      "gazebo::components::Geometry");
   gazebo::ecs::ComponentFactory::Register<gazebo::components::WorldPose>(
       "gazebo::components::WorldPose");
   gazebo::ecs::ComponentFactory::Register<gazebo::components::WorldVelocity>(
       "gazebo::components::WorldVelocity");
 
-  ignition::common::PluginLoader pm;
-  const char *path = std::getenv("GAZEBO_PLUGIN_PATH");
-  if (nullptr != path)
-    pm.AddSearchPath(path);
-  else
-    std::cerr << "No plugin path given" << std::endl;
+  // Plugin loader (plugins are systems)
+  ignition::common::PluginLoader pluginLoader;
+  ignition::common::SystemPaths sp;
+  sp.SetPluginPathEnv("GAZEBO_PLUGIN_PATH");
 
-  if (pm.LoadLibrary("DumbPhysicsPlugin"))
+  std::string pathToPhysicsLib = sp.FindSharedLibrary("DumbPhysicsPlugin");
+  std::string physicsPluginName = pluginLoader.LoadLibrary(pathToPhysicsLib);
+
+  if (physicsPluginName.size())
   {
     std::unique_ptr<gazebo::ecs::System> sys;
-    sys = pm.Instantiate<gazebo::ecs::System>(
-        "::gazebo::systems::DumbPhysics");
+    sys = pluginLoader.Instantiate<gazebo::ecs::System>(physicsPluginName);
     if (!manager.LoadSystem(std::move(sys)))
     {
       std::cerr << "Failed to load plugin from library" << std::endl;
@@ -65,40 +73,76 @@ int main(int argc, char **argv)
     std::cerr << "Failed to load library" << std::endl;
   }
 
-  // Add 25 spheres
+  // Create 25 sphere entities
   for (int i = 0; i < 25; i++)
   {
+    // Create the entity
     gazebo::ecs::EntityId e = manager.CreateEntity();
-    auto body = manager.AddComponent<gazebo::components::RigidBody>(e);
-    auto pose = manager.AddComponent<gazebo::components::WorldPose>(e);
-    auto vel = manager.AddComponent<gazebo::components::WorldVelocity>(e);
-    if (body && pose && vel)
-    {
-      body->type = gazebo::components::RigidBody::SPHERE;
-      body->isStatic = false;
-      body->mass = ignition::math::Rand::DblUniform(0.1, 5.0);
-      body->sphere.radius = ignition::math::Rand::DblUniform(0.1, 0.5);
 
+    // Give it components
+
+    // Inertial component
+    auto inertial = manager.AddComponent<gazebo::components::Inertial>(e);
+    if (inertial)
+    {
+      inertial->mass = ignition::math::Rand::DblUniform(0.1, 5.0);
+    }
+    else
+    {
+      std::cerr << "Failed to add inertial component to entity [" << e << "]"
+                << std::endl;
+    }
+
+    // Geometry component
+    auto geom = manager.AddComponent<gazebo::components::Geometry>(e);
+    if (geom)
+    {
+      geom->type = gazebo::components::Geometry::SPHERE;
+      geom->sphere.radius = ignition::math::Rand::DblUniform(0.1, 0.5);
+    }
+    else
+    {
+      std::cerr << "Failed to add geom component to entity [" << e << "]"
+                << std::endl;
+    }
+
+    // World pose
+    auto pose = manager.AddComponent<gazebo::components::WorldPose>(e);
+    if (pose)
+    {
       pose->position.X(ignition::math::Rand::DblUniform(-4.0, 4.0));
       pose->position.Y(ignition::math::Rand::DblUniform(-4.0, 4.0));
       pose->position.Z(ignition::math::Rand::DblUniform(-4.0, 4.0));
+    }
+    else
+    {
+      std::cerr << "Failed to add world pose component to entity [" << e << "]"
+                << std::endl;
+    }
 
+    // World velocity
+    auto vel = manager.AddComponent<gazebo::components::WorldVelocity>(e);
+    if (vel)
+    {
       vel->linear.X(ignition::math::Rand::DblUniform(-1.0, 1.0));
       vel->linear.Y(ignition::math::Rand::DblUniform(-1.0, 1.0));
       vel->linear.Z(ignition::math::Rand::DblUniform(-1.0, 1.0));
     }
     else
     {
-      std::cerr << "Failed to add components to entity" << std::endl;
+      std::cerr << "Failed to add world velocity component to entity ["
+                << e << "]" << std::endl;
     }
   }
 
+  // Simulation loop
   int millis = 1;
   double timeStep = millis / 1000.0;
   while (true)
   {
     manager.UpdateSystems(timeStep);
-    // update in actual time
+
+    // update in real time
     std::this_thread::sleep_for(std::chrono::milliseconds(millis));
   }
 

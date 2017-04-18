@@ -15,41 +15,18 @@
  *
 */
 
-#ifndef GAZEBO_COMPONENTS_RIGIDBODY_HH_
-#define GAZEBO_COMPONENTS_RIGIDBODY_HH_
+#ifndef GAZEBO_COMPONENTS_INERTIA_HH_
+#define GAZEBO_COMPONENTS_INERTIA_HH_
 
 namespace gazebo
 {
   namespace components
   {
-    /// \brief A body that needs physics simulation
-    struct RigidBody
+    /// \brief Describes the inertial properties of an entity.
+    struct Inertial
     {
-      enum Type {
-        UNKNOWN = 0,
-        SPHERE = 1,
-        CUBE = 2,
-      };
-
-      struct SphereProperties {
-        double radius;
-      };
-
-      struct CubeProperties {
-        double side;
-      };
-
-      /// \brief the shape of this component
-      Type type = UNKNOWN;
-      /// \brief true if the component cannot move or be moved
-      bool isStatic = false;
-      /// \brief mass in kilograms
+      /// \brief Mass in kilograms
       double mass = 1.0;
-
-      union {
-        SphereProperties sphere;
-        CubeProperties cube;
-      };
     };
   }
 }

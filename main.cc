@@ -18,7 +18,8 @@
 #include <iostream>
 #include <map>
 
-#include <gflags/gflags.h>
+#include <ignition/common/PluginLoader.hh>
+#include <ignition/common/SystemPaths.hh>
 
 #include "gazebo/Config.hh"
 
@@ -27,6 +28,7 @@
 DEFINE_bool(h, false, "");
 
 // Additional flags will go here
+
 
 void Help()
 {
