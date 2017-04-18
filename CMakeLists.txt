@@ -17,6 +17,8 @@ enable_testing()
 
 ########################################
 # Write the config file
+set (PROJECT_CMAKE_DIR ${PROJECT_SOURCE_DIR}/cmake
+  CACHE PATH "Location of CMake scripts")
 configure_file (${PROJECT_CMAKE_DIR}/Config.hh.in
     "${PROJECT_BINARY_DIR}/include/gazebo/Config.hh")
 
