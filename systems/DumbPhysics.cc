@@ -24,7 +24,7 @@
 
 // Internal to Gazebo
 #include "gazebo/components/Inertial.hh"
-#include "gazebo/components/SphereGeometry.hh"
+#include "gazebo/components/Geometry.hh"
 #include "gazebo/components/WorldPose.hh"
 #include "gazebo/components/WorldVelocity.hh"
 #include "gazebo/ecs/Manager.hh"
@@ -47,8 +47,8 @@ ecs::EntityQuery DumbPhysics::Init()
   // Add required components
 
   // Entities must have a sphere geometry
-  if (!query.AddComponent("gazebo::components::SphereGeometry"))
-    std::cerr << "Undefined component[gazebo::components::SphereGeometry]\n";
+  if (!query.AddComponent("gazebo::components::Geometry"))
+    std::cerr << "Undefined component[gazebo::components::Geometry]\n";
 
   // Entities must have a world pose
   if (!query.AddComponent("gazebo::components::WorldPose"))
@@ -78,7 +78,7 @@ void DumbPhysics::Update(
 
     // Check if geometry has changed since last time step
     // We use the presence of this component to add/remove bodies in this system
-    auto difference = entity.IsDifferent<components::SphereGeometry>();
+    auto difference = entity.IsDifferent<components::Geometry>();
 
     // Another system created a new geometry we don't know about yet, so
     // create it internally
@@ -97,14 +97,14 @@ void DumbPhysics::Update(
     // TODO How can we be sure it wasn't us who changed it?
     else if (ecs::WAS_MODIFIED == difference && body)
     {
-      auto const geom = entity.Component<components::SphereGeometry>();
+      auto const geom = entity.Component<components::Geometry>();
       this->SyncInternalGeom(body, geom);
     }
     // Something went wrong
     else if (ecs::NO_DIFFERENCE != difference)
     {
       std::cerr << "Unable to handle difference [" << difference
-                << "] on SphereGeometry component for entity [" << entityId
+                << "] on Geometry component for entity [" << entityId
                 << "]" << std::endl;
     }
 
@@ -158,9 +158,16 @@ void DumbPhysics::Update(
 
 /////////////////////////////////////////////////
 void DumbPhysics::SyncInternalGeom(dumb_physics::Body *_body,
-    const components::SphereGeometry *_component)
+    const components::Geometry *_component)
 {
-  _body->Radius(_component->radius);
+  if (_component->type != components::Geometry::SPHERE)
+  {
+    std::cerr << "DumbPhysics only supports spheres, failed to sync geometry "
+              << "type [" << _component->type << "]" << std::endl;
+    return;
+  }
+
+  _body->Radius(_component->sphere.radius);
 }
 
 /////////////////////////////////////////////////
@@ -188,9 +195,9 @@ void DumbPhysics::SyncInternalPose(dumb_physics::Body *_body,
 
 /////////////////////////////////////////////////
 void DumbPhysics::SyncExternalGeom(const dumb_physics::Body *_body,
-    components::SphereGeometry *_component)
+    components::Geometry *_component)
 {
-  _component->radius = _body->Radius();
+  _component->sphere.radius = _body->Radius();
 }
 
 /////////////////////////////////////////////////
@@ -225,7 +232,7 @@ dumb_physics::Body *DumbPhysics::AddBody(const ecs::EntityId _id,
   dumb_physics::Body *body = nullptr;
 
   // Required components
-  auto geom = _entity.Component<components::SphereGeometry>();
+  auto geom = _entity.Component<components::Geometry>();
   auto worldPose = _entity.Component<components::WorldPose>();
 
   if (!geom || !worldPose)

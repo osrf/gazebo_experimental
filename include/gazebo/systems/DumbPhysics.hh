@@ -60,7 +60,7 @@ namespace gazebo
       /// \param[in] _body Internal representation of a body
       /// \param[in] _component ECS sphere geometry component
       private: void SyncInternalGeom(dumb_physics::Body *_body,
-                   const components::SphereGeometry *_component);
+                   const components::Geometry *_component);
 
       /// \brief Sets internal representation to match component
       /// \param[in] _body Internal representation of a body
@@ -86,7 +86,7 @@ namespace gazebo
       /// \param[in] _body External representation of a body
       /// \param[in] _component ECS sphere geometry component
       private: void SyncExternalGeom(const dumb_physics::Body *_body,
-                   components::SphereGeometry *_component);
+                   components::Geometry *_component);
 
       /// \brief Sets component to match internal representation
       /// \param[in] _body External representation of a body

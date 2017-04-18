@@ -22,10 +22,11 @@
 #include <vector>
 
 #include <ignition/common/PluginLoader.hh>
+#include <ignition/common/SystemPaths.hh>
 #include <ignition/math/Rand.hh>
 
 #include "gazebo/components/Inertial.hh"
-#include "gazebo/components/SphereGeometry.hh"
+#include "gazebo/components/Geometry.hh"
 #include "gazebo/components/WorldPose.hh"
 #include "gazebo/components/WorldVelocity.hh"
 #include "gazebo/ecs/ComponentFactory.hh"
@@ -43,8 +44,8 @@ int main(int argc, char **argv)
   // Register component types
   gazebo::ecs::ComponentFactory::Register<gazebo::components::Inertial>(
       "gazebo::components::Inertial");
-  gazebo::ecs::ComponentFactory::Register<gazebo::components::SphereGeometry>(
-      "gazebo::components::SphereGeometry");
+  gazebo::ecs::ComponentFactory::Register<gazebo::components::Geometry>(
+      "gazebo::components::Geometry");
   gazebo::ecs::ComponentFactory::Register<gazebo::components::WorldPose>(
       "gazebo::components::WorldPose");
   gazebo::ecs::ComponentFactory::Register<gazebo::components::WorldVelocity>(
@@ -52,33 +53,24 @@ int main(int argc, char **argv)
 
   // Plugin loader (plugins are systems)
   ignition::common::PluginLoader pluginLoader;
+  ignition::common::SystemPaths sp;
+  sp.SetPluginPathEnv("GAZEBO_PLUGIN_PATH");
 
-  // Search path
-  const char *path = std::getenv("GAZEBO_PLUGIN_PATH");
-  if (nullptr != path)
-    pluginLoader.AddSearchPath(path);
-  else
-    std::cerr << "No plugin path given" << std::endl;
+  std::string pathToPhysicsLib = sp.FindSharedLibrary("DumbPhysicsPlugin");
+  std::string physicsPluginName = pluginLoader.LoadLibrary(pathToPhysicsLib);
 
-  // Systems to load
-  std::vector<std::pair<std::string, std::string> > libs = {
-    {"DumbPhysicsPlugin", "::gazebo::systems::DumbPhysics"},
-    {"DummyRenderingPlugin", "::gazebo::systems::DummyRendering"},
-  };
-
-  // Create a system for each library
-  for (auto lib : libs)
+  if (physicsPluginName.size())
   {
-    if (pluginLoader.LoadLibrary(lib.first))
+    std::unique_ptr<gazebo::ecs::System> sys;
+    sys = pluginLoader.Instantiate<gazebo::ecs::System>(physicsPluginName);
+    if (!manager.LoadSystem(std::move(sys)))
     {
-      std::unique_ptr<gazebo::ecs::System> sys;
-      sys = pluginLoader.Instantiate<gazebo::ecs::System>(lib.second);
-      if (!manager.LoadSystem(std::move(sys)))
-        std::cerr << "Failed to load " << lib.second << " from " << lib.first
-          << std::endl;
+      std::cerr << "Failed to load plugin from library" << std::endl;
     }
-    else
-      std::cerr << "Failed to load library " << lib.first << std::endl;
+  }
+  else
+  {
+    std::cerr << "Failed to load library" << std::endl;
   }
 
   // Create 25 sphere entities
@@ -102,10 +94,11 @@ int main(int argc, char **argv)
     }
 
     // Geometry component
-    auto geom = manager.AddComponent<gazebo::components::SphereGeometry>(e);
+    auto geom = manager.AddComponent<gazebo::components::Geometry>(e);
     if (geom)
     {
-      geom->radius = ignition::math::Rand::DblUniform(0.1, 0.5);
+      geom->type = gazebo::components::Geometry::SPHERE;
+      geom->sphere.radius = ignition::math::Rand::DblUniform(0.1, 0.5);
     }
     else
     {
