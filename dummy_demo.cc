@@ -24,15 +24,15 @@
 #include <ignition/common/PluginLoader.hh>
 #include <ignition/math/Rand.hh>
 
-#include "gazebo/components/RigidBody.hh"
+#include "gazebo/components/Inertial.hh"
+#include "gazebo/components/SphereGeometry.hh"
 #include "gazebo/components/WorldPose.hh"
 #include "gazebo/components/WorldVelocity.hh"
 #include "gazebo/ecs/ComponentFactory.hh"
 #include "gazebo/ecs/Manager.hh"
 
-// Example of an application with 2 systems:
+// Example of an application with 1 system:
 // * Physics
-// * Rendering
 int main(int argc, char **argv)
 {
   // Central ECS manager
@@ -41,8 +41,10 @@ int main(int argc, char **argv)
   // TODO Componentizer to register components
 
   // Register component types
-  gazebo::ecs::ComponentFactory::Register<gazebo::components::RigidBody>(
-      "gazebo::components::RigidBody");
+  gazebo::ecs::ComponentFactory::Register<gazebo::components::Inertial>(
+      "gazebo::components::Inertial");
+  gazebo::ecs::ComponentFactory::Register<gazebo::components::SphereGeometry>(
+      "gazebo::components::SphereGeometry");
   gazebo::ecs::ComponentFactory::Register<gazebo::components::WorldPose>(
       "gazebo::components::WorldPose");
   gazebo::ecs::ComponentFactory::Register<gazebo::components::WorldVelocity>(
@@ -87,18 +89,27 @@ int main(int argc, char **argv)
 
     // Give it components
 
-    // Rigid body component
-    auto body = manager.AddComponent<gazebo::components::RigidBody>(e);
-    if (body)
+    // Inertial component
+    auto inertial = manager.AddComponent<gazebo::components::Inertial>(e);
+    if (inertial)
     {
-      body->type = gazebo::components::RigidBody::SPHERE;
-      body->isStatic = false;
-      body->mass = ignition::math::Rand::DblUniform(0.1, 5.0);
-      body->sphere.radius = ignition::math::Rand::DblUniform(0.1, 0.5);
+      inertial->mass = ignition::math::Rand::DblUniform(0.1, 5.0);
     }
     else
     {
-      std::cerr << "Failed to add body component to entity [" << e << "]"
+      std::cerr << "Failed to add inertial component to entity [" << e << "]"
+                << std::endl;
+    }
+
+    // Geometry component
+    auto geom = manager.AddComponent<gazebo::components::SphereGeometry>(e);
+    if (geom)
+    {
+      geom->radius = ignition::math::Rand::DblUniform(0.1, 0.5);
+    }
+    else
+    {
+      std::cerr << "Failed to add geom component to entity [" << e << "]"
                 << std::endl;
     }
 

@@ -26,19 +26,26 @@
 
 namespace gazebo
 {
+  namespace components
+  {
+    class Inertial;
+  }
+
   namespace systems
   {
-
     /// \brief ECSystem to do simple physics
     ///
     /// The goal of this class is to feel out what kind of features
     /// a physics system will need in an ECS architecture
     class DumbPhysics : public ecs::System
     {
-      /// \brief called when the system is loaded
+      /// \brief Called when the system is loaded
       public: virtual ecs::EntityQuery Init();
 
-      /// \brief called every physics update
+      /// \brief Called every physics update
+      /// \param[in] _dt Time step
+      /// \param[out] _result ?
+      /// \param[in] _mgr ?
       public: virtual void Update(const double _dt,
                   const ecs::EntityQuery &_result,
                   ecs::Manager &_mgr);
@@ -47,18 +54,61 @@ namespace gazebo
       ///        and their internal reprentations of the world
       private: dumb_physics::World world;
 
-      /// \brief sets internal representation to match component
-      private: void SyncBodies(dumb_physics::Body *body,
-                   const components::RigidBody *component);
+      /// \brief Sets internal representation to match component
+      /// \param[in] _body Internal representation of a body
+      /// \param[in] _component ECS sphere geometry component
+      private: void SyncInternalGeom(dumb_physics::Body *_body,
+                   const components::SphereGeometry *_component);
 
-      /// \brief sets internal representation to match component
-      private: void SyncVelocity(dumb_physics::Body *body,
-                   const components::WorldVelocity *component);
+      /// \brief Sets internal representation to match component
+      /// \param[in] _body Internal representation of a body
+      /// \param[in] _component ECS inertial component. Only the mass is used
+      /// by this system.
+      private: void SyncInternalMass(dumb_physics::Body *_body,
+                   const components::Inertial *_component);
+
+      /// \brief Sets internal representation to match component
+      /// \param[in] _body Internal representation of a body
+      /// \param[in] _component ECS world velocity component. Both lienar and
+      /// angular are handled.
+      private: void SyncInternalVelocity(dumb_physics::Body *_body,
+                   const components::WorldVelocity *_component);
+
+      /// \brief Sets internal representation to match component
+      /// \param[in] _body Internal representation of a body
+      /// \param[in] _component ECS world pose component
+      private: void SyncInternalPose(dumb_physics::Body *_body,
+                   const components::WorldPose *_component);
+
+      /// \brief Sets component to match internal representation
+      /// \param[in] _body External representation of a body
+      /// \param[in] _component ECS sphere geometry component
+      private: void SyncExternalGeom(const dumb_physics::Body *_body,
+                   components::SphereGeometry *_component);
+
+      /// \brief Sets component to match internal representation
+      /// \param[in] _body External representation of a body
+      /// \param[in] _component ECS inertial component. Only the mass is used
+      /// by this system.
+      private: void SyncExternalMass(const dumb_physics::Body *_body,
+                   components::Inertial *_component);
+
+      /// \brief Sets component to match internal representation
+      /// \param[in] _body External representation of a body
+      /// \param[in] _component ECS world velocity component. Both lienar and
+      /// angular are handled.
+      private: void SyncExternalVelocity(const dumb_physics::Body *_body,
+                   components::WorldVelocity *_component);
+
+      /// \brief Sets component to match internal representation
+      /// \param[in] _body External representation of a body
+      /// \param[in] _component ECS world pose component
+      private: void SyncExternalPose(const dumb_physics::Body *_body,
+                   components::WorldPose *_component);
 
       /// \brief Adds a body to the world
-      private: dumb_physics::Body *AddBody(ecs::EntityId _id,
-                   const components::RigidBody *bodyComponent,
-                   const components::WorldPose *poseComponent);
+      private: dumb_physics::Body *AddBody(const ecs::EntityId _id,
+                                           ecs::Entity &_entity);
     };
   }
 }

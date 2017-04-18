@@ -18,10 +18,13 @@
 #include <iostream>
 #include <ignition/common/PluginMacros.hh>
 
+// From external library
 #include "dumb_physics/Body.hh"
 #include "dumb_physics/World.hh"
 
-#include "gazebo/components/RigidBody.hh"
+// Internal to Gazebo
+#include "gazebo/components/Inertial.hh"
+#include "gazebo/components/SphereGeometry.hh"
 #include "gazebo/components/WorldPose.hh"
 #include "gazebo/components/WorldVelocity.hh"
 #include "gazebo/ecs/Manager.hh"
@@ -42,12 +45,18 @@ ecs::EntityQuery DumbPhysics::Init()
   this->world.SetSize({10.0, 10.0, 10.0});
 
   // Add required components
-  if (!query.AddComponent("gazebo::components::RigidBody"))
-    std::cerr << "Undefined component[gazebo::components::RigidBody]\n";
+
+  // Entities must have a sphere geometry
+  if (!query.AddComponent("gazebo::components::SphereGeometry"))
+    std::cerr << "Undefined component[gazebo::components::SphereGeometry]\n";
+
+  // Entities must have a world pose
   if (!query.AddComponent("gazebo::components::WorldPose"))
     std::cerr << "Undefined component[gazebo::components::WorldPose]\n";
-  if (!query.AddComponent("gazebo::components::WorldVelocity"))
-    std::cerr << "Undefined component[gazebo::components::WorldVelocity]\n";
+
+  // Note that we add only the required components. This system will also make
+  // use of the Mass and WorldVelocity components if present, but these are
+  // optional
 
   return std::move(query);
 }
@@ -57,65 +66,63 @@ void DumbPhysics::Update(
     double _dt, const ecs::EntityQuery &_result, ecs::Manager &_mgr)
 {
   // STEP 1 Loop through entities and update internal representation
-  // This is where the effects of other systems gets propagated to this one,
+  // This is where the effects of other systems get propagated to this one,
   // for example, if a pose is changed or a body is deleted through the GUI.
   for (auto const &entityId : _result.EntityIds())
   {
     // Get entity (should check if exists?)
     auto &entity = _mgr.Entity(entityId);
 
-    // Get rigid body component
-    auto const rigidBody = entity.Component<components::RigidBody>();
-
-    // Check if component has changed since last time step
-    auto difference = entity.IsDifferent<components::RigidBody>();
-
     // Body is the internal representation of an entity in this system
     auto body = this->world.BodyById(entityId);
 
-    // Another system created a new body we don't know about yet
+    // Check if geometry has changed since last time step
+    // We use the presence of this component to add/remove bodies in this system
+    auto difference = entity.IsDifferent<components::SphereGeometry>();
+
+    // Another system created a new geometry we don't know about yet, so
+    // create it internally
     if (ecs::WAS_CREATED == difference && !body)
     {
-      auto worldPose = entity.Component<components::WorldPose>();
-      body = this->AddBody(entityId, rigidBody, worldPose);
+      body = this->AddBody(entityId, entity);
     }
-    // Body component was removed from this entity by another system.
+    // Geometry component was removed from this entity by another system.
     // We remove the whole entity from this system, because we're not
-    // interested in entities without a body.
+    // interested in entities without a geometry.
     else if (ecs::WAS_DELETED == difference && body)
     {
       this->world.RemoveBody(body->Id());
     }
-    // Another system modified the body
+    // Another system modified the geometry
+    // TODO How can we be sure it wasn't us who changed it?
     else if (ecs::WAS_MODIFIED == difference && body)
     {
-      this->SyncBodies(body, rigidBody);
+      auto const geom = entity.Component<components::SphereGeometry>();
+      this->SyncInternalGeom(body, geom);
     }
     // Something went wrong
     else if (ecs::NO_DIFFERENCE != difference)
     {
       std::cerr << "Unable to handle difference [" << difference
-                << "] for entity [" << entityId << "]" << std::endl;
+                << "] on SphereGeometry component for entity [" << entityId
+                << "]" << std::endl;
     }
 
-    // In case it's a non-static body
-    if (body && !body->IsStatic())
+    // Sync other properties in case they've been changed by other systems
+    auto const pose = entity.Component<components::WorldPose>();
+    if (pose)
+      this->SyncInternalPose(body, pose);
+    else
     {
-      // Get the current velocity
-      auto const velocity = entity.Component<components::WorldVelocity>();
-
-      // Update
-      if (velocity)
-      {
-        this->SyncVelocity(body, velocity);
-      }
-      else
-      {
-        std::cerr << "Entity [" << entityId
-                  << "] has a non-static body, but no world velocity"
-                  << std::endl;
-      }
+      std::cerr << "Entity [" << entityId
+                << "] missing required component WorldPose. "
+                << "Removing it from the world." << std::endl;
+      this->world.RemoveBody(body->Id());
     }
+
+    auto const velocity = entity.Component<components::WorldVelocity>();
+    if (velocity)
+      this->SyncInternalVelocity(body, velocity);
   }
 
   // STEP 2 do some physics
@@ -140,63 +147,112 @@ void DumbPhysics::Update(
     }
 
     auto &entity = _mgr.Entity(entityId);
-    // TODO what if something else moved the world pose? How to know that
-    //      it changed and the physics world should be updated?
+
     auto worldPose = entity.ComponentMutable<components::WorldPose>();
-    worldPose->position = body->Position();
-    worldPose->rotation = body->Rotation();
+    this->SyncExternalPose(body, worldPose);
 
-    auto component = entity.ComponentMutable<components::WorldVelocity>();
-    component->linear = body->LinearVelocity();
-    component->angular = body->AngularVelocity();
+    auto worldVel = entity.ComponentMutable<components::WorldVelocity>();
+    this->SyncExternalVelocity(body, worldVel);
   }
 }
 
 /////////////////////////////////////////////////
-void DumbPhysics::SyncBodies(dumb_physics::Body *body,
-    const components::RigidBody *component)
+void DumbPhysics::SyncInternalGeom(dumb_physics::Body *_body,
+    const components::SphereGeometry *_component)
 {
-  if (component->type != components::RigidBody::SPHERE)
-  {
-    // Dumb physics only supports spheres
-    this->world.RemoveBody(body->Id());
-  }
-  else
-  {
-    // set internal representation to match component
-    body->Radius(component->sphere.radius);
-    body->IsStatic(component->isStatic);
-    body->Mass(component->mass);
-  }
+  _body->Radius(_component->radius);
 }
 
 /////////////////////////////////////////////////
-void DumbPhysics::SyncVelocity(dumb_physics::Body *body,
-    const components::WorldVelocity *component)
+void DumbPhysics::SyncInternalMass(dumb_physics::Body *_body,
+    const components::Inertial *_component)
 {
-  body->LinearVelocity(component->linear);
-  body->AngularVelocity(component->angular);
+  _body->Mass(_component->mass);
 }
 
 /////////////////////////////////////////////////
-dumb_physics::Body *DumbPhysics::AddBody(ecs::EntityId _id,
-    const components::RigidBody *bodyComponent,
-    const components::WorldPose *poseComponent)
+void DumbPhysics::SyncInternalVelocity(dumb_physics::Body *_body,
+    const components::WorldVelocity *_component)
 {
-  std::cout << "[phys]Add body " << _id << std::endl;
+  _body->LinearVelocity(_component->linear);
+  _body->AngularVelocity(_component->angular);
+}
+
+/////////////////////////////////////////////////
+void DumbPhysics::SyncInternalPose(dumb_physics::Body *_body,
+    const components::WorldPose *_component)
+{
+  _body->Position(_component->position);
+  _body->Rotation(_component->rotation);
+}
+
+/////////////////////////////////////////////////
+void DumbPhysics::SyncExternalGeom(const dumb_physics::Body *_body,
+    components::SphereGeometry *_component)
+{
+  _component->radius = _body->Radius();
+}
+
+/////////////////////////////////////////////////
+void DumbPhysics::SyncExternalMass(const dumb_physics::Body *_body,
+    components::Inertial *_component)
+{
+  _component->mass = _body->Mass();
+}
+
+/////////////////////////////////////////////////
+void DumbPhysics::SyncExternalVelocity(const dumb_physics::Body *_body,
+    components::WorldVelocity *_component)
+{
+  _component->linear = _body->LinearVelocity();
+  _component->angular = _body->AngularVelocity();
+}
+
+/////////////////////////////////////////////////
+void DumbPhysics::SyncExternalPose(const dumb_physics::Body *_body,
+    components::WorldPose *_component)
+{
+  _component->position = _body->Position();
+  _component->rotation = _body->Rotation();
+}
+
+/////////////////////////////////////////////////
+dumb_physics::Body *DumbPhysics::AddBody(const ecs::EntityId _id,
+                                         ecs::Entity &_entity)
+{
+  std::cout << "[phys] Add body " << _id << std::endl;
+
   dumb_physics::Body *body = nullptr;
 
-  // Dumb physics only supports spheres
-  if (bodyComponent->type == components::RigidBody::SPHERE)
-  {
-    body = this->world.AddBody(_id);
-    body->Radius(bodyComponent->sphere.radius);
-    body->IsStatic(bodyComponent->isStatic);
-    body->Mass(bodyComponent->mass);
+  // Required components
+  auto geom = _entity.Component<components::SphereGeometry>();
+  auto worldPose = _entity.Component<components::WorldPose>();
 
-    body->Position(poseComponent->position);
-    body->Rotation(poseComponent->rotation);
+  if (!geom || !worldPose)
+  {
+    std::cerr << "Entity [" << _entity.Id() << "] is missing required components."
+             << " Can't create body." << std::endl;
+    return body;
   }
+
+  // Create body
+  body = this->world.AddBody(_id);
+
+  // Update internal representation
+  this->SyncInternalGeom(body, geom);
+  this->SyncInternalPose(body, worldPose);
+
+  // Optional components
+  auto inertia = _entity.Component<components::Inertial>();
+
+  if (inertia)
+    this->SyncInternalMass(body, inertia);
+
+  auto worldVel = _entity.Component<components::WorldVelocity>();
+
+  if (worldVel)
+    this->SyncInternalVelocity(body, worldVel);
+
   return body;
 }
 
