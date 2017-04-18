@@ -39,7 +39,7 @@ ecs::EntityQuery DumbPhysics::Init()
   // TODO how will systems get info that should apply to everything like
   //      gravity and solver parameters?
   this->world.Gravity({0.0, 0.0, 0.0});
-  this->world.SetSize(10.0, 10.0, 10.0);
+  this->world.SetSize({10.0, 10.0, 10.0});
 
   // Add required components
   if (!query.AddComponent("gazebo::components::RigidBody"))
@@ -57,37 +57,63 @@ void DumbPhysics::Update(
     double _dt, const ecs::EntityQuery &_result, ecs::Manager &_mgr)
 {
   // STEP 1 Loop through entities and update internal representation
+  // This is where the effects of other systems gets propagated to this one,
+  // for example, if a pose is changed or a body is deleted through the GUI.
   for (auto const &entityId : _result.EntityIds())
   {
+    // Get entity (should check if exists?)
     auto &entity = _mgr.Entity(entityId);
+
+    // Get rigid body component
     auto const rigidBody = entity.Component<components::RigidBody>();
+
+    // Check if component has changed since last time step
     auto difference = entity.IsDifferent<components::RigidBody>();
 
-    dumb_physics::Body *body = nullptr;
+    // Body is the internal representation of an entity in this system
+    auto body = this->world.BodyById(entityId);
 
-    if (ecs::WAS_CREATED == difference)
+    // Another system created a new body we don't know about yet
+    if (ecs::WAS_CREATED == difference && !body)
     {
-      // Create a dumb_physics::Body if this is new
       auto worldPose = entity.Component<components::WorldPose>();
       body = this->AddBody(entityId, rigidBody, worldPose);
     }
-    else
+    // Body component was removed from this entity by another system.
+    // We remove the whole entity from this system, because we're not
+    // interested in entities without a body.
+    else if (ecs::WAS_DELETED == difference && body)
     {
-      body = this->world.GetById(entityId);
-
-      if (ecs::WAS_DELETED == difference)
-        this->world.RemoveBody(body->Id());
-
-      else if (ecs::WAS_MODIFIED == difference)
-        this->SyncBodies(body, rigidBody);
+      this->world.RemoveBody(body->Id());
+    }
+    // Another system modified the body
+    else if (ecs::WAS_MODIFIED == difference && body)
+    {
+      this->SyncBodies(body, rigidBody);
+    }
+    // Something went wrong
+    else if (ecs::NO_DIFFERENCE != difference)
+    {
+      std::cerr << "Unable to handle difference [" << difference
+                << "] for entity [" << entityId << "]" << std::endl;
     }
 
+    // In case it's a non-static body
     if (body && !body->IsStatic())
     {
+      // Get the current velocity
       auto const velocity = entity.Component<components::WorldVelocity>();
+
+      // Update
       if (velocity)
       {
         this->SyncVelocity(body, velocity);
+      }
+      else
+      {
+        std::cerr << "Entity [" << entityId
+                  << "] has a non-static body, but no world velocity"
+                  << std::endl;
       }
     }
   }
@@ -105,21 +131,24 @@ void DumbPhysics::Update(
   // STEP 3 update the components with the results of the physics
   for (auto const &entityId : _result.EntityIds())
   {
-    dumb_physics::Body *body = this->world.GetById(entityId);
+    dumb_physics::Body *body = this->world.BodyById(entityId);
 
-    if (body)
+    if (!body)
     {
-      auto &entity = _mgr.Entity(entityId);
-      // TODO what if something else moved the world pose? How to know that
-      //      it changed and the physics world should be updated?
-      auto worldPose = entity.ComponentMutable<components::WorldPose>();
-      worldPose->position = body->Position();
-      worldPose->rotation = body->Rotation();
-
-      auto component = entity.ComponentMutable<components::WorldVelocity>();
-      component->linear = body->LinearVelocity();
-      component->angular = body->AngularVelocity();
+      std::cerr << "Null body for entity [" << entityId << "]" << std::endl;
+      continue;
     }
+
+    auto &entity = _mgr.Entity(entityId);
+    // TODO what if something else moved the world pose? How to know that
+    //      it changed and the physics world should be updated?
+    auto worldPose = entity.ComponentMutable<components::WorldPose>();
+    worldPose->position = body->Position();
+    worldPose->rotation = body->Rotation();
+
+    auto component = entity.ComponentMutable<components::WorldVelocity>();
+    component->linear = body->LinearVelocity();
+    component->angular = body->AngularVelocity();
   }
 }
 
@@ -145,8 +174,8 @@ void DumbPhysics::SyncBodies(dumb_physics::Body *body,
 void DumbPhysics::SyncVelocity(dumb_physics::Body *body,
     const components::WorldVelocity *component)
 {
-    body->LinearVelocity(component->linear);
-    body->AngularVelocity(component->angular);
+  body->LinearVelocity(component->linear);
+  body->AngularVelocity(component->angular);
 }
 
 /////////////////////////////////////////////////
@@ -156,9 +185,10 @@ dumb_physics::Body *DumbPhysics::AddBody(ecs::EntityId _id,
 {
   std::cout << "[phys]Add body " << _id << std::endl;
   dumb_physics::Body *body = nullptr;
+
+  // Dumb physics only supports spheres
   if (bodyComponent->type == components::RigidBody::SPHERE)
   {
-    // Dumb physics only supports spheres
     body = this->world.AddBody(_id);
     body->Radius(bodyComponent->sphere.radius);
     body->IsStatic(bodyComponent->isStatic);

@@ -23,7 +23,6 @@
 #include <utility>
 
 #include <ignition/math/Vector3.hh>
-#include <ignition/math/Quaternion.hh>
 
 #include "dumb_physics/Body.hh"
 
@@ -35,32 +34,42 @@ namespace dumb_physics
   /// \brief A world for doing physics stuff
   class World
   {
+    /// \brief Constructor
     public: World();
 
+    /// \brief Destructor
     public: ~World();
 
     /// \brief Get Gravity
-    public: ignition::math::Vector3<double> Gravity();
+    /// \return Gravity vector in world coordinates.
+    public: ignition::math::Vector3<double> Gravity() const;
 
     /// \brief Set Gravity
-    public: void Gravity(ignition::math::Vector3<double> _gravity);
+    /// \param[in] _gravity Gravity vector in world coordinates.
+    public: void Gravity(const ignition::math::Vector3<double> &_gravity);
 
-    /// \brief add a body to the world 
+    /// \brief Add a body to the world
+    /// \param[in] _bodyId Body id
     public: Body *AddBody(int _bodyId);
 
-    /// \brief get a body on the world 
-    public: Body *GetById(int _bodyId);
+    /// \brief Get a body on the world
+    /// \param[in] _bodyId Body id
+    public: Body *BodyById(int _bodyId) const;
 
-    /// \brief remove a body from the world 
+    /// \brief Remove a body from the world
+    /// \param[in] _bodyId Body id
     public: void RemoveBody(int _bodyId);
 
-    /// \brief do collisions and stuff
-    public: std::set<std::pair<int, int> > Update(double _dt);
+    /// \brief Calculate collisions and update bodies
+    /// \param[in] _dt Time step in seconds
+    /// \return Set with pairs of overlapping bodies
+    public: std::set<std::pair<int, int> > Update(const double _dt);
 
-    /// \brief set the size of the world
-    public: void SetSize(double _x, double _y, double _z);
+    /// \brief Set the size of the world
+    /// \param[in] Size in meters
+    public: void SetSize(const ignition::math::Vector3d &_size);
 
-    /// \brief PIMPL
+    /// \brief Pointer to private members.
     private: std::unique_ptr<WorldPrivate> dataPtr;
   };
 }

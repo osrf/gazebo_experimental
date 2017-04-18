@@ -110,6 +110,7 @@ namespace gazebo
               }
 
       /// \brief Test if a component changed last timestep
+      /// \param[in] _type Type of component to check
       public: Difference IsDifferent(ComponentType _type) const;
 
       /// \brief Private data pointer
