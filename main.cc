@@ -17,26 +17,30 @@
 
 #include <iostream>
 #include <map>
+#include <sstream>
 
 #include <gflags/gflags.h>
 
 #include "gazebo/Config.hh"
 
 // Gflag command line argument definitions
-// These two flags are abbreviations for longer gflags built-ins.
+// This flag is an abbreviation for the longer gflags built-in help flag.
 DEFINE_bool(h, false, "--help, Print help message");
-DEFINE_bool(v, false, "--version, Print version information");
 
 // Additional flags will go here
 
 int main(int _argc, char **_argv)
 {
-  gflags::SetUsageMessage(GAZEBO_VERSION_HEADER);
-  gflags::SetVersionString(GAZEBO_VERSION_FULL);
+  std::stringstream stream;
+  stream << "Run the Gazebo server and GUI." << std::endl
+         << std::endl
+         << "`gazebo` [options]";
+  gflags::SetUsageMessage(stream.str());
+  gflags::SetVersionString(GAZEBO_VERSION_HEADER);
   gflags::ParseCommandLineNonHelpFlags(&_argc, &_argv, true);
 
   // Parse out the help flag in such a way that the full help text
-  // is suppressed - if --help or -h is specified, override the default
+  // is suppressed: if --help* or -h is specified, override the default
   // help behavior and turn on --helpmatch, to only shows help for the
   // current executable (instead of showing a huge list of gflags built-ins).
   std::vector<gflags::CommandLineFlagInfo> flags;
@@ -48,7 +52,6 @@ int main(int _argc, char **_argv)
     showHelp = showHelp || (flag.name.find("help") != std::string::npos &&
                             flag.current_value == "true");
   }
-
   // If help message is requested, substitute help for helpmatch.
   if (showHelp || FLAGS_h)
   {
@@ -56,12 +59,7 @@ int main(int _argc, char **_argv)
     gflags::SetCommandLineOption("helpmatch", "main");
   }
 
-  if (FLAGS_v)
-  {
-    gflags::SetCommandLineOptionWithMode("version", "true",
-        gflags::SET_FLAGS_DEFAULT);
-  }
-
+  // print help and/or version information
   gflags::HandleCommandLineHelpFlags();
 
   return 0;
