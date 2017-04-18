@@ -8,4 +8,4 @@
 #define GAZEBO_VERSION "${PROJECT_VERSION}"
 #define GAZEBO_VERSION_FULL "${PROJECT_VERSION_FULL}"
 
-#define GAZEBO_VERSION_HEADER "Gazebo, version ${PROJECT_VERSION_FULL}\nCopyright (C) 2017 Open Robotics.\nReleased under the Apache 2.0 License.\nhttp://ignitionrobotics.org"
+#define GAZEBO_VERSION_HEADER "Version ${PROJECT_VERSION_FULL}\nCopyright (C) 2017 Open Robotics.\nReleased under the Apache 2.0 License.\nhttp://ignitionrobotics.org"

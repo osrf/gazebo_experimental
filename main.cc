@@ -23,8 +23,11 @@
 #include "gazebo/Config.hh"
 
 // Gflag command line argument definitions
-DEFINE_bool(h, false, "--help, Show this help text");
-DEFINE_bool(v, false, "--version, Display version information");
+// These two flags are abbreviations for longer gflags built-ins.
+DEFINE_bool(h, false, "--help, Print help message");
+DEFINE_bool(v, false, "--version, Print version information");
+
+// Additional flags will go here
 
 int main(int _argc, char **_argv)
 {
@@ -34,7 +37,7 @@ int main(int _argc, char **_argv)
 
   // Parse out the help flag in such a way that the full help text
   // is suppressed - if --help or -h is specified, override the default
-  // help behavior and turn on --helpshort, which only shows help for the
+  // help behavior and turn on --helpmatch, to only shows help for the
   // current executable (instead of showing a huge list of gflags built-ins).
   std::vector<gflags::CommandLineFlagInfo> flags;
   gflags::GetAllFlags(&flags);
@@ -46,7 +49,7 @@ int main(int _argc, char **_argv)
                             flag.current_value == "true");
   }
 
-  // SHow help, if specified
+  // If help message is requested, substitute help for helpmatch.
   if (showHelp || FLAGS_h)
   {
     gflags::SetCommandLineOption("help", "false");
