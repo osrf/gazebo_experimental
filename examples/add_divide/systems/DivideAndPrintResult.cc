@@ -17,41 +17,41 @@
 #include <iostream>
 #include <ignition/common/PluginMacros.hh>
 
-#include "gazebo/components/Triplet.hh"
+#include "components/Fraction.hh"
 #include "gazebo/ecs/Entity.hh"
 #include "gazebo/ecs/Manager.hh"
 #include "gazebo/ecs/EntityQuery.hh"
-#include "gazebo/systems/AddAndPrintResult.hh"
+#include "systems/DivideAndPrintResult.hh"
 
 using namespace gazebo;
 using namespace systems;
 
 /////////////////////////////////////////////////
-ecs::EntityQuery AddAndPrintResult::Init()
+ecs::EntityQuery DivideAndPrintResult::Init()
 {
   ecs::EntityQuery query;
 
   // Add components which are required
-  if (!query.AddComponent("gazebo::components::Triplet"))
-    std::cerr << "Undefined component[gazebo::components::Triplet]\n";
+  if (!query.AddComponent("gazebo::components::Fraction"))
+    std::cerr << "Undefined component[gazebo::components::Fraction]\n";
 
-  return query;
+  return std::move(query);
 }
 
 /////////////////////////////////////////////////
-void AddAndPrintResult::Update(double _dt,
-    const ecs::EntityQuery &_query, ecs::Manager &_mgr)
+void DivideAndPrintResult::Update(
+    double _dt, const ecs::EntityQuery &_result, ecs::Manager &_mgr)
 {
   // Loop through all of the entities which have the required components
-  for (auto const &entityId : _query.EntityIds())
+  for (auto const &entityId : _result.EntityIds())
   {
     auto &entity = _mgr.Entity(entityId);
-    auto numbers = entity.Component<gazebo::components::Triplet>();
+    auto fraction = entity.Component<gazebo::components::Fraction>();
 
-    std::cout << "Adding " << entityId << ":" <<
-      numbers->first + numbers->second + numbers->third << std::endl;
+    std::cout << "Dividing " << entityId << ":" <<
+      fraction->numerator / fraction->denominator << std::endl;
   }
 }
 
-IGN_COMMON_REGISTER_SINGLE_PLUGIN(gazebo::systems::AddAndPrintResult,
-                          gazebo::ecs::System)
+IGN_COMMON_REGISTER_SINGLE_PLUGIN(gazebo::systems::DivideAndPrintResult,
+                                  gazebo::ecs::System)

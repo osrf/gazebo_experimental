@@ -21,12 +21,12 @@
 #include <ignition/common/PluginLoader.hh>
 #include <ignition/common/SystemPaths.hh>
 
-#include "gazebo/components/Fraction.hh"
-#include "gazebo/components/Triplet.hh"
+#include "components/Fraction.hh"
+#include "components/Triplet.hh"
 #include "gazebo/ecs/ComponentFactory.hh"
 #include "gazebo/ecs/Manager.hh"
 
-#include "gazebo/systems/DivideAndPrintResult.hh"
+#include "systems/DivideAndPrintResult.hh"
 
 int main(int argc, char **argv)
 {
