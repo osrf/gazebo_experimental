@@ -17,7 +17,6 @@
 
 #include <iostream>
 #include <map>
-#include <sstream>
 
 #include <gflags/gflags.h>
 
@@ -25,18 +24,55 @@
 
 // Gflag command line argument definitions
 // This flag is an abbreviation for the longer gflags built-in help flag.
-DEFINE_bool(h, false, "--help, Print help message");
+DEFINE_bool(h, false, "");
 
 // Additional flags will go here
 
+void Help()
+{
+  std::cerr << "gazebo -- Run the Gazebo server and GUI.\n" << std::endl;
+  std::cerr << "`gazebo` [options] <world_file>\n" << std::endl;
+  // std::cerr << "Gazebo server runs simulation and handles commandline "
+  //   << "options, starts a Master, runs World update and sensor generation "
+  //   << "loops. This also starts the Gazebo GUI client in a separate "
+  //   << "process.\n" << std::endl;
+
+  std::cerr << "Options:" << std::endl
+  // << "  -d [ --record ]               Record simulation data." << std::endl
+  // << "  -e [ --physics ] arg          Specify a physics engine "
+  // << "  -f [ --file ] arg             Load an SDF file on start." << std::endl
+  // << "  -g [ --gui ]                  Run only the GUI." << std::endl
+  << "  -h [ --help ]                 Print help message." << std::endl
+  // << "  -i [ --iters ] arg            Run simulation for the specified "
+  // <<                                  "number of iterations." << std::endl
+  // <<                                  "(xxx|xxx|xxx)." << std::endl
+  // << "  -l [ --replay ] arg           Replay a log file." << std::endl
+  // << "  --minimal_comms               Reduce the amount of generated TCP/IP"
+  // << "  -o [ --profile ] arg          Physics profile name." << std::endl
+  // << "  -p [ --plugin ] arg           Load a plugin." << std::endl
+  // << "  -r [ --run ]                  Run physics simulation on start."
+  // <<                                  std::endl
+  // << "  --record_encoding arg (=zlib) Compression encoding format for log "
+  // <<                                  "data " << std::endl
+  // << "                                (zlib|bz2|txt)." << std::endl
+  // << "  -s [ --server ]               Run only the server, a.k.a. headless."
+  // <<                                  std::endl
+  // << "  --seed arg                    Start with the given random number seed."
+  // <<                                  std::endl
+  // <<                                  " traffic." << std::endl
+  // << "  -v [ --verbose ] level (=X)   Adjust the level of console output."
+  // <<                                  std::endl
+  << "  --version                     Print version information." << std::endl
+  << std::endl;
+}
+
+void Version()
+{
+  std::cerr << GAZEBO_VERSION_HEADER << std::endl;
+}
+
 int main(int _argc, char **_argv)
 {
-  std::stringstream stream;
-  stream << "Run the Gazebo server and GUI." << std::endl
-         << std::endl
-         << "`gazebo` [options]";
-  gflags::SetUsageMessage(stream.str());
-  gflags::SetVersionString(GAZEBO_VERSION_HEADER);
   gflags::ParseCommandLineNonHelpFlags(&_argc, &_argv, true);
 
   // Parse out the help flag in such a way that the full help text
@@ -46,21 +82,33 @@ int main(int _argc, char **_argv)
   std::vector<gflags::CommandLineFlagInfo> flags;
   gflags::GetAllFlags(&flags);
 
-  bool showHelp = false;
+  bool showHelp = FLAGS_h;
+  bool showVersion = false;
   for (auto const &flag : flags)
   {
     showHelp = showHelp || (flag.name.find("help") != std::string::npos &&
                             flag.current_value == "true");
-  }
-  // If help message is requested, substitute help for helpmatch.
-  if (showHelp || FLAGS_h)
-  {
-    gflags::SetCommandLineOption("help", "false");
-    gflags::SetCommandLineOption("helpmatch", "main");
+    showVersion = showVersion ||
+                  (flag.name.find("version") != std::string::npos &&
+                      flag.current_value == "true");
   }
 
-  // print help and/or version information
-  gflags::HandleCommandLineHelpFlags();
+  // If help message is requested, substitute in the override help function.
+  if (showHelp)
+  {
+    gflags::SetCommandLineOption("help", "false");
+    gflags::SetCommandLineOption("helpshort", "false");
+    gflags::SetCommandLineOption("helpfull", "false");
+    gflags::SetCommandLineOption("helpmatch", "");
+    Help();
+  }
+
+  // If version is requested, override with custom version print function.
+  if (showVersion)
+  {
+    gflags::SetCommandLineOption("version", "false");
+    Version();
+  }
 
   return 0;
 }
