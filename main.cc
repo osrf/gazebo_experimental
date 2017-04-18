@@ -19,6 +19,7 @@
 #include <cstdlib>
 
 #include <ignition/common/PluginLoader.hh>
+#include <ignition/common/SystemPaths.hh>
 
 #include "gazebo/components/Fraction.hh"
 #include "gazebo/components/Triplet.hh"
@@ -43,19 +44,16 @@ int main(int argc, char **argv)
   // First way to load a system: not using a plugin. Useful for testing
   manager.LoadSystem<gazebo::systems::DivideAndPrintResult>();
 
-  // Add a place to search for plugins
-  const char *path = std::getenv("GAZEBO_PLUGIN_PATH");
-  if (nullptr != path)
-    pm.AddSearchPath(path);
-  else
-    std::cerr << "No plugin path given" << std::endl;
-
   // Second way to load a system: using a plugin.
-  if (pm.LoadLibrary("AddAndPrintResult"))
+  ignition::common::SystemPaths sp;
+  sp.SetPluginPathEnv("GAZEBO_PLUGIN_PATH");
+  std::string pathToLib = sp.FindSharedLibrary("AddAndPrintResult");
+  std::string pluginName = pm.LoadLibrary(pathToLib);
+
+  if (pluginName.size())
   {
     std::unique_ptr<gazebo::ecs::System> sys;
-    sys = pm.Instantiate<gazebo::ecs::System>(
-        "::gazebo::systems::AddAndPrintResult");
+    sys = pm.Instantiate<gazebo::ecs::System>(pluginName);
     if (!manager.LoadSystem(std::move(sys)))
     {
       std::cerr << "Failed to load plugin from library" << std::endl;

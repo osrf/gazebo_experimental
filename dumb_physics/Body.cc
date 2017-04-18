@@ -21,37 +21,53 @@ namespace dumb_physics
 {
   class BodyPrivate
   {
+    /// \brief Body id
     public: int id = -1;
+
+    /// \brief Mass in kg
     public: double mass = 1.0;
+
+    /// \brief Sphere radius
     public: double radius = 1.0;
+
+    /// \brief Whether it moves
     public: bool isStatic = false;
 
+    /// \brief Linear velocity in m/s
     public: ignition::math::Vector3<double> linearVelocity = {0, 0, 0};
+
+    /// \brief Angular velocity in m/s
     public: ignition::math::Quaternion<double> angularVelocity = {1, 0, 0, 0};
+
+    /// \brief Position in meters
     public: ignition::math::Vector3<double> position = {0, 0, 0};
+
+    /// \brief Rotation in radians
     public: ignition::math::Quaternion<double> rotation {1, 0, 0, 0};
   };
 }
 
 using namespace dumb_physics;
 
+/////////////////////////////////////////////////
 Body::Body()
 {
-  dataPtr.reset(new BodyPrivate);
+  this->dataPtr.reset(new BodyPrivate);
 }
 
+/////////////////////////////////////////////////
 Body::~Body()
 {
 }
 
 /////////////////////////////////////////////////
-int Body::Id()
+int Body::Id() const
 {
   return this->dataPtr->id;
 }
 
 /////////////////////////////////////////////////
-void Body::Id(int _id)
+void Body::Id(const int _id)
 {
   this->dataPtr->id = _id;
 }
@@ -63,7 +79,7 @@ double Body::Mass() const
 }
 
 /////////////////////////////////////////////////
-void Body::Mass(double _mass)
+void Body::Mass(const double _mass)
 {
   this->dataPtr->mass = _mass;
 }
@@ -75,12 +91,12 @@ bool Body::IsStatic() const
 }
 
 /////////////////////////////////////////////////
-void Body::IsStatic(bool _isStatic)
+void Body::IsStatic(const bool _isStatic)
 {
   if (_isStatic == true)
   {
-    this->dataPtr->linearVelocity.Set(0,0,0);
-    this->dataPtr->angularVelocity.Set(1,0,0,0);
+    this->dataPtr->linearVelocity.Set(0, 0, 0);
+    this->dataPtr->angularVelocity.Set(1, 0, 0, 0);
   }
   this->dataPtr->isStatic = _isStatic;
 }
@@ -92,7 +108,7 @@ double Body::Radius() const
 }
 
 /////////////////////////////////////////////////
-void Body::Radius(double _radius)
+void Body::Radius(const double _radius)
 {
   this->dataPtr->radius = _radius;
 }
@@ -104,7 +120,7 @@ ignition::math::Vector3<double> Body::LinearVelocity() const
 }
 
 /////////////////////////////////////////////////
-void Body::LinearVelocity(ignition::math::Vector3<double> _vel)
+void Body::LinearVelocity(const ignition::math::Vector3<double> &_vel)
 {
   if (!this->dataPtr->isStatic)
   {
@@ -119,7 +135,7 @@ ignition::math::Quaternion<double> Body::AngularVelocity() const
 }
 
 /////////////////////////////////////////////////
-void Body::AngularVelocity(ignition::math::Quaternion<double> _vel)
+void Body::AngularVelocity(const ignition::math::Quaternion<double> &_vel)
 {
   if (!this->dataPtr->isStatic)
   {
@@ -134,7 +150,7 @@ ignition::math::Vector3<double> Body::Position() const
 }
 
 /////////////////////////////////////////////////
-void Body::Position(ignition::math::Vector3<double> _position)
+void Body::Position(const ignition::math::Vector3<double> &_position)
 {
   this->dataPtr->position = _position;
 }
@@ -146,7 +162,7 @@ ignition::math::Quaternion<double> Body::Rotation() const
 }
 
 /////////////////////////////////////////////////
-void Body::Rotation(ignition::math::Quaternion<double> _rotation)
+void Body::Rotation(const ignition::math::Quaternion<double> &_rotation)
 {
   this->dataPtr->rotation = _rotation;
 }
