@@ -16,103 +16,50 @@
 */
 
 #include <iostream>
-#include <cstdlib>
+#include <map>
 
-#include <ignition/common/PluginLoader.hh>
+#include <gflags/gflags.h>
 
-#include "gazebo/components/Fraction.hh"
-#include "gazebo/components/Triplet.hh"
-#include "gazebo/ecs/ComponentFactory.hh"
-#include "gazebo/ecs/Manager.hh"
+#include "gazebo/Config.hh"
 
-#include "gazebo/systems/DivideAndPrintResult.hh"
+// Gflag command line argument definitions
+DEFINE_bool(h, false, "--help, Show this help text");
+DEFINE_bool(v, false, "--version, Display version information");
 
-int main(int argc, char **argv)
+int main(int _argc, char **_argv)
 {
-  gazebo::ecs::Manager manager;
+  gflags::SetUsageMessage(GAZEBO_VERSION_HEADER);
+  gflags::SetVersionString(GAZEBO_VERSION_FULL);
+  gflags::ParseCommandLineNonHelpFlags(&_argc, &_argv, true);
 
-  // Something to deal with loading plugins
-  ignition::common::PluginLoader pm;
+  // Parse out the help flag in such a way that the full help text
+  // is suppressed - if --help or -h is specified, override the default
+  // help behavior and turn on --helpshort, which only shows help for the
+  // current executable (instead of showing a huge list of gflags built-ins).
+  std::vector<gflags::CommandLineFlagInfo> flags;
+  gflags::GetAllFlags(&flags);
 
-  // TODO Componentizer to register components
-  gazebo::ecs::ComponentFactory::Register<gazebo::components::Triplet>(
-      "gazebo::components::Triplet");
-  gazebo::ecs::ComponentFactory::Register<gazebo::components::Fraction>(
-      "gazebo::components::Fraction");
-
-  // First way to load a system: not using a plugin. Useful for testing
-  manager.LoadSystem<gazebo::systems::DivideAndPrintResult>();
-
-  // Add a place to search for plugins
-  const char *path = std::getenv("GAZEBO_PLUGIN_PATH");
-  if (nullptr != path)
-    pm.AddSearchPath(path);
-  else
-    std::cerr << "No plugin path given" << std::endl;
-
-  // Second way to load a system: using a plugin.
-  if (pm.LoadLibrary("AddAndPrintResult"))
+  bool showHelp = false;
+  for (auto const &flag : flags)
   {
-    std::unique_ptr<gazebo::ecs::System> sys;
-    sys = pm.Instantiate<gazebo::ecs::System>(
-        "::gazebo::systems::AddAndPrintResult");
-    if (!manager.LoadSystem(std::move(sys)))
-    {
-      std::cerr << "Failed to load plugin from library" << std::endl;
-    }
-  }
-  else
-  {
-    std::cerr << "Failed to load library" << std::endl;
+    showHelp = showHelp || (flag.name.find("help") != std::string::npos &&
+                            flag.current_value == "true");
   }
 
-  // Create a few entities to work with
-  for (int i = 0; i < 10; i++)
+  // SHow help, if specified
+  if (showHelp || FLAGS_h)
   {
-    // An entity is just an ID
-    gazebo::ecs::EntityId e = manager.CreateEntity();
-    // Convenience wrapper for working with an Id
-    gazebo::ecs::Entity &entity = manager.Entity(e);
-
-    // TODO manager.CreateEntity<ComponentA, ComponentB, ...>();
-
-    if (e % 2 == 0)
-    {
-      // One method of adding a component to an entity
-      auto *fraction = manager.AddComponent<gazebo::components::Fraction>(e);
-      if (nullptr != fraction)
-      {
-        fraction->numerator = 100.0f + i;
-        fraction->denominator = 1.0f + i;
-      }
-      else
-      {
-        std::cerr << "Failed to add fraction to entity" << std::endl;
-      }
-
-    }
-    if (e % 3 == 0)
-    {
-      // Another method of adding a component to an entity
-      auto numbers = entity.AddComponent<gazebo::components::Triplet>();
-      if (nullptr != numbers)
-      {
-        numbers->first = e;
-        numbers->second = i;
-        numbers->third = 3;
-      }
-      else
-      {
-        std::cerr << "Failed to add triplet to entity" << std::endl;
-      }
-    }
+    gflags::SetCommandLineOption("help", "false");
+    gflags::SetCommandLineOption("helpmatch", "main");
   }
 
-  // Run all the systems once. Value chosen for time_step is unimportant for
-  // this demo. In practice Update() should be called in a loop for as long
-  // as the simulation is running.
-  double timeStep = 0.001;
-  manager.UpdateSystems(timeStep);
+  if (FLAGS_v)
+  {
+    gflags::SetCommandLineOptionWithMode("version", "true",
+        gflags::SET_FLAGS_DEFAULT);
+  }
+
+  gflags::HandleCommandLineHelpFlags();
 
   return 0;
 }
