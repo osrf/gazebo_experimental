@@ -44,8 +44,10 @@ namespace gazebo
 
       /// \brief Called every physics update
       /// \param[in] _dt Time step
-      /// \param[out] _result ?
-      /// \param[in] _mgr ?
+      /// \param[in] _result An EntityQuery with result from the query
+      /// returned from Init().
+      /// \param[in] _mgr An ecs::Manager instance that can be used to
+      /// add/delete entities.
       public: virtual void Update(const double _dt,
                   const ecs::EntityQuery &_result,
                   ecs::Manager &_mgr);
