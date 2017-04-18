@@ -24,17 +24,21 @@ namespace dumb_physics
 {
   class WorldPrivate
   {
-    public: ignition::math::Vector3<double> gravity = {0, 0, 0};
+    /// \brief Gravity vector in m/s^2
+    public: ignition::math::Vector3d gravity = {0, 0, 0};
+
+    /// \brief Number of iterations elapsed
     public: unsigned int iterations = 1;
+
+    /// \brief Map of bodies in the world
     public: std::map<int, std::shared_ptr<Body> > bodies;
-    public: double xSize = 2.0;
-    public: double ySize = 2.0;
-    public: double zSize = 2.0;
+
+    /// \brief Size of the world in meters
+    public: ignition::math::Vector3d size = {2.0, 2.0, 2.0};
   };
 }
 
 using namespace dumb_physics;
-
 
 /////////////////////////////////////////////////
 World::World()
@@ -48,13 +52,13 @@ World::~World()
 }
 
 /////////////////////////////////////////////////
-ignition::math::Vector3<double> World::Gravity()
+ignition::math::Vector3d World::Gravity() const
 {
   return this->dataPtr->gravity;
 }
 
 /////////////////////////////////////////////////
-void World::Gravity(ignition::math::Vector3<double> _gravity)
+void World::Gravity(const ignition::math::Vector3d &_gravity)
 {
   this->dataPtr->gravity = _gravity;
 }
@@ -73,14 +77,13 @@ Body *World::AddBody(int _bodyId)
 }
 
 /////////////////////////////////////////////////
-Body *World::GetById(int _bodyId)
+Body *World::BodyById(int _bodyId) const
 {
   Body *body = nullptr;
   auto bodyIter = this->dataPtr->bodies.find(_bodyId);
   if (bodyIter != this->dataPtr->bodies.end())
     body = bodyIter->second.get();
   return body;
-
 }
 
 /////////////////////////////////////////////////
@@ -90,15 +93,13 @@ void World::RemoveBody(int _bodyId)
 }
 
 /////////////////////////////////////////////////
-void World::SetSize(double _x, double _y, double _z)
+void World::SetSize(const ignition::math::Vector3d &_size)
 {
-  this->dataPtr->xSize = _x;
-  this->dataPtr->ySize = _y;
-  this->dataPtr->zSize = _z;
+  this->dataPtr->size = _size;
 }
 
 /////////////////////////////////////////////////
-std::set<std::pair<int, int> > World::Update(double _dt)
+std::set<std::pair<int, int> > World::Update(const double _dt)
 {
   // loop through all bodies and advance position by velocity
   for (auto kv : this->dataPtr->bodies)
@@ -148,8 +149,8 @@ std::set<std::pair<int, int> > World::Update(double _dt)
   // simple-sphere-sphere-collision-detection-and-collision-response/
   for (auto overlap : overlappingBodies)
   {
-    Body *body1 = this->GetById(overlap.first);
-    Body *body2 = this->GetById(overlap.second);
+    Body *body1 = this->BodyById(overlap.first);
+    Body *body2 = this->BodyById(overlap.second);
     ignition::math::Vector3<double> basis;
     basis = body1->Position() - body2->Position();
     basis.Normalize();
@@ -179,9 +180,9 @@ std::set<std::pair<int, int> > World::Update(double _dt)
     std::shared_ptr<Body> &body = kv.second;
     ignition::math::Vector3<double> pose = body->Position();
     ignition::math::Vector3<double> vel = body->LinearVelocity();
-    double x2 = this->dataPtr->xSize / 2.0;
-    double y2 = this->dataPtr->ySize / 2.0;
-    double z2 = this->dataPtr->zSize / 2.0;
+    double x2 = this->dataPtr->size.X() / 2.0;
+    double y2 = this->dataPtr->size.Y() / 2.0;
+    double z2 = this->dataPtr->size.Z() / 2.0;
     bool collision = false;
 
     // X
