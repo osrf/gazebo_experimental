@@ -18,6 +18,8 @@
 #include <iostream>
 #include <map>
 
+#include <gflags/gflags.h>
+
 #include <ignition/common/PluginLoader.hh>
 #include <ignition/common/SystemPaths.hh>
 
