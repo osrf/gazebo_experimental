@@ -33,5 +33,3 @@ namespace gazebo
 
 #endif
 
-
-
