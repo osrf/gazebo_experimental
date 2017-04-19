@@ -6,6 +6,7 @@
 set(unit_tests
   EntityComponentDatabase_TEST.cc
   EntityQuery_TEST.cc
+  QueryRegistrar_TEST.cc
   # SystemManager_TEST.cc
 )
 
