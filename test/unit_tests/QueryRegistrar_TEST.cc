@@ -57,16 +57,16 @@ TEST(QueryRegistrar, RegisterOneQuery)
   gazebo::ecs::QueryRegistrar r;
   gazebo::ecs::EntityQuery q;
   q.AddComponent("TC1");
-  gazebo::ecs::QueryCallbackPtr cb = [] (
+  gazebo::ecs::QueryCallbackPtr cb = [] (double _dt,
       const gazebo::ecs::EntityQuery &_q,
-      gazebo::ecs::Manager &_m, double _dt) -> void {
+      gazebo::ecs::Manager &_m) -> void {
         _m.result = "RegisterOneQuery lambda";
       };
   r.Register(q, cb);
   ASSERT_EQ(1, r.Registrations().size());
 
   gazebo::ecs::Manager m;
-  (r.Registrations()[0].second)(q, m, 0);
+  (r.Registrations()[0].second)(0, q, m);
   EXPECT_EQ(std::string("RegisterOneQuery lambda"), m.result);
 }
 
@@ -78,14 +78,14 @@ TEST(QueryRegistrar, QueryOrderIsPreserved)
   gazebo::ecs::EntityQuery q2;
   q1.AddComponent("TC1");
   q2.AddComponent("TC2");
-  gazebo::ecs::QueryCallbackPtr cb1 = [] (
+  gazebo::ecs::QueryCallbackPtr cb1 = [] (double _dt,
       const gazebo::ecs::EntityQuery &_q,
-      gazebo::ecs::Manager &_m, double _dt) -> void {
+      gazebo::ecs::Manager &_m) -> void {
         _m.result = "first callback";
       };
-  gazebo::ecs::QueryCallbackPtr cb2 = [] (
+  gazebo::ecs::QueryCallbackPtr cb2 = [] (double _dt,
       const gazebo::ecs::EntityQuery &_q,
-      gazebo::ecs::Manager &_m, double _dt) -> void {
+      gazebo::ecs::Manager &_m) -> void {
         _m.result = "second callback";
       };
   r.Register(q1, cb1);
@@ -93,9 +93,9 @@ TEST(QueryRegistrar, QueryOrderIsPreserved)
   ASSERT_EQ(2, r.Registrations().size());
 
   gazebo::ecs::Manager m;
-  (r.Registrations()[0].second)(q1, m, 0);
+  (r.Registrations()[0].second)(0, q1, m);
   EXPECT_EQ(std::string("first callback"), m.result);
-  (r.Registrations()[1].second)(q1, m, 0);
+  (r.Registrations()[1].second)(0, q1, m);
   EXPECT_EQ(std::string("second callback"), m.result);
 }
 
@@ -109,4 +109,3 @@ int main(int argc, char **argv)
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
-
