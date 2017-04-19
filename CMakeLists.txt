@@ -13,29 +13,34 @@ set (PROJECT_VERSION_FULL
 set (PROJECT_CMAKE_DIR ${PROJECT_SOURCE_DIR}/cmake
   CACHE PATH "Location of CMake scripts")
 include_directories(include)
-
 enable_testing()
 
 ################################################################################
-message (STATUS "\n\n====== Finding 3rd Party Packages ======")
+
+set (build_errors "" CACHE INTERNAL "build errors" FORCE)
+set (build_warnings "" CACHE INTERNAL "build warnings" FORCE)
+
+################################################################################
+message (STATUS "====== Finding 3rd Party Packages ======")
 
 include (${PROJECT_CMAKE_DIR}/FindDependencies.cmake)
 
-message (STATUS "\n\n========================================")
-################################################################################
-message (STATUS "\n\n====== Building Configuration File =====")
-
-configure_file (${PROJECT_CMAKE_DIR}/Config.hh.in
-    "${PROJECT_BINARY_DIR}/include/gazebo/Config.hh")
-include_directories(${PROJECT_BINARY_DIR}/include)
-
-message (STATUS "\n\n========================================")
+message (STATUS "========================================")
 ################################################################################
 
-find_package(ignition-common0 REQUIRED)
-
-include_directories(${IGNITION-COMMON_INCLUDE_DIRS})
-
-add_subdirectory(src)
-add_subdirectory(test)
-add_subdirectory(examples)
+if (build_errors)
+  message(STATUS "BUILD ERRORS: These must be resolved before compiling.")
+  foreach (msg ${build_errors})
+    message(STATUS ${msg})
+  endforeach ()
+  message(STATUS "END BUILD ERRORS\n")
+  message (FATAL_ERROR "Errors encountered in build. "
+      "Please see the BUILD ERRORS above.")
+else (build_errors)
+	configure_file (${PROJECT_CMAKE_DIR}/Config.hh.in
+	    "${PROJECT_BINARY_DIR}/include/gazebo/Config.hh")
+	include_directories(${PROJECT_BINARY_DIR}/include)
+	add_subdirectory(src)
+	add_subdirectory(test)
+	add_subdirectory(examples)
+endif (build_errors)
