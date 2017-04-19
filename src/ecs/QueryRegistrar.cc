@@ -40,7 +40,7 @@ QueryRegistrar::~QueryRegistrar()
 }
 
 /////////////////////////////////////////////////
-void QueryRegistrar::Register(const EntityQuery &_q, QueryCallbackPtr _cb)
+void QueryRegistrar::Register(const EntityQuery &_q, QueryCallback _cb)
 {
   QueryRegistration r = {_q, _cb};
   this->dataPtr->queryCallbacks.push_back(r);

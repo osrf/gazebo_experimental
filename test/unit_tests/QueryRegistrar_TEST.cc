@@ -38,12 +38,6 @@ struct TC3
   double itemThree;
 };
 
-// fake declaration to avoid include
-class gazebo::ecs::Manager
-{
-  public: std::string result;
-};
-
 /////////////////////////////////////////////////
 TEST(QueryRegistrar, InitiallyNoRegistrations)
 {
@@ -57,17 +51,16 @@ TEST(QueryRegistrar, RegisterOneQuery)
   gazebo::ecs::QueryRegistrar r;
   gazebo::ecs::EntityQuery q;
   q.AddComponent("TC1");
-  gazebo::ecs::QueryCallbackPtr cb = [] (double _dt,
-      const gazebo::ecs::EntityQuery &_q,
-      gazebo::ecs::Manager &_m) -> void {
-        _m.result = "RegisterOneQuery lambda";
+  std::string sentinel;
+  gazebo::ecs::QueryCallback cb = [&sentinel] (double _dt,
+      const gazebo::ecs::EntityQuery &_q) -> void {
+        sentinel = "RegisterOneQuery lambda";
       };
   r.Register(q, cb);
   ASSERT_EQ(1, r.Registrations().size());
 
-  gazebo::ecs::Manager m;
-  (r.Registrations()[0].second)(0, q, m);
-  EXPECT_EQ(std::string("RegisterOneQuery lambda"), m.result);
+  (r.Registrations()[0].second)(0, q);
+  EXPECT_EQ(std::string("RegisterOneQuery lambda"), sentinel);
 }
 
 /////////////////////////////////////////////////
@@ -78,25 +71,23 @@ TEST(QueryRegistrar, QueryOrderIsPreserved)
   gazebo::ecs::EntityQuery q2;
   q1.AddComponent("TC1");
   q2.AddComponent("TC2");
-  gazebo::ecs::QueryCallbackPtr cb1 = [] (double _dt,
-      const gazebo::ecs::EntityQuery &_q,
-      gazebo::ecs::Manager &_m) -> void {
-        _m.result = "first callback";
+  std::string sentinel;
+  gazebo::ecs::QueryCallback cb1 = [&sentinel] (double _dt,
+      const gazebo::ecs::EntityQuery &_q) -> void {
+        sentinel = "first callback";
       };
-  gazebo::ecs::QueryCallbackPtr cb2 = [] (double _dt,
-      const gazebo::ecs::EntityQuery &_q,
-      gazebo::ecs::Manager &_m) -> void {
-        _m.result = "second callback";
+  gazebo::ecs::QueryCallback cb2 = [&sentinel] (double _dt,
+      const gazebo::ecs::EntityQuery &_q) -> void {
+        sentinel = "second callback";
       };
   r.Register(q1, cb1);
   r.Register(q2, cb2);
   ASSERT_EQ(2, r.Registrations().size());
 
-  gazebo::ecs::Manager m;
-  (r.Registrations()[0].second)(0, q1, m);
-  EXPECT_EQ(std::string("first callback"), m.result);
-  (r.Registrations()[1].second)(0, q1, m);
-  EXPECT_EQ(std::string("second callback"), m.result);
+  (r.Registrations()[0].second)(0, q1);
+  EXPECT_EQ(std::string("first callback"), sentinel);
+  (r.Registrations()[1].second)(0, q2);
+  EXPECT_EQ(std::string("second callback"), sentinel);
 }
 
 int main(int argc, char **argv)

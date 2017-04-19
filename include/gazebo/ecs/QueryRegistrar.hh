@@ -18,6 +18,7 @@
 #ifndef GAZEBO_ECS_QUERYREGISTRAR_HH_
 #define GAZEBO_ECS_QUERYREGISTRAR_HH_
 
+#include <functional>
 #include <memory>
 #include <utility>
 
@@ -32,11 +33,10 @@ namespace gazebo
 
     // Todo cb has a lot of arguments. Maybe have one argument with everything?
     /// \brief typedef for long function pointer
-    typedef void (*QueryCallbackPtr)(double _dt, const EntityQuery &_q,
-        Manager &_m);
+    typedef std::function<void (double _dt, const EntityQuery &_q)> QueryCallback;
 
     /// \brief typedef for long registration type
-    typedef std::pair<EntityQuery, QueryCallbackPtr> QueryRegistration;
+    typedef std::pair<EntityQuery, QueryCallback> QueryRegistration;
 
     /// \brief forward declaration
     class QueryRegistrarPrivate;
@@ -50,8 +50,8 @@ namespace gazebo
 
       /// \brief adds a query and a callback to call the results
       /// \param[in] _q the query object
-      /// \param[in] _cb pointer to callback function
-      public: void Register(const EntityQuery &_q, QueryCallbackPtr _cb);
+      /// \param[in] _cb callback function
+      public: void Register(const EntityQuery &_q, QueryCallback _cb);
 
       /// \brief Return the registered callbacks
       public: std::vector<QueryRegistration> Registrations() const;
