@@ -48,7 +48,7 @@ include_directories(${IGNITION-MATH_INCLUDE_DIRS})
 add_executable(dummy_demo dummy_demo.cc)
 target_link_libraries(dummy_demo GazeboECS ${IGNITION-COMMON_LIBRARIES} ${IGNITION-MATH_LIBRARIES})
 
-add_executable(gazebo main.cc)
+add_executable(gazebo gazebo_main.cc)
 target_link_libraries(gazebo gflags ${IGNITION-COMMON_LIBRARIES})
 
 # TODO install rules that don't install gazebo/system/*.hh
