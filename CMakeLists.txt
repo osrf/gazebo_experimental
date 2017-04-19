@@ -13,42 +13,29 @@ set (PROJECT_VERSION_FULL
 set (PROJECT_CMAKE_DIR ${PROJECT_SOURCE_DIR}/cmake
   CACHE PATH "Location of CMake scripts")
 include_directories(include)
+
 enable_testing()
 
-########################################
-
+################################################################################
 message (STATUS "\n\n====== Finding 3rd Party Packages ======")
-include (${PROJECT_CMAKE_DIR}/FindDependencies.cmake)
-message (STATUS "----------------------------------------\n")
 
-########################################
-# Write the config file
+include (${PROJECT_CMAKE_DIR}/FindDependencies.cmake)
+
+message (STATUS "\n\n========================================")
+################################################################################
+message (STATUS "\n\n====== Building Configuration File =====")
+
 configure_file (${PROJECT_CMAKE_DIR}/Config.hh.in
     "${PROJECT_BINARY_DIR}/include/gazebo/Config.hh")
+include_directories(${PROJECT_BINARY_DIR}/include)
 
-########################################
+message (STATUS "\n\n========================================")
+################################################################################
 
 find_package(ignition-common0 REQUIRED)
 
-include_directories(
-    ${IGNITION-COMMON_INCLUDE_DIRS}
-    ${gflags_INCLUDE_DIRS}
-    ${PROJECT_BINARY_DIR}/include)
+include_directories(${IGNITION-COMMON_INCLUDE_DIRS})
 
-add_subdirectory(ecs)
-add_subdirectory(systems)
-add_subdirectory(dumb_physics)
+add_subdirectory(src)
 add_subdirectory(test)
-
-add_executable(gz_ecs gz_ecs.cc)
-target_link_libraries(gz_ecs DivideAndPrintResult GazeboECS ${IGNITION-COMMON_LIBRARIES})
-
-find_package(ignition-math3 REQUIRED)
-include_directories(${IGNITION-MATH_INCLUDE_DIRS})
-add_executable(dummy_demo dummy_demo.cc)
-target_link_libraries(dummy_demo GazeboECS ${IGNITION-COMMON_LIBRARIES} ${IGNITION-MATH_LIBRARIES})
-
-add_executable(gazebo gazebo_main.cc)
-target_link_libraries(gazebo gflags ${IGNITION-COMMON_LIBRARIES})
-
-# TODO install rules that don't install gazebo/system/*.hh
+add_subdirectory(examples)

@@ -29,7 +29,7 @@
 #include "gazebo/components/WorldVelocity.hh"
 #include "gazebo/ecs/Manager.hh"
 #include "gazebo/ecs/EntityQuery.hh"
-#include "gazebo/systems/DumbPhysics.hh"
+#include "DumbPhysics.hh"
 
 using namespace gazebo;
 using namespace systems;
