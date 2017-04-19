@@ -47,10 +47,17 @@ namespace gazebo
       /// required by this system.
       public: virtual EntityQuery Init() = 0;
 
-      // TODO ECS to put manager into dataPtr
-        /// \brief Update all entities matching this system's requirements
+      /// \brief Update all entities matching this system's requirements
       public: virtual void Update(
                   double _dt, const EntityQuery &_result, Manager &_mgr) = 0;
+
+      friend ecs::Manager;
+
+      /// \brief Get the manager this system is a part of
+      public: ecs::Manager &Manager();
+
+      /// \brief Set the manager this system is a part of
+      private:void Manager(ecs::Manager *_mgr);
 
       /// \brief No copy constructor
       private: System(const System&) = delete;

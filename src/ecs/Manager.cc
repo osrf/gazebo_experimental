@@ -100,6 +100,7 @@ bool Manager::LoadSystem(std::unique_ptr<System> _sys)
   if (_sys)
   {
     EntityQuery query = _sys->Init();
+    _sys->Manager(this);
     auto result = this->dataPtr->database.AddQuery(std::move(query));
     this->dataPtr->systems.push_back(
         std::make_pair(std::move(_sys), result.first));

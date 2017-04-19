@@ -22,12 +22,25 @@ using namespace ecs;
 
 class gazebo::ecs::SystemPrivate
 {
+  public: ecs::Manager *_mgr;
 };
 
 /////////////////////////////////////////////////
 System::System()
 : dataPtr(new SystemPrivate())
 {
+}
+
+/// \brief Get the manager this system is a part of
+ecs::Manager &System::Manager()
+{
+  return *(this->dataPtr->_mgr);
+}
+
+/// \brief Set the manager this system is a part of
+void System::Manager(ecs::Manager *_mgr)
+{
+  this->dataPtr->_mgr = _mgr;
 }
 
 /////////////////////////////////////////////////
