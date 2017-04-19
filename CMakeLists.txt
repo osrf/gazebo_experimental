@@ -37,10 +37,10 @@ if (build_errors)
   message (FATAL_ERROR "Errors encountered in build. "
       "Please see the BUILD ERRORS above.")
 else (build_errors)
-	configure_file (${PROJECT_CMAKE_DIR}/Config.hh.in
-	    "${PROJECT_BINARY_DIR}/include/gazebo/Config.hh")
-	include_directories(${PROJECT_BINARY_DIR}/include)
-	add_subdirectory(src)
-	add_subdirectory(test)
-	add_subdirectory(examples)
+  configure_file (${PROJECT_CMAKE_DIR}/Config.hh.in
+      "${PROJECT_BINARY_DIR}/include/gazebo/Config.hh")
+  include_directories(${PROJECT_BINARY_DIR}/include)
+  add_subdirectory(src)
+  add_subdirectory(test)
+  add_subdirectory(examples)
 endif (build_errors)
