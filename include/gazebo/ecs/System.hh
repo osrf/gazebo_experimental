@@ -19,8 +19,10 @@
 #define GAZEBO_ECS_SYSTEM_HH_
 
 #include <memory>
-// #include "gazebo/ecs/Manager.hh"
-// #include "gazebo/ecs/Component.hh"
+
+// Could be forward declarations, but systems will include them anyways
+#include "gazebo/ecs/QueryRegistrar.hh"
+#include "gazebo/ecs/EntityQuery.hh"
 
 namespace gazebo
 {
@@ -29,10 +31,8 @@ namespace gazebo
     /// \brief Forward declaration
     class SystemPrivate;
 
+    /// \brief Forward Declaration
     class Manager;
-
-    /// \brief Forward declaration
-    class EntityQuery;
 
     /// \brief base class for a System
     ///
@@ -43,13 +43,8 @@ namespace gazebo
       public: System();
       public: ~System();
 
-      /// \brief Initialize the system and return the entity query
-      /// required by this system.
-      public: virtual EntityQuery Init() = 0;
-
-      /// \brief Update all entities matching this system's requirements
-      public: virtual void Update(
-                  double _dt, const EntityQuery &_result, Manager &_mgr) = 0;
+      /// \brief Initialize the system so it can register queries and callbacks
+      public: virtual void Init(QueryRegistrar &_registrar) = 0;
 
       friend ecs::Manager;
 

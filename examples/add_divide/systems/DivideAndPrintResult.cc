@@ -18,16 +18,14 @@
 #include <ignition/common/PluginMacros.hh>
 
 #include "components/Fraction.hh"
-#include "gazebo/ecs/Entity.hh"
 #include "gazebo/ecs/Manager.hh"
-#include "gazebo/ecs/EntityQuery.hh"
 #include "systems/DivideAndPrintResult.hh"
 
 using namespace gazebo;
 using namespace systems;
 
 /////////////////////////////////////////////////
-ecs::EntityQuery DivideAndPrintResult::Init()
+void DivideAndPrintResult::Init(ecs::QueryRegistrar &_registrar)
 {
   ecs::EntityQuery query;
 
@@ -35,17 +33,20 @@ ecs::EntityQuery DivideAndPrintResult::Init()
   if (!query.AddComponent("gazebo::components::Fraction"))
     std::cerr << "Undefined component[gazebo::components::Fraction]\n";
 
-  return query;
+  _registrar.Register(query,
+      std::bind(&DivideAndPrintResult::Update, this,
+        std::placeholders::_1, std::placeholders::_2));
 }
 
 /////////////////////////////////////////////////
 void DivideAndPrintResult::Update(
-    double _dt, const ecs::EntityQuery &_result, ecs::Manager &_mgr)
+    double _dt, const ecs::EntityQuery &_result)
 {
+  ecs::Manager &mgr = this->Manager();
   // Loop through all of the entities which have the required components
   for (auto const &entityId : _result.EntityIds())
   {
-    auto &entity = _mgr.Entity(entityId);
+    auto &entity = mgr.Entity(entityId);
     auto fraction = entity.Component<gazebo::components::Fraction>();
 
     std::cout << "Dividing " << entityId << ":" <<

@@ -29,10 +29,10 @@ namespace gazebo
 
     class AddAndPrintResult : public ecs::System
     {
-      public: virtual ecs::EntityQuery Init();
+      public: virtual void Init(ecs::QueryRegistrar &_registrar);
 
-      public: virtual void Update(double _dt, const ecs::EntityQuery &_result,
-                  ecs::Manager &_mgr);
+      /// \brief callback for query results
+      public: void Update(double _dt, const ecs::EntityQuery &_result);
     };
   }
 }
