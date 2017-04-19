@@ -58,7 +58,7 @@ ecs::EntityQuery DumbPhysics::Init()
   // use of the Mass and WorldVelocity components if present, but these are
   // optional
 
-  return std::move(query);
+  return query;
 }
 
 /////////////////////////////////////////////////

@@ -35,7 +35,7 @@ ecs::EntityQuery DivideAndPrintResult::Init()
   if (!query.AddComponent("gazebo::components::Fraction"))
     std::cerr << "Undefined component[gazebo::components::Fraction]\n";
 
-  return std::move(query);
+  return query;
 }
 
 /////////////////////////////////////////////////

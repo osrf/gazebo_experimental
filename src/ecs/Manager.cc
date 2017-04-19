@@ -63,9 +63,9 @@ bool Manager::DeleteEntity(EntityId _id)
 }
 
 /////////////////////////////////////////////////
-bool Manager::AddQuery(EntityQuery &&_query)
+bool Manager::AddQuery(const EntityQuery &_query)
 {
-  return this->dataPtr->database.AddQuery(std::move(_query)).second;
+  return this->dataPtr->database.AddQuery(_query).second;
 }
 
 /////////////////////////////////////////////////

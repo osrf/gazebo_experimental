@@ -81,7 +81,7 @@ namespace gazebo
       /// \returns true if the query was added successfully
       ///
       /// The query will be processed until it is removed.
-      private: bool AddQuery(EntityQuery &&_query);
+      private: bool AddQuery(const EntityQuery &_query);
 
       private: Manager(const Manager&) = delete;
 

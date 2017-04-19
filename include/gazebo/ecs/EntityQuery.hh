@@ -40,8 +40,6 @@ namespace gazebo
       /// \brief Constructor
       public: EntityQuery();
 
-      public: EntityQuery(EntityQuery &&_move);
-
       /// \brief Destructor
       public: ~EntityQuery();
 
@@ -70,9 +68,6 @@ namespace gazebo
       /// \return True if this query matches _rhs.
       public: bool operator==(const EntityQuery &_rhs) const;
 
-      /// \brief Move assignment operator.
-      public: EntityQuery &operator=(EntityQuery &&_rhs);
-
       /// \brief Add an entity.
       /// \param[in] _id Id of the entity to add.
       /// \return True if the entity was added.
@@ -96,7 +91,7 @@ namespace gazebo
       private: friend EntityComponentDatabase;
 
       /// \brief Private data pointer
-      private: std::unique_ptr<EntityQueryPrivate> dataPtr;
+      private: std::shared_ptr<EntityQueryPrivate> dataPtr;
     };
 
     static const EntityQuery EntityQueryNull;
