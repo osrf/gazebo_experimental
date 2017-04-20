@@ -16,12 +16,8 @@
 */
 
 #include <iostream>
-#include <map>
 
 #include <gflags/gflags.h>
-
-#include <ignition/common/PluginLoader.hh>
-#include <ignition/common/SystemPaths.hh>
 
 #include "gazebo/Config.hh"
 
@@ -31,13 +27,15 @@ DEFINE_bool(h, false, "");
 
 // Additional flags will go here
 
-
 void Help()
 {
-  std::cerr << "gazebo -- Run the Gazebo server and GUI.\n" << std::endl;
-  std::cerr << "`gazebo` [options] <world_file>\n" << std::endl;
-
-  std::cerr << "Options:" << std::endl
+  std::cout
+  << "gazebo -- Run the Gazebo server and GUI." << std::endl
+  << std::endl
+  << "`gazebo` [options] <world_file>" << std::endl
+  << std::endl
+  << std::endl
+  << "Options:" << std::endl
   << "  -h [ --help ]                 Print help message." << std::endl
   << "  --version                     Print version information." << std::endl
   << std::endl;
@@ -45,7 +43,7 @@ void Help()
 
 void Version()
 {
-  std::cerr << GAZEBO_VERSION_HEADER << std::endl;
+  std::cout << GAZEBO_VERSION_HEADER << std::endl;
 }
 
 int main(int _argc, char **_argv)
