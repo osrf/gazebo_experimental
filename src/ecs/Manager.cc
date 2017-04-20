@@ -75,12 +75,6 @@ bool Manager::DeleteEntity(EntityId _id)
 }
 
 /////////////////////////////////////////////////
-bool Manager::AddQuery(const EntityQuery &_query)
-{
-  return this->dataPtr->database.AddQuery(_query).second;
-}
-
-/////////////////////////////////////////////////
 void Manager::UpdateSystems(const double _dt)
 {
   // Let database do some stuff before starting the new update
@@ -98,7 +92,7 @@ void Manager::UpdateSystems(const double _dt)
   //  other SystemManagers to use multiple machines for one simulation
 
   // But this is a prototype, so here's the basic implementation
-  for (auto &sysInfo : this->dataPtr->systemInfo)
+  for(auto &sysInfo : this->dataPtr->systemInfo)
   {
     for (auto &updateInfo : sysInfo.updates)
     {
@@ -131,12 +125,6 @@ bool Manager::LoadSystem(std::unique_ptr<System> _sys)
     success = true;
   }
   return success;
-}
-
-/////////////////////////////////////////////////
-void *Manager::AddComponent(ComponentType _type, EntityId _id)
-{
-  return this->dataPtr->database.AddComponent(_id, _type);
 }
 
 /////////////////////////////////////////////////

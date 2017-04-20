@@ -64,25 +64,6 @@ namespace gazebo
       /// \returns Entity with id set to NO_ENTITY if entity does not exist
       public: gazebo::ecs::Entity &Entity(const EntityId _id) const;
 
-      public: template <typename T>
-              T *AddComponent(EntityId _id)
-              {
-                ComponentType type = ComponentFactory::Type<T>();
-                return static_cast<T*>(this->AddComponent(type, _id));
-              }
-
-      /// \brief Add component to entity by ComponentType
-      /// \returns pointer to component iff it was successfully added
-      public: void *AddComponent(ComponentType _type, EntityId _id);
-
-      public: void UpdateSystem(double _dt);
-
-      /// \brief Add a query for components of a certain type
-      /// \returns true if the query was added successfully
-      ///
-      /// The query will be processed until it is removed.
-      private: bool AddQuery(const EntityQuery &_query);
-
       private: Manager(const Manager&) = delete;
 
       private: std::unique_ptr<ManagerPrivate> dataPtr;
