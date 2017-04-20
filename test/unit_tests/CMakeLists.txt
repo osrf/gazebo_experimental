@@ -8,6 +8,7 @@ set(unit_tests
   EntityComponentDatabase_TEST.cc
   EntityQuery_TEST.cc
   # SystemManager_TEST.cc
+  Manager_TEST.cc
 )
 
 

@@ -76,8 +76,7 @@ int main(int argc, char **argv)
 
     if (e % 2 == 0)
     {
-      // One method of adding a component to an entity
-      auto *fraction = manager.AddComponent<gazebo::components::Fraction>(e);
+      auto *fraction = entity.AddComponent<gazebo::components::Fraction>();
       if (nullptr != fraction)
       {
         fraction->numerator = 100.0f + i;
