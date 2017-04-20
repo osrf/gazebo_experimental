@@ -97,6 +97,12 @@ void *Entity::AddComponent(const ComponentType &_type)
 }
 
 /////////////////////////////////////////////////
+bool Entity::RemoveComponent(ComponentType _type)
+{
+  return this->dataPtr->database->RemoveComponent(this->dataPtr->id, _type);
+}
+
+/////////////////////////////////////////////////
 Difference Entity::IsDifferent(ComponentType _type) const
 {
   return this->dataPtr->database->IsDifferent(this->dataPtr->id, _type);

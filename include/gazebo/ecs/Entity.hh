@@ -104,6 +104,17 @@ namespace gazebo
       /// \returns pointer to a component or nullptr on error
       public: void *AddComponent(const ComponentType&);
 
+      /// \brief remove a component from an entity by actual type
+      public: template <typename T>
+              bool RemoveComponent()
+              {
+                ComponentType type = ComponentFactory::Type<T>();
+                return this->RemoveComponent(type);
+              }
+
+      /// \brief remove a component from an entity
+      public: bool RemoveComponent(ComponentType _type);
+
       /// \brief Test if a component is different by actual type
       /// \returns the difference if any
       public: template <typename T>

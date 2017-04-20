@@ -589,6 +589,60 @@ TEST(EntityComponentDatabase, ReuseSmallestAvailableEntityId)
   EXPECT_EQ(3, uut.CreateEntity());
 }
 
+/////////////////////////////////////////////////
+TEST(EntityComponentDatabaseEntity, IsDifferent)
+{
+  gazebo::ecs::EntityComponentDatabase db;
+  gazebo::ecs::Entity &entity = db.Entity(db.CreateEntity());
+  entity.AddComponent<TC1>();
+  db.Update();
+  EXPECT_EQ(gazebo::ecs::WAS_CREATED, entity.IsDifferent<TC1>());
+}
+
+/////////////////////////////////////////////////
+TEST(EntityComponentDatabaseEntity, ReadComponent)
+{
+  gazebo::ecs::EntityComponentDatabase db;
+  gazebo::ecs::Entity &entity = db.Entity(db.CreateEntity());
+  auto comp = entity.AddComponent<TC1>();
+  comp->itemOne = 1234.0;
+  db.Update();
+  auto readOnlyComp = entity.Component<TC1>();
+  EXPECT_FLOAT_EQ(1234.0, readOnlyComp->itemOne);
+
+  db.Update();
+  EXPECT_EQ(gazebo::ecs::NO_DIFFERENCE, entity.IsDifferent<TC1>());
+}
+
+/////////////////////////////////////////////////
+TEST(EntityComponentDatabaseEntity, WriteComponent)
+{
+  gazebo::ecs::EntityComponentDatabase db;
+  gazebo::ecs::Entity &entity = db.Entity(db.CreateEntity());
+  auto comp = entity.AddComponent<TC1>();
+  comp->itemOne = 1234.0;
+  db.Update();
+  auto mutableComp = entity.ComponentMutable<TC1>();
+  mutableComp->itemOne = 4567.0;
+
+  db.Update();
+  EXPECT_EQ(gazebo::ecs::WAS_MODIFIED, entity.IsDifferent<TC1>());
+  auto readOnlyComp = entity.Component<TC1>();
+  EXPECT_FLOAT_EQ(4567.0, readOnlyComp->itemOne);
+}
+
+/////////////////////////////////////////////////
+TEST(EntityComponentDatabaseEntity, RemoveComponent)
+{
+  gazebo::ecs::EntityComponentDatabase db;
+  gazebo::ecs::Entity &entity = db.Entity(db.CreateEntity());
+  entity.AddComponent<TC1>();
+  db.Update();
+  entity.RemoveComponent<TC1>();
+  db.Update();
+  EXPECT_EQ(gazebo::ecs::WAS_DELETED, entity.IsDifferent<TC1>());
+}
+
 int main(int argc, char **argv)
 {
   gazebo::ecs::ComponentFactory::Register<TC1>("TC1");
