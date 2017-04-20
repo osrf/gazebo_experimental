@@ -50,12 +50,20 @@ Entity::Entity()
 Entity::Entity(Entity &&_entity)
 : dataPtr(std::move(_entity.dataPtr))
 {
+  _entity.dataPtr.reset(new EntityPrivate());
 }
 
 /////////////////////////////////////////////////
 Entity &Entity::operator=(Entity &&_entity)
 {
   this->dataPtr = std::move(_entity.dataPtr);
+  _entity.dataPtr.reset(new EntityPrivate());
+}
+
+/////////////////////////////////////////////////
+bool Entity::operator==(const Entity &_entity) const
+{
+  return this->dataPtr->id == _entity.dataPtr->id;
 }
 
 /////////////////////////////////////////////////

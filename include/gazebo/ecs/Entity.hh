@@ -55,6 +55,10 @@ namespace gazebo
       /// \brief Move assignment operator
       public: Entity &operator=(Entity &&_entity);
 
+      /// \brief Equality operator
+      /// \returns true if the id's are the same
+      public: bool operator==(const Entity &_entity) const;
+
       /// \brief Destructor
       public: ~Entity();
 
