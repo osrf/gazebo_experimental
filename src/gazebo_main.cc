@@ -93,7 +93,8 @@ int main(int _argc, char **_argv)
     // Initialize app
     ignition::gui::initApp();
 
-    // TODO: load plugins and configuration files here
+    // TODO: load startup plugins and configuration files here before creating
+    // the window
 
     // Create main window
     ignition::gui::createMainWindow();
@@ -102,10 +103,11 @@ int main(int _argc, char **_argv)
     auto win = ignition::gui::mainWindow();
     win->setWindowTitle("Gazebo");
 
-    // Run main window
+    // Run main window - this blocks until the window is closed or we receive a
+    // SIGINT
     ignition::gui::runMainWindow();
 
-    // Once main window is closed
+    // Cleanup once main window is closed
     ignition::gui::stop();
   }
 
