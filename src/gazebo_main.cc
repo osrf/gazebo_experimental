@@ -19,14 +19,17 @@
 
 #include <gflags/gflags.h>
 
+#ifndef Q_MOC_RUN
+  #include <ignition/gui/Iface.hh>
+#endif
+
 #include "gazebo/Config.hh"
 
 // Gflag command line argument definitions
 // This flag is an abbreviation for the longer gflags built-in help flag.
 DEFINE_bool(h, false, "");
 
-// Additional flags will go here
-
+//////////////////////////////////////////////////
 void Help()
 {
   std::cout
@@ -41,11 +44,13 @@ void Help()
   << std::endl;
 }
 
+//////////////////////////////////////////////////
 void Version()
 {
   std::cout << GAZEBO_VERSION_HEADER << std::endl;
 }
 
+//////////////////////////////////////////////////
 int main(int _argc, char **_argv)
 {
   gflags::ParseCommandLineNonHelpFlags(&_argc, &_argv, true);
@@ -77,12 +82,31 @@ int main(int _argc, char **_argv)
     gflags::SetCommandLineOption("helpmatch", "");
     Help();
   }
-
   // If version is requested, override with custom version print function.
-  if (showVersion)
+  else if (showVersion)
   {
     gflags::SetCommandLineOption("version", "false");
     Version();
+  }
+  else
+  {
+    // Initialize app
+    ignition::gui::initApp();
+
+    // TODO: load plugins and configuration files here
+
+    // Create main window
+    ignition::gui::createMainWindow();
+
+    // Customize window
+    auto win = ignition::gui::mainWindow();
+    win->setWindowTitle("Gazebo");
+
+    // Run main window
+    ignition::gui::runMainWindow();
+
+    // Once main window is closed
+    ignition::gui::stop();
   }
 
   return 0;
