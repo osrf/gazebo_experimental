@@ -19,6 +19,8 @@
 
 #include <gflags/gflags.h>
 
+#include <ignition/common/Console.hh>
+
 #ifndef Q_MOC_RUN
   #include <ignition/gui/Iface.hh>
 #endif
@@ -28,6 +30,8 @@
 // Gflag command line argument definitions
 // This flag is an abbreviation for the longer gflags built-in help flag.
 DEFINE_bool(h, false, "");
+DEFINE_int32(verbose, 1, "");
+DEFINE_int32(v, 1, "");
 
 //////////////////////////////////////////////////
 void Help()
@@ -41,6 +45,8 @@ void Help()
   << "Options:" << std::endl
   << "  -h [ --help ]                 Print help message." << std::endl
   << "  --version                     Print version information." << std::endl
+  << "  -v [--verbose] arg            Adjust the level of console output (0~4)."
+  << std::endl
   << std::endl;
 }
 
@@ -51,26 +57,50 @@ void Version()
 }
 
 //////////////////////////////////////////////////
+void Verbose()
+{
+  // This also applies to all upstream libraries using ignition::common::Console
+  ignition::common::Console::SetVerbosity(FLAGS_verbose);
+}
+
+//////////////////////////////////////////////////
+static bool VerbosityValidator(const char */*_flagname*/, int _value)
+{
+  return _value >= 0 && _value <= 4;
+}
+
+//////////////////////////////////////////////////
 int main(int _argc, char **_argv)
 {
+  // Register validators
+  gflags::RegisterFlagValidator(&FLAGS_verbose, &VerbosityValidator);
+  gflags::RegisterFlagValidator(&FLAGS_v, &VerbosityValidator);
+
+  // Parse command line
   gflags::ParseCommandLineNonHelpFlags(&_argc, &_argv, true);
 
+  // Hold info as we parse it
+  gflags::CommandLineFlagInfo info;
+
+  // Help
   // Parse out the help flag in such a way that the full help text
   // is suppressed: if --help* or -h is specified, override the default
   // help behavior and turn on --helpmatch, to only shows help for the
   // current executable (instead of showing a huge list of gflags built-ins).
-  std::vector<gflags::CommandLineFlagInfo> flags;
-  gflags::GetAllFlags(&flags);
+  gflags::GetCommandLineFlagInfo("help", &info);
+  bool showHelp = FLAGS_h || (info.current_value == "true");
 
-  bool showHelp = FLAGS_h;
-  bool showVersion = false;
-  for (auto const &flag : flags)
+  // Version
+  gflags::GetCommandLineFlagInfo("version", &info);
+  bool showVersion = (info.current_value == "true");
+
+  // Verbosity
+  gflags::GetCommandLineFlagInfo("verbose", &info);
+  if (info.is_default)
   {
-    showHelp = showHelp || (flag.name.find("help") != std::string::npos &&
-                            flag.current_value == "true");
-    showVersion = showVersion ||
-                  (flag.name.find("version") != std::string::npos &&
-                      flag.current_value == "true");
+    gflags::GetCommandLineFlagInfo("v", &info);
+    if (!info.is_default)
+      FLAGS_verbose = FLAGS_v;
   }
 
   // If help message is requested, substitute in the override help function.
@@ -88,8 +118,12 @@ int main(int _argc, char **_argv)
     gflags::SetCommandLineOption("version", "false");
     Version();
   }
+  // Run Gazebo
   else
   {
+    // Set verbosity level
+    Verbose();
+
     // Initialize app
     ignition::gui::initApp();
 
