@@ -108,6 +108,67 @@ TEST(Manager, LoadSystem)
   EXPECT_FLOAT_EQ(1.09, raw->lastDelta);
 }
 
+/////////////////////////////////////////////////
+TEST(Manager, PauseCount)
+{
+  gzecs::Manager mgr;
+  EXPECT_EQ(1, mgr.BeginPause());
+  EXPECT_EQ(2, mgr.BeginPause());
+  EXPECT_EQ(3, mgr.BeginPause());
+  EXPECT_EQ(2, mgr.EndPause());
+  EXPECT_EQ(1, mgr.EndPause());
+  EXPECT_EQ(0, mgr.EndPause());
+}
+
+/////////////////////////////////////////////////
+TEST(Manager, InitiallyNotPaused)
+{
+  gzecs::Manager mgr;
+  EXPECT_FALSE(mgr.Paused());
+}
+
+/////////////////////////////////////////////////
+TEST(Manager, PauseUnpause)
+{
+  gzecs::Manager mgr;
+  mgr.BeginPause();
+  EXPECT_TRUE(mgr.Paused());
+  mgr.EndPause();
+  EXPECT_FALSE(mgr.Paused());
+}
+
+/////////////////////////////////////////////////
+TEST(Manager, InitialTimeZero)
+{
+  gzecs::Manager mgr;
+  ignition::common::Time simTime = mgr.SimulationTime();
+  EXPECT_EQ(0, simTime.sec);
+  EXPECT_EQ(0, simTime.nsec);
+}
+
+/////////////////////////////////////////////////
+TEST(Manager, SetTimeNotPaused)
+{
+  gzecs::Manager mgr;
+  ignition::common::Time simTime(1234, 5678);
+  EXPECT_TRUE(mgr.SimulationTime(simTime));
+  ignition::common::Time retrievedTime = mgr.SimulationTime();
+  EXPECT_EQ(1234, retrievedTime.sec);
+  EXPECT_EQ(5678, retrievedTime.nsec);
+}
+
+/////////////////////////////////////////////////
+TEST(Manager, SetTimePaused)
+{
+  gzecs::Manager mgr;
+  mgr.BeginPause();
+  ignition::common::Time simTime(1234, 5678);
+  EXPECT_FALSE(mgr.SimulationTime(simTime));
+  ignition::common::Time retrievedTime = mgr.SimulationTime();
+  EXPECT_EQ(0, retrievedTime.sec);
+  EXPECT_EQ(0, retrievedTime.nsec);
+}
+
 int main(int argc, char **argv)
 {
   // Register types with the factory

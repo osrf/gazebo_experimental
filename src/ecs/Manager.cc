@@ -14,6 +14,7 @@
  * limitations under the License.
  *
 */
+#include <atomic>
 #include <set>
 #include <unordered_map>
 #include <utility>
@@ -37,12 +38,19 @@ class gazebo::ecs::ManagerPrivate
 
   /// \brief Handles storage and quering of components
   public: EntityComponentDatabase database;
+
+  /// \brief Holds the current simulation time
+  public: ignition::common::Time simTime;
+
+  /// \brief count of how many things want simulation time paused
+  public: std::atomic<int> pauseCount;
 };
 
 /////////////////////////////////////////////////
 Manager::Manager()
 : dataPtr(new ManagerPrivate)
 {
+  this->dataPtr->pauseCount = 0;
 }
 
 /////////////////////////////////////////////////
@@ -106,4 +114,45 @@ bool Manager::LoadSystem(std::unique_ptr<System> _sys)
 gazebo::ecs::Entity &Manager::Entity(const EntityId _id) const
 {
   return this->dataPtr->database.Entity(_id);
+}
+
+/////////////////////////////////////////////////
+const ignition::common::Time &Manager::SimulationTime()
+{
+  return this->dataPtr->simTime;
+}
+
+/////////////////////////////////////////////////
+bool Manager::SimulationTime(const ignition::common::Time &_newTime)
+{
+  if (!this->Paused())
+  {
+    this->dataPtr->simTime = _newTime;
+    return true;
+  }
+  return false;
+}
+
+/////////////////////////////////////////////////
+int Manager::BeginPause()
+{
+  return ++(this->dataPtr->pauseCount);
+}
+
+/////////////////////////////////////////////////
+int Manager::EndPause()
+{
+  int currentCount = this->dataPtr->pauseCount;
+  while (currentCount && !this->dataPtr->pauseCount.compare_exchange_weak(
+        currentCount, currentCount - 1))
+  {
+    // Intentionally do nothing, compare_exchange_weak modifies currentCount
+  }
+  return currentCount - 1;
+}
+
+/////////////////////////////////////////////////
+bool Manager::Paused()
+{
+  return this->dataPtr->pauseCount;
 }
