@@ -9,3 +9,5 @@ target_link_libraries(gazebo
   ${Qt5Core_LIBRARIES}
   ${Qt5Widgets_LIBRARIES}
 )
+
+gz_install_executable(gazebo)

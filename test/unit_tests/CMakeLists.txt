@@ -4,9 +4,11 @@
 #   a milisecond to run, there's a good chance it's a different kind of
 #   test
 set(unit_tests
+  Entity_TEST.cc
   EntityComponentDatabase_TEST.cc
   EntityQuery_TEST.cc
   # SystemManager_TEST.cc
+  Manager_TEST.cc
 )
 
 

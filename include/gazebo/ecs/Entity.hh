@@ -55,6 +55,10 @@ namespace gazebo
       /// \brief Move assignment operator
       public: Entity &operator=(Entity &&_entity);
 
+      /// \brief Equality operator
+      /// \returns true if the id's are the same
+      public: bool operator==(const Entity &_entity) const;
+
       /// \brief Destructor
       public: ~Entity();
 
@@ -99,6 +103,17 @@ namespace gazebo
       /// \brief Add a component by ComponentType
       /// \returns pointer to a component or nullptr on error
       public: void *AddComponent(const ComponentType&);
+
+      /// \brief remove a component from an entity by actual type
+      public: template <typename T>
+              bool RemoveComponent()
+              {
+                ComponentType type = ComponentFactory::Type<T>();
+                return this->RemoveComponent(type);
+              }
+
+      /// \brief remove a component from an entity
+      public: bool RemoveComponent(ComponentType _type);
 
       /// \brief Test if a component is different by actual type
       /// \returns the difference if any

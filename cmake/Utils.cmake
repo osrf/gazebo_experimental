@@ -38,3 +38,17 @@ macro (BUILD_WARNING)
     APPEND_TO_CACHED_LIST(build_warnings "build warning" ${msg})
   endforeach (str ${ARGN})
 endmacro (BUILD_WARNING)
+
+#################################################
+macro (gz_install_library _name)
+  set_target_properties(${_name} PROPERTIES SOVERSION ${PROJECT_MAJOR_VERSION} VERSION ${PROJECT_VERSION_FULL})
+  install (TARGETS ${_name} DESTINATION ${LIB_INSTALL_DIR} COMPONENT shlib)
+endmacro ()
+
+#################################################
+macro (gz_install_executable _name)
+  set_target_properties(${_name} PROPERTIES VERSION ${PROJECT_VERSION_FULL})
+  install (TARGETS ${_name} DESTINATION ${BIN_INSTALL_DIR})
+endmacro ()
+
+

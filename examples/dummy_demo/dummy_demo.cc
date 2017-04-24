@@ -78,11 +78,12 @@ int main(int argc, char **argv)
   {
     // Create the entity
     gazebo::ecs::EntityId e = manager.CreateEntity();
+    gazebo::ecs::Entity &entity = manager.Entity(e);
 
     // Give it components
 
     // Inertial component
-    auto inertial = manager.AddComponent<gazebo::components::Inertial>(e);
+    auto inertial = entity.AddComponent<gazebo::components::Inertial>();
     if (inertial)
     {
       inertial->mass = ignition::math::Rand::DblUniform(0.1, 5.0);
@@ -94,7 +95,7 @@ int main(int argc, char **argv)
     }
 
     // Geometry component
-    auto geom = manager.AddComponent<gazebo::components::Geometry>(e);
+    auto geom = entity.AddComponent<gazebo::components::Geometry>();
     if (geom)
     {
       geom->type = gazebo::components::Geometry::SPHERE;
@@ -107,7 +108,7 @@ int main(int argc, char **argv)
     }
 
     // World pose
-    auto pose = manager.AddComponent<gazebo::components::WorldPose>(e);
+    auto pose = entity.AddComponent<gazebo::components::WorldPose>();
     if (pose)
     {
       pose->position.X(ignition::math::Rand::DblUniform(-4.0, 4.0));
@@ -121,7 +122,7 @@ int main(int argc, char **argv)
     }
 
     // World velocity
-    auto vel = manager.AddComponent<gazebo::components::WorldVelocity>(e);
+    auto vel = entity.AddComponent<gazebo::components::WorldVelocity>();
     if (vel)
     {
       vel->linear.X(ignition::math::Rand::DblUniform(-1.0, 1.0));

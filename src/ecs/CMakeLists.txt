@@ -8,3 +8,5 @@ set(sources
 )
 
 add_library(GazeboECS SHARED ${sources})
+
+gz_install_library(GazeboECS)
