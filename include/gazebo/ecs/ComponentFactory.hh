@@ -23,6 +23,7 @@
 #include <memory>
 #include <mutex>
 #include <new>
+#include <string>
 #include <typeinfo>
 #include <vector>
 
