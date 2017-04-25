@@ -42,8 +42,14 @@ class gazebo::ecs::ManagerPrivate
   /// \brief Holds the current simulation time
   public: ignition::common::Time simTime;
 
+  /// \brief Holds the next simulation time
+  public: ignition::common::Time nextSimTime;
+
   /// \brief count of how many things want simulation time paused
   public: std::atomic<int> pauseCount;
+
+  /// \brief true if the simulation is paused
+  public: bool paused = false;
 };
 
 /////////////////////////////////////////////////
@@ -73,6 +79,14 @@ bool Manager::DeleteEntity(EntityId _id)
 /////////////////////////////////////////////////
 void Manager::UpdateSystems(const double _dt)
 {
+  // Decide at the beginning of every update if sim time is paused or not.
+  // Some systems (like rendering a camera for a GUI) need to continue to run
+  // even when simulation time is paused, so it's up to each system to check
+  this->dataPtr->paused = this->dataPtr->pauseCount;
+
+  // Advance sim time according to what was set last update
+  this->dataPtr->simTime = this->dataPtr->nextSimTime;
+
   // Let database do some stuff before starting the new update
   this->dataPtr->database.Update();
 
@@ -127,7 +141,7 @@ bool Manager::SimulationTime(const ignition::common::Time &_newTime)
 {
   if (!this->Paused())
   {
-    this->dataPtr->simTime = _newTime;
+    this->dataPtr->nextSimTime = _newTime;
     return true;
   }
   return false;
@@ -154,5 +168,5 @@ int Manager::EndPause()
 /////////////////////////////////////////////////
 bool Manager::Paused()
 {
-  return this->dataPtr->pauseCount;
+  return this->dataPtr->paused;
 }

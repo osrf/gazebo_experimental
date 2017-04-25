@@ -125,6 +125,8 @@ TEST(Manager, InitiallyNotPaused)
 {
   gzecs::Manager mgr;
   EXPECT_FALSE(mgr.Paused());
+  mgr.UpdateSystems(0);
+  EXPECT_FALSE(mgr.Paused());
 }
 
 /////////////////////////////////////////////////
@@ -132,8 +134,10 @@ TEST(Manager, PauseUnpause)
 {
   gzecs::Manager mgr;
   mgr.BeginPause();
+  mgr.UpdateSystems(0);
   EXPECT_TRUE(mgr.Paused());
   mgr.EndPause();
+  mgr.UpdateSystems(0);
   EXPECT_FALSE(mgr.Paused());
 }
 
@@ -152,9 +156,28 @@ TEST(Manager, SetTimeNotPaused)
   gzecs::Manager mgr;
   ignition::common::Time simTime(1234, 5678);
   EXPECT_TRUE(mgr.SimulationTime(simTime));
-  ignition::common::Time retrievedTime = mgr.SimulationTime();
-  EXPECT_EQ(1234, retrievedTime.sec);
-  EXPECT_EQ(5678, retrievedTime.nsec);
+
+  mgr.UpdateSystems(0);
+  simTime = mgr.SimulationTime();
+  EXPECT_EQ(1234, simTime.sec);
+  EXPECT_EQ(5678, simTime.nsec);
+}
+
+/////////////////////////////////////////////////
+TEST(Manager, SetTimeNextUpdate)
+{
+  gzecs::Manager mgr;
+  ignition::common::Time simTime(1234, 5678);
+  EXPECT_TRUE(mgr.SimulationTime(simTime));
+
+  simTime = mgr.SimulationTime();
+  EXPECT_EQ(0, simTime.sec);
+  EXPECT_EQ(0, simTime.nsec);
+
+  mgr.UpdateSystems(0);
+  simTime = mgr.SimulationTime();
+  EXPECT_EQ(1234, simTime.sec);
+  EXPECT_EQ(5678, simTime.nsec);
 }
 
 /////////////////////////////////////////////////
@@ -162,11 +185,15 @@ TEST(Manager, SetTimePaused)
 {
   gzecs::Manager mgr;
   mgr.BeginPause();
+  mgr.UpdateSystems(0);
+
   ignition::common::Time simTime(1234, 5678);
   EXPECT_FALSE(mgr.SimulationTime(simTime));
-  ignition::common::Time retrievedTime = mgr.SimulationTime();
-  EXPECT_EQ(0, retrievedTime.sec);
-  EXPECT_EQ(0, retrievedTime.nsec);
+
+  mgr.UpdateSystems(0);
+  simTime = mgr.SimulationTime();
+  EXPECT_EQ(0, simTime.sec);
+  EXPECT_EQ(0, simTime.nsec);
 }
 
 int main(int argc, char **argv)
