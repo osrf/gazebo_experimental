@@ -162,7 +162,7 @@ int Manager::EndPause()
   {
     // Intentionally do nothing, compare_exchange_weak modifies currentCount
   }
-  return currentCount - 1;
+  return currentCount > 0 ? currentCount - 1 : currentCount;
 }
 
 /////////////////////////////////////////////////

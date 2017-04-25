@@ -121,6 +121,14 @@ TEST(Manager, PauseCount)
 }
 
 /////////////////////////////////////////////////
+TEST(Manager, PauseCountAlwaysPositive)
+{
+  gzecs::Manager mgr;
+  for (int i = 0; i < 10; ++i)
+    EXPECT_EQ(0, mgr.EndPause());
+}
+
+/////////////////////////////////////////////////
 TEST(Manager, InitiallyNotPaused)
 {
   gzecs::Manager mgr;
