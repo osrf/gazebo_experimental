@@ -44,7 +44,7 @@ namespace gazebo
       /// \brief Get the current simulation time
       public: const ignition::common::Time &SimulationTime();
 
-      /// \brief Set the curret simulation time
+      /// \brief Set the simulation time of the next update
       /// \returns true if the time was set, or false if paused
       public: bool SimulationTime(const ignition::common::Time &_newTime);
 
