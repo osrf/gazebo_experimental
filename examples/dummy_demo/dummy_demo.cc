@@ -152,7 +152,7 @@ int main(int argc, char **argv)
     }
     else
     {
-      std::cerr << "First timestep or time moved backwards?" << std::endl;
+      std::cerr << "time moved backwards?" << std::endl;
       // Time moved backwards? Default update rate
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }

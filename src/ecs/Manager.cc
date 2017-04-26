@@ -96,9 +96,6 @@ void Manager::UpdateSystems()
   // even when simulation time is paused, so it's up to each system to check
   this->dataPtr->paused = this->dataPtr->pauseCount;
 
-  // Advance sim time according to what was set last update
-  this->dataPtr->simTime = this->dataPtr->nextSimTime;
-
   // Let database do some stuff before starting the new update
   this->dataPtr->database.Update();
 
@@ -123,6 +120,9 @@ void Manager::UpdateSystems()
       cb(query);
     }
   }
+
+  // Advance sim time according to what was set last update
+  this->dataPtr->simTime = this->dataPtr->nextSimTime;
 }
 
 /////////////////////////////////////////////////
