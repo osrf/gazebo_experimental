@@ -31,8 +31,7 @@ namespace gazebo
     /// \brief forward declaration
     class Manager;
 
-    // Todo cb has a lot of arguments. Maybe have one argument with everything?
-    /// \brief typedef for long function pointer
+    /// \brief typedef for query callbacks
     typedef std::function<void (const EntityQuery &_q)> QueryCallback;
 
     /// \brief typedef for long registration type
