@@ -33,7 +33,7 @@ namespace gazebo
 
     // Todo cb has a lot of arguments. Maybe have one argument with everything?
     /// \brief typedef for long function pointer
-    typedef std::function<void (double _dt, const EntityQuery &_q)> QueryCallback;
+    typedef std::function<void (const EntityQuery &_q)> QueryCallback;
 
     /// \brief typedef for long registration type
     typedef std::pair<EntityQuery, QueryCallback> QueryRegistration;

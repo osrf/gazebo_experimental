@@ -32,7 +32,7 @@ namespace gazebo
       public: virtual void Init(ecs::QueryRegistrar &_registrar);
 
       /// \brief callback for query results
-      public: void Update(double _dt, const ecs::EntityQuery &_result);
+      public: void Update(const ecs::EntityQuery &_result);
     };
   }
 }

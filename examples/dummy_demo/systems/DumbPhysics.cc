@@ -59,13 +59,11 @@ void DumbPhysics::Init(ecs::QueryRegistrar &_registrar)
   // optional
 
   _registrar.Register(query,
-      std::bind(&DumbPhysics::Update, this,
-        std::placeholders::_1, std::placeholders::_2));
+      std::bind(&DumbPhysics::Update, this, std::placeholders::_1));
 }
 
 /////////////////////////////////////////////////
-void DumbPhysics::Update(
-    double _dt, const ecs::EntityQuery &_result)
+void DumbPhysics::Update(const ecs::EntityQuery &_result)
 {
   ecs::Manager &mgr = this->Manager();
 
@@ -130,7 +128,12 @@ void DumbPhysics::Update(
   }
 
   // STEP 2 do some physics
-  auto contacts = this->world.Update(_dt);
+  // Physics controls simulation time because physics engines with a variable
+  // time steps will update at an unknown rate
+  double changeInTime = 0.001;
+  auto contacts = this->world.Update(changeInTime);
+  ignition::common::Time delta(0, changeInTime * 1e6);
+  mgr.SimulationTime(mgr.SimulationTime() + delta);
 
   // TODO Publish contacts on an ignition transport topic?
   for (auto contact : contacts)

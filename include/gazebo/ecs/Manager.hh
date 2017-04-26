@@ -82,7 +82,7 @@ namespace gazebo
       /// Ex: sm->LoadSystem(std::move(aUniquePtrInstance))
       public: bool LoadSystem(std::unique_ptr<System> _sys);
 
-      public: void UpdateSystems(const double _dt);
+      public: void UpdateSystems();
 
       /// \brief Returns an entity instance with the given ID
       /// \returns Entity with id set to NO_ENTITY if entity does not exist

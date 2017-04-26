@@ -23,6 +23,7 @@
 
 #include <ignition/common/PluginLoader.hh>
 #include <ignition/common/SystemPaths.hh>
+#include <ignition/common/Time.hh>
 #include <ignition/math/Rand.hh>
 
 #include "gazebo/components/Inertial.hh"
@@ -137,14 +138,25 @@ int main(int argc, char **argv)
   }
 
   // Simulation loop
-  int millis = 1;
-  double timeStep = millis / 1000.0;
+  ignition::common::Time lastSimTime;
   while (true)
   {
-    manager.UpdateSystems(timeStep);
+    manager.UpdateSystems();
+    ignition::common::Time currentSimTime = manager.SimulationTime();
 
-    // update in real time
-    std::this_thread::sleep_for(std::chrono::milliseconds(millis));
+    if (currentSimTime > lastSimTime)
+    {
+      // update in real time
+      double seconds = (currentSimTime - lastSimTime).Double();
+      std::this_thread::sleep_for(std::chrono::duration<double>(seconds));
+    }
+    else
+    {
+      std::cerr << "First timestep or time moved backwards?" << std::endl;
+      // Time moved backwards? Default update rate
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    lastSimTime = currentSimTime;
   }
 
   return 0;

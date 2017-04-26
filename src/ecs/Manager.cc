@@ -89,7 +89,7 @@ bool Manager::DeleteEntity(EntityId _id)
 }
 
 /////////////////////////////////////////////////
-void Manager::UpdateSystems(const double _dt)
+void Manager::UpdateSystems()
 {
   // Decide at the beginning of every update if sim time is paused or not.
   // Some systems (like rendering a camera for a GUI) need to continue to run
@@ -120,7 +120,7 @@ void Manager::UpdateSystems(const double _dt)
     {
       auto query = this->dataPtr->database.Query(updateInfo.first);
       QueryCallback cb = updateInfo.second;
-      cb(_dt, query);
+      cb(query);
     }
   }
 }

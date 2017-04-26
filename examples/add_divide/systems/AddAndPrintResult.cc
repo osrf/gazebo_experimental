@@ -34,12 +34,11 @@ void AddAndPrintResult::Init(ecs::QueryRegistrar &_registrar)
     std::cerr << "Undefined component[gazebo::components::Triplet]\n";
 
   _registrar.Register(query,
-      std::bind(&AddAndPrintResult::Update, this,
-        std::placeholders::_1, std::placeholders::_2));
+      std::bind(&AddAndPrintResult::Update, this, std::placeholders::_1));
 }
 
 /////////////////////////////////////////////////
-void AddAndPrintResult::Update(double _dt, const ecs::EntityQuery &_query)
+void AddAndPrintResult::Update(const ecs::EntityQuery &_query)
 {
   ecs::Manager &mgr = this->Manager();
   // Loop through all of the entities which have the required components

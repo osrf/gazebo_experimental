@@ -34,13 +34,11 @@ void DivideAndPrintResult::Init(ecs::QueryRegistrar &_registrar)
     std::cerr << "Undefined component[gazebo::components::Fraction]\n";
 
   _registrar.Register(query,
-      std::bind(&DivideAndPrintResult::Update, this,
-        std::placeholders::_1, std::placeholders::_2));
+      std::bind(&DivideAndPrintResult::Update, this, std::placeholders::_1));
 }
 
 /////////////////////////////////////////////////
-void DivideAndPrintResult::Update(
-    double _dt, const ecs::EntityQuery &_result)
+void DivideAndPrintResult::Update(const ecs::EntityQuery &_result)
 {
   ecs::Manager &mgr = this->Manager();
   // Loop through all of the entities which have the required components
