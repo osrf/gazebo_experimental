@@ -156,7 +156,7 @@ gazebo::ecs::Entity &Manager::Entity(const EntityId _id) const
 }
 
 /////////////////////////////////////////////////
-const ignition::common::Time &Manager::SimulationTime()
+const ignition::common::Time &Manager::SimulationTime() const
 {
   return this->dataPtr->simTime;
 }
@@ -191,7 +191,7 @@ int Manager::EndPause()
 }
 
 /////////////////////////////////////////////////
-bool Manager::Paused()
+bool Manager::Paused() const
 {
   return this->dataPtr->paused;
 }

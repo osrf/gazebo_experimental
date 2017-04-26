@@ -42,7 +42,7 @@ namespace gazebo
       public: ~Manager();
 
       /// \brief Get the current simulation time
-      public: const ignition::common::Time &SimulationTime();
+      public: const ignition::common::Time &SimulationTime() const;
 
       /// \brief Set the simulation time of the next update
       /// \returns true if the time was set, or false if paused
@@ -60,7 +60,7 @@ namespace gazebo
 
       /// \brief Check if simulation is paused
       /// \returns true if the simulation is paused
-      public: bool Paused();
+      public: bool Paused() const;
 
       /// \brief Creates a new entity
       public: EntityId CreateEntity();
