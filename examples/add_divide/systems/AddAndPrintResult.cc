@@ -18,16 +18,14 @@
 #include <ignition/common/PluginMacros.hh>
 
 #include "components/Triplet.hh"
-#include "gazebo/ecs/Entity.hh"
 #include "gazebo/ecs/Manager.hh"
-#include "gazebo/ecs/EntityQuery.hh"
 #include "systems/AddAndPrintResult.hh"
 
 using namespace gazebo;
 using namespace systems;
 
 /////////////////////////////////////////////////
-ecs::EntityQuery AddAndPrintResult::Init()
+void AddAndPrintResult::Init(ecs::QueryRegistrar &_registrar)
 {
   ecs::EntityQuery query;
 
@@ -35,17 +33,19 @@ ecs::EntityQuery AddAndPrintResult::Init()
   if (!query.AddComponent("gazebo::components::Triplet"))
     std::cerr << "Undefined component[gazebo::components::Triplet]\n";
 
-  return query;
+  _registrar.Register(query,
+      std::bind(&AddAndPrintResult::Update, this,
+        std::placeholders::_1, std::placeholders::_2));
 }
 
 /////////////////////////////////////////////////
-void AddAndPrintResult::Update(double _dt,
-    const ecs::EntityQuery &_query, ecs::Manager &_mgr)
+void AddAndPrintResult::Update(double _dt, const ecs::EntityQuery &_query)
 {
+  ecs::Manager &mgr = this->Manager();
   // Loop through all of the entities which have the required components
   for (auto const &entityId : _query.EntityIds())
   {
-    auto &entity = _mgr.Entity(entityId);
+    auto &entity = mgr.Entity(entityId);
     auto numbers = entity.Component<gazebo::components::Triplet>();
 
     std::cout << "Adding " << entityId << ":" <<

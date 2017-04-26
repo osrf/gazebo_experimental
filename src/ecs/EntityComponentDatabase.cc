@@ -128,7 +128,7 @@ EntityComponentDatabase::~EntityComponentDatabase()
 
 /////////////////////////////////////////////////
 std::pair<EntityQueryId, bool> EntityComponentDatabase::AddQuery(
-    EntityQuery &&_query)
+    const EntityQuery &_query)
 {
   bool isDuplicate = false;
   EntityQueryId result = -1;
@@ -146,7 +146,7 @@ std::pair<EntityQueryId, bool> EntityComponentDatabase::AddQuery(
   if (!isDuplicate)
   {
     auto const types = _query.ComponentTypes();
-    this->dataPtr->queries.push_back(std::move(_query));
+    this->dataPtr->queries.push_back(_query);
     result = this->dataPtr->queries.size() - 1;
     auto &nonConstQuery = this->dataPtr->queries.back();
     for (int id = 0; id < this->dataPtr->entities.size(); ++id)

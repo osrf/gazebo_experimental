@@ -37,7 +37,7 @@ namespace gazebo
     class DumbPhysics : public ecs::System
     {
       /// \brief Called when the system is loaded
-      public: virtual ecs::EntityQuery Init();
+      public: virtual void Init(ecs::QueryRegistrar &_registrar);
 
       /// \brief Called every physics update
       /// \param[in] _dt Time step
@@ -46,8 +46,7 @@ namespace gazebo
       /// \param[in] _mgr An ecs::Manager instance that can be used to
       /// add/delete entities.
       public: virtual void Update(const double _dt,
-                  const ecs::EntityQuery &_result,
-                  ecs::Manager &_mgr);
+                  const ecs::EntityQuery &_result);
 
       /// \brief Physics systems need to bridge between entities/components
       ///        and their internal reprentations of the world

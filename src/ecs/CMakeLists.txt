@@ -4,6 +4,7 @@ set(sources
   EntityQuery.cc
   ComponentFactory.cc
   Manager.cc
+  QueryRegistrar.cc
   System.cc
 )
 
