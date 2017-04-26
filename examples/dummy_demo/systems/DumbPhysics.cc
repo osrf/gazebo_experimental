@@ -35,7 +35,7 @@ using namespace gazebo;
 using namespace systems;
 
 /////////////////////////////////////////////////
-ecs::EntityQuery DumbPhysics::Init()
+void DumbPhysics::Init(ecs::QueryRegistrar &_registrar)
 {
   ecs::EntityQuery query;
 
@@ -58,20 +58,24 @@ ecs::EntityQuery DumbPhysics::Init()
   // use of the Mass and WorldVelocity components if present, but these are
   // optional
 
-  return std::move(query);
+  _registrar.Register(query,
+      std::bind(&DumbPhysics::Update, this,
+        std::placeholders::_1, std::placeholders::_2));
 }
 
 /////////////////////////////////////////////////
 void DumbPhysics::Update(
-    double _dt, const ecs::EntityQuery &_result, ecs::Manager &_mgr)
+    double _dt, const ecs::EntityQuery &_result)
 {
+  ecs::Manager &mgr = this->Manager();
+
   // STEP 1 Loop through entities and update internal representation
   // This is where the effects of other systems get propagated to this one,
   // for example, if a pose is changed or a body is deleted through the GUI.
   for (auto const &entityId : _result.EntityIds())
   {
     // Get entity (should check if exists?)
-    auto &entity = _mgr.Entity(entityId);
+    auto &entity = mgr.Entity(entityId);
 
     // Body is the internal representation of an entity in this system
     auto body = this->world.BodyById(entityId);
@@ -146,7 +150,7 @@ void DumbPhysics::Update(
       continue;
     }
 
-    auto &entity = _mgr.Entity(entityId);
+    auto &entity = mgr.Entity(entityId);
 
     auto worldPose = entity.ComponentMutable<components::WorldPose>();
     this->SyncExternalPose(body, worldPose);

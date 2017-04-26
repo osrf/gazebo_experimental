@@ -15,35 +15,40 @@
  *
 */
 
-#include "gazebo/ecs/System.hh"
+#include <utility>
+#include <vector>
 
-using namespace gazebo;
-using namespace ecs;
+#include "gazebo/ecs/QueryRegistrar.hh"
 
-class gazebo::ecs::SystemPrivate
+using namespace gazebo::ecs;
+
+class gazebo::ecs::QueryRegistrarPrivate
 {
-  public: ecs::Manager *_mgr;
+  /// \brief queries and callbacks that have been registered
+  public: std::vector<QueryRegistration> queryCallbacks;
 };
 
 /////////////////////////////////////////////////
-System::System()
-: dataPtr(new SystemPrivate())
+QueryRegistrar::QueryRegistrar() :
+  dataPtr(new QueryRegistrarPrivate)
 {
-}
-
-/// \brief Get the manager this system is a part of
-ecs::Manager &System::Manager()
-{
-  return *(this->dataPtr->_mgr);
-}
-
-/// \brief Set the manager this system is a part of
-void System::Manager(ecs::Manager *_mgr)
-{
-  this->dataPtr->_mgr = _mgr;
 }
 
 /////////////////////////////////////////////////
-System::~System()
+QueryRegistrar::~QueryRegistrar()
 {
 }
+
+/////////////////////////////////////////////////
+void QueryRegistrar::Register(const EntityQuery &_q, QueryCallback _cb)
+{
+  QueryRegistration r = {_q, _cb};
+  this->dataPtr->queryCallbacks.push_back(r);
+}
+
+/////////////////////////////////////////////////
+std::vector<QueryRegistration> QueryRegistrar::Registrations() const
+{
+  return this->dataPtr->queryCallbacks;
+}
+

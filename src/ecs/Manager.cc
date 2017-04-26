@@ -23,6 +23,7 @@
 #include "gazebo/ecs/EntityComponentDatabase.hh"
 #include "gazebo/ecs/EntityQuery.hh"
 #include "gazebo/ecs/Manager.hh"
+#include "gazebo/ecs/QueryRegistrar.hh"
 
 using namespace gazebo;
 using namespace ecs;
@@ -30,11 +31,22 @@ using namespace ecs;
 /// \brief Forward declaration
 class System;
 
+/////////////////////////////////////////////////
+/// \brief struct to hold information required for updating a system
+struct SystemInfo
+{
+  /// \brief List of callbacks to call
+  public: std::vector<std::pair<EntityQueryId, QueryCallback> > updates;
+};
+
+/////////////////////////////////////////////////
 class gazebo::ecs::ManagerPrivate
 {
   /// \brief Systems that are added to the manager
-  public: std::vector<
-          std::pair<std::unique_ptr<System>, EntityQueryId>> systems;
+  public: std::vector<std::unique_ptr<System> > systems;
+
+  /// \brief System info associated with a system by index
+  public: std::vector<SystemInfo> systemInfo;
 
   /// \brief Handles storage and quering of components
   public: EntityComponentDatabase database;
@@ -102,10 +114,14 @@ void Manager::UpdateSystems(const double _dt)
   //  other SystemManagers to use multiple machines for one simulation
 
   // But this is a prototype, so here's the basic implementation
-  for(auto &system : this->dataPtr->systems)
+  for(auto &sysInfo : this->dataPtr->systemInfo)
   {
-    system.first->Update(_dt, this->dataPtr->database.Query(system.second),
-        *this);
+    for (auto &updateInfo : sysInfo.updates)
+    {
+      auto query = this->dataPtr->database.Query(updateInfo.first);
+      QueryCallback cb = updateInfo.second;
+      cb(_dt, query);
+    }
   }
 }
 
@@ -115,10 +131,19 @@ bool Manager::LoadSystem(std::unique_ptr<System> _sys)
   bool success = false;
   if (_sys)
   {
-    EntityQuery query = _sys->Init();
-    auto result = this->dataPtr->database.AddQuery(std::move(query));
-    this->dataPtr->systems.push_back(
-        std::make_pair(std::move(_sys), result.first));
+    SystemInfo sysInfo;
+    QueryRegistrar registrar;
+    _sys->Manager(this);
+    _sys->Init(registrar);
+    for (auto registration : registrar.Registrations())
+    {
+      EntityQuery &query = registration.first;
+      QueryCallback &cb = registration.second;
+      auto result = this->dataPtr->database.AddQuery(query);
+      sysInfo.updates.push_back(std::make_pair(result.first, cb));
+    }
+    this->dataPtr->systems.push_back(std::move(_sys));
+    this->dataPtr->systemInfo.push_back(sysInfo);
     success = true;
   }
   return success;

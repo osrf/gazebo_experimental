@@ -39,12 +39,6 @@ EntityQuery::EntityQuery()
 }
 
 /////////////////////////////////////////////////
-EntityQuery::EntityQuery(EntityQuery &&_move)
-: dataPtr(std::move(_move.dataPtr))
-{
-}
-
-/////////////////////////////////////////////////
 EntityQuery::~EntityQuery()
 {
 }
@@ -109,12 +103,6 @@ const std::set<ComponentType> &EntityQuery::ComponentTypes() const
 const std::set<EntityId> &EntityQuery::EntityIds() const
 {
   return this->dataPtr->entityIds;
-}
-
-/////////////////////////////////////////////////
-EntityQuery &EntityQuery::operator=(EntityQuery &&_rhs)
-{
-  this->dataPtr = std::move(_rhs.dataPtr);
 }
 
 /////////////////////////////////////////////////

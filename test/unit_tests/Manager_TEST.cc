@@ -53,14 +53,16 @@ class TestHookSystem : public gzecs::System
 
   public: double lastDelta = 0;
 
-  public: virtual gzecs::EntityQuery Init()
+  public: virtual void Init(gzecs::QueryRegistrar &_registrar)
     {
+      gzecs::EntityQuery q;
+      q.AddComponent("TC1");
+      _registrar.Register(q, std::bind(&TestHookSystem::Update, this,
+            std::placeholders::_1, std::placeholders::_2));
       this->sentinel = "Init Ran";
-      return gzecs::EntityQuery();
     }
 
-  public: virtual void Update(double _dt, const gzecs::EntityQuery &_result,
-              gzecs::Manager &_mgr)
+  public: void Update(double _dt, const gzecs::EntityQuery &_result)
     {
       this->sentinel = "Update Ran";
       this->lastDelta = _dt;
