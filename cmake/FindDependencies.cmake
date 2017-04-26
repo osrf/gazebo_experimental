@@ -25,3 +25,21 @@ else()
 endif()
 
 ################################################################################
+# Ignition GUI
+find_package(ignition-gui0 QUIET)
+if (NOT ignition-gui0_FOUND)
+  BUILD_ERROR ("Missing: Ignition GUI (libignition-gui0-dev)")
+else()
+  message (STATUS "Found Ignition GUI")
+  set (CMAKE_AUTOMOC ON)
+  find_package (Qt5Widgets REQUIRED)
+  find_package (Qt5Core REQUIRED)
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${IGNITION-GUI_CXX_FLAGS}")
+  include_directories(
+    ${IGNITION-GUI_INCLUDE_DIRS}
+    ${Qt5Core_INCLUDE_DIRS}
+  )
+  link_directories(${IGNITION-GUI_LIBRARY_DIRS})
+endif()
+
+################################################################################
