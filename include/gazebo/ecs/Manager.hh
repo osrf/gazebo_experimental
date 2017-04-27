@@ -22,9 +22,12 @@
 #include <iostream>
 #include <set>
 
+#include <ignition/common/Time.hh>
+
 #include "gazebo/ecs/Entity.hh"
 #include "gazebo/ecs/System.hh"
 #include "gazebo/ecs/ComponentFactory.hh"
+
 
 namespace gazebo
 {
@@ -37,6 +40,27 @@ namespace gazebo
     {
       public: Manager();
       public: ~Manager();
+
+      /// \brief Get the current simulation time
+      public: const ignition::common::Time &SimulationTime() const;
+
+      /// \brief Set the simulation time of the next update
+      /// \returns true if the time was set, or false if paused
+      public: bool SimulationTime(const ignition::common::Time &_newTime);
+
+      /// \brief Pause the simulation
+      /// \description EndPause() must be called for each call to BeginPause().
+      /// \returns a count of systems that want time paused. This will never be
+      ///   less than 1.
+      public: int BeginPause();
+
+      /// \brief Unpause the simulation
+      /// \returns a count of systems that want time paused.
+      public: int EndPause();
+
+      /// \brief Check if simulation is paused
+      /// \returns true if the simulation is paused
+      public: bool Paused() const;
 
       /// \brief Creates a new entity
       public: EntityId CreateEntity();
@@ -58,30 +82,11 @@ namespace gazebo
       /// Ex: sm->LoadSystem(std::move(aUniquePtrInstance))
       public: bool LoadSystem(std::unique_ptr<System> _sys);
 
-      public: void UpdateSystems(const double _dt);
+      public: void UpdateSystems();
 
       /// \brief Returns an entity instance with the given ID
       /// \returns Entity with id set to NO_ENTITY if entity does not exist
       public: gazebo::ecs::Entity &Entity(const EntityId _id) const;
-
-      public: template <typename T>
-              T *AddComponent(EntityId _id)
-              {
-                ComponentType type = ComponentFactory::Type<T>();
-                return static_cast<T*>(this->AddComponent(type, _id));
-              }
-
-      /// \brief Add component to entity by ComponentType
-      /// \returns pointer to component iff it was successfully added
-      public: void *AddComponent(ComponentType _type, EntityId _id);
-
-      public: void UpdateSystem(double _dt);
-
-      /// \brief Add a query for components of a certain type
-      /// \returns true if the query was added successfully
-      ///
-      /// The query will be processed until it is removed.
-      private: bool AddQuery(EntityQuery &&_query);
 
       private: Manager(const Manager&) = delete;
 

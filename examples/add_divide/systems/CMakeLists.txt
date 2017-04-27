@@ -1,0 +1,5 @@
+add_library(DivideAndPrintResult SHARED DivideAndPrintResult.cc)
+add_library(AddAndPrintResult SHARED AddAndPrintResult.cc)
+
+target_link_libraries(AddAndPrintResult GazeboECS)
+target_link_libraries(DivideAndPrintResult GazeboECS)

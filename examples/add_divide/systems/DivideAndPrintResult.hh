@@ -15,21 +15,25 @@
  *
 */
 
-#ifndef GAZEBO_COMPONENTS_INERTIA_HH_
-#define GAZEBO_COMPONENTS_INERTIA_HH_
+#ifndef GAZEBO_PRIVATE_SYSTEMS_DIVIDEANDPRINTRESULT_HH_
+#define GAZEBO_PRIVATE_SYSTEMS_DIVIDEANDPRINTRESULT_HH_
+
+#include "gazebo/ecs/System.hh"
 
 namespace gazebo
 {
-  namespace components
+  namespace systems
   {
-    /// \brief Describes the inertial properties of an entity.
-    struct Inertial
+    /// \brief Forward Declaration
+    class EntityQueryResult;
+
+    class DivideAndPrintResult : public ecs::System
     {
-      /// \brief Mass in kilograms
-      double mass = 1.0;
+      public: virtual void Init(ecs::QueryRegistrar &_registrar);
+
+      /// \brief callback for query results
+      public: void Update(const ecs::EntityQuery &_result);
     };
   }
 }
-
 #endif
-

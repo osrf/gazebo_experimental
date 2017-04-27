@@ -52,7 +52,7 @@ namespace gazebo
       /// \param[in] _query The query to add
       /// \returns The index of the query and boolean in a pair. The boolean
       /// is true if query was added, false if the query already existed.
-      public: std::pair<EntityQueryId, bool> AddQuery(EntityQuery &&_query);
+      public: std::pair<EntityQueryId, bool> AddQuery(const EntityQuery &_query);
 
       /// \brief Get a query based on an index.
       /// \param[in] _index Index of the query.

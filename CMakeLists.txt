@@ -3,27 +3,77 @@ project(gz_ecs)
 
 set(CMAKE_CXX_FLAGS "-std=c++11")
 
-include_directories(include)
+set (PROJECT_MAJOR_VERSION 0)
+set (PROJECT_MINOR_VERSION 0)
+set (PROJECT_PATCH_VERSION 0)
+set (PROJECT_VERSION ${PROJECT_MAJOR_VERSION}.${PROJECT_MINOR_VERSION})
+set (PROJECT_VERSION_FULL
+  ${PROJECT_MAJOR_VERSION}.${PROJECT_MINOR_VERSION}.${PROJECT_PATCH_VERSION})
 
+set (PROJECT_CMAKE_DIR ${PROJECT_SOURCE_DIR}/cmake
+  CACHE PATH "Location of CMake scripts")
+include_directories(include)
 enable_testing()
 
+################################################################################
 
-find_package(ignition-common0 REQUIRED)
-find_package(ignition-transport3 REQUIRED)
-include_directories(${IGNITION-COMMON_INCLUDE_DIRS} ${IGNITION-TRANSPORT_INCLUDE_DIRS})
+set (build_errors "" CACHE INTERNAL "build errors" FORCE)
+set (build_warnings "" CACHE INTERNAL "build warnings" FORCE)
 
-add_subdirectory(ecs)
-add_subdirectory(systems)
-add_subdirectory(dumb_physics)
-add_subdirectory(test)
+################################################################################
+message (STATUS "====== Finding 3rd Party Packages ======")
 
-add_executable(gz_ecs main.cc)
-target_link_libraries(gz_ecs DivideAndPrintResult GazeboECS ${IGNITION-COMMON_LIBRARIES})
+include (${PROJECT_CMAKE_DIR}/FindDependencies.cmake)
 
-find_package(ignition-math3 REQUIRED)
-include_directories(${IGNITION-MATH_INCLUDE_DIRS})
-add_executable(dummy_demo dummy_demo.cc)
-target_link_libraries(dummy_demo GazeboECS ${IGNITION-COMMON_LIBRARIES} ${IGNITION-MATH_LIBRARIES})
+message (STATUS "========================================")
+################################################################################
 
+# Use GNUInstallDirst to get canonical paths
+include(GNUInstallDirs)
 
-# TODO install rules that don't install gazebo/system/*.hh
+# with -fPIC
+if(UNIX AND NOT WIN32)
+  set (CMAKE_INSTALL_PREFIX "/usr" CACHE STRING "Install Prefix")
+ find_program(CMAKE_UNAME uname /bin /usr/bin /usr/local/bin )
+ if(CMAKE_UNAME)
+   exec_program(uname ARGS -m OUTPUT_VARIABLE CMAKE_SYSTEM_PROCESSOR)
+   set(CMAKE_SYSTEM_PROCESSOR ${CMAKE_SYSTEM_PROCESSOR} CACHE INTERNAL
+     "processor type (i386 and x86_64)")
+   if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64")
+     ADD_DEFINITIONS(-fPIC)
+   endif(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64")
+ endif(CMAKE_UNAME)
+endif()
+
+set (CMAKE_INCLUDE_DIRECTORIES_PROJECT_BEFORE ON)
+
+# developer's option to cache PKG_CONFIG_PATH and
+# LD_LIBRARY_PATH for local installs
+if(PKG_CONFIG_PATH)
+  set (ENV{PKG_CONFIG_PATH} ${PKG_CONFIG_PATH}:$ENV{PKG_CONFIG_PATH})
+endif()
+if(LD_LIBRARY_PATH)
+  set (ENV{LD_LIBRARY_PATH} ${LD_LIBRARY_PATH}:$ENV{LD_LIBRARY_PATH})
+endif()
+
+set (INCLUDE_INSTALL_DIR
+  "${CMAKE_INSTALL_INCLUDEDIR}/gazebo-${PROJECT_MAJOR_VERSION}/gazebo")
+set (LIB_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR})
+set (BIN_INSTALL_DIR ${CMAKE_INSTALL_BINDIR})
+
+if (build_errors)
+  message(STATUS "BUILD ERRORS: These must be resolved before compiling.")
+  foreach (msg ${build_errors})
+    message(STATUS ${msg})
+  endforeach ()
+  message(STATUS "END BUILD ERRORS\n")
+  message (FATAL_ERROR "Errors encountered in build. "
+      "Please see the BUILD ERRORS above.")
+else (build_errors)
+  configure_file (${PROJECT_CMAKE_DIR}/Config.hh.in
+      "${PROJECT_BINARY_DIR}/include/gazebo/Config.hh")
+  include_directories(${PROJECT_BINARY_DIR}/include)
+  add_subdirectory(src)
+  add_subdirectory(test)
+  add_subdirectory(examples)
+endif (build_errors)
