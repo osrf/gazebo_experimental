@@ -28,6 +28,7 @@
 
 #include "gazebo/components/Inertial.hh"
 #include "gazebo/components/Geometry.hh"
+#include "gazebo/components/Renderable.hh"
 #include "gazebo/components/WorldPose.hh"
 #include "gazebo/components/WorldVelocity.hh"
 #include "gazebo/ecs/ComponentFactory.hh"
@@ -51,27 +52,33 @@ int main(int argc, char **argv)
       "gazebo::components::WorldPose");
   gazebo::ecs::ComponentFactory::Register<gazebo::components::WorldVelocity>(
       "gazebo::components::WorldVelocity");
+  gazebo::ecs::ComponentFactory::Register<gazebo::components::Renderable>(
+      "gazebo::components::Renderable");
 
   // Plugin loader (plugins are systems)
   ignition::common::PluginLoader pluginLoader;
   ignition::common::SystemPaths sp;
   sp.SetPluginPathEnv("GAZEBO_PLUGIN_PATH");
 
-  std::string pathToPhysicsLib = sp.FindSharedLibrary("DumbPhysicsPlugin");
-  std::string physicsPluginName = pluginLoader.LoadLibrary(pathToPhysicsLib);
+  std::vector<std::string> libs = {
+    "DumbPhysicsPlugin",
+    "DummyRenderingPlugin",
+  };
 
-  if (physicsPluginName.size())
+  for (auto const &libName : libs)
   {
-    std::unique_ptr<gazebo::ecs::System> sys;
-    sys = pluginLoader.Instantiate<gazebo::ecs::System>(physicsPluginName);
-    if (!manager.LoadSystem(std::move(sys)))
+    std::string pathToLibrary = sp.FindSharedLibrary(libName);
+    std::string pluginName = pluginLoader.LoadLibrary(pathToLibrary);
+    if (pluginName.size())
     {
-      std::cerr << "Failed to load plugin from library" << std::endl;
+      std::unique_ptr<gazebo::ecs::System> sys;
+      sys = pluginLoader.Instantiate<gazebo::ecs::System>(pluginName);
+      if (!manager.LoadSystem(std::move(sys)))
+        std::cerr << "Failed to load " << pluginName << " from " << libName
+          << std::endl;
     }
-  }
-  else
-  {
-    std::cerr << "Failed to load library" << std::endl;
+    else
+      std::cerr << "Failed to load library " << libName << std::endl;
   }
 
   // Create 25 sphere entities
@@ -129,6 +136,23 @@ int main(int argc, char **argv)
       vel->linear.X(ignition::math::Rand::DblUniform(-1.0, 1.0));
       vel->linear.Y(ignition::math::Rand::DblUniform(-1.0, 1.0));
       vel->linear.Z(ignition::math::Rand::DblUniform(-1.0, 1.0));
+    }
+    else
+    {
+      std::cerr << "Failed to add world velocity component to entity ["
+                << e << "]" << std::endl;
+    }
+
+    // Renderable
+    auto renderable = entity.AddComponent<gazebo::components::Renderable>();
+    if (renderable)
+    {
+      renderable->shape = gazebo::components::Renderable::SPHERE;
+      renderable->material = gazebo::components::Renderable::COLOR;
+      renderable->sphere.radius = geom->sphere.radius;
+      renderable->color.red = ignition::math::Rand::DblUniform(0.1, 1.0);
+      renderable->color.green = ignition::math::Rand::DblUniform(0.1, 1.0);
+      renderable->color.blue = ignition::math::Rand::DblUniform(0.1, 1.0);
     }
     else
     {
