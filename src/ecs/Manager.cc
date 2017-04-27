@@ -14,6 +14,7 @@
  * limitations under the License.
  *
 */
+#include <atomic>
 #include <set>
 #include <unordered_map>
 #include <utility>
@@ -49,12 +50,25 @@ class gazebo::ecs::ManagerPrivate
 
   /// \brief Handles storage and quering of components
   public: EntityComponentDatabase database;
+
+  /// \brief Holds the current simulation time
+  public: ignition::common::Time simTime;
+
+  /// \brief Holds the next simulation time
+  public: ignition::common::Time nextSimTime;
+
+  /// \brief count of how many things want simulation time paused
+  public: std::atomic<int> pauseCount;
+
+  /// \brief true if the simulation is paused
+  public: bool paused = false;
 };
 
 /////////////////////////////////////////////////
 Manager::Manager()
 : dataPtr(new ManagerPrivate)
 {
+  this->dataPtr->pauseCount = 0;
 }
 
 /////////////////////////////////////////////////
@@ -75,8 +89,13 @@ bool Manager::DeleteEntity(EntityId _id)
 }
 
 /////////////////////////////////////////////////
-void Manager::UpdateSystems(const double _dt)
+void Manager::UpdateSystems()
 {
+  // Decide at the beginning of every update if sim time is paused or not.
+  // Some systems (like rendering a camera for a GUI) need to continue to run
+  // even when simulation time is paused, so it's up to each system to check
+  this->dataPtr->paused = this->dataPtr->pauseCount;
+
   // Let database do some stuff before starting the new update
   this->dataPtr->database.Update();
 
@@ -98,9 +117,12 @@ void Manager::UpdateSystems(const double _dt)
     {
       auto query = this->dataPtr->database.Query(updateInfo.first);
       QueryCallback cb = updateInfo.second;
-      cb(_dt, query);
+      cb(query);
     }
   }
+
+  // Advance sim time according to what was set last update
+  this->dataPtr->simTime = this->dataPtr->nextSimTime;
 }
 
 /////////////////////////////////////////////////
@@ -131,4 +153,45 @@ bool Manager::LoadSystem(std::unique_ptr<System> _sys)
 gazebo::ecs::Entity &Manager::Entity(const EntityId _id) const
 {
   return this->dataPtr->database.Entity(_id);
+}
+
+/////////////////////////////////////////////////
+const ignition::common::Time &Manager::SimulationTime() const
+{
+  return this->dataPtr->simTime;
+}
+
+/////////////////////////////////////////////////
+bool Manager::SimulationTime(const ignition::common::Time &_newTime)
+{
+  if (!this->Paused())
+  {
+    this->dataPtr->nextSimTime = _newTime;
+    return true;
+  }
+  return false;
+}
+
+/////////////////////////////////////////////////
+int Manager::BeginPause()
+{
+  return ++(this->dataPtr->pauseCount);
+}
+
+/////////////////////////////////////////////////
+int Manager::EndPause()
+{
+  int currentCount = this->dataPtr->pauseCount;
+  while (currentCount && !this->dataPtr->pauseCount.compare_exchange_weak(
+        currentCount, currentCount - 1))
+  {
+    // Intentionally do nothing, compare_exchange_weak modifies currentCount
+  }
+  return currentCount > 0 ? currentCount - 1 : currentCount;
+}
+
+/////////////////////////////////////////////////
+bool Manager::Paused() const
+{
+  return this->dataPtr->paused;
 }

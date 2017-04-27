@@ -105,11 +105,8 @@ int main(int argc, char **argv)
     }
   }
 
-  // Run all the systems once. Value chosen for time_step is unimportant for
-  // this demo. In practice Update() should be called in a loop for as long
-  // as the simulation is running.
-  double timeStep = 0.001;
-  manager.UpdateSystems(timeStep);
+  // Run all the systems once.
+  manager.UpdateSystems();
 
   return 0;
 }

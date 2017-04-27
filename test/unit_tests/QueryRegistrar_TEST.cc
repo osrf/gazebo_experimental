@@ -52,14 +52,14 @@ TEST(QueryRegistrar, RegisterOneQuery)
   gazebo::ecs::EntityQuery q;
   q.AddComponent("TC1");
   std::string sentinel;
-  gazebo::ecs::QueryCallback cb = [&sentinel] (double _dt,
+  gazebo::ecs::QueryCallback cb = [&sentinel] (
       const gazebo::ecs::EntityQuery &_q) -> void {
         sentinel = "RegisterOneQuery lambda";
       };
   r.Register(q, cb);
   ASSERT_EQ(1, r.Registrations().size());
 
-  (r.Registrations()[0].second)(0, q);
+  (r.Registrations()[0].second)(q);
   EXPECT_EQ(std::string("RegisterOneQuery lambda"), sentinel);
 }
 
@@ -72,11 +72,11 @@ TEST(QueryRegistrar, QueryOrderIsPreserved)
   q1.AddComponent("TC1");
   q2.AddComponent("TC2");
   std::string sentinel;
-  gazebo::ecs::QueryCallback cb1 = [&sentinel] (double _dt,
+  gazebo::ecs::QueryCallback cb1 = [&sentinel] (
       const gazebo::ecs::EntityQuery &_q) -> void {
         sentinel = "first callback";
       };
-  gazebo::ecs::QueryCallback cb2 = [&sentinel] (double _dt,
+  gazebo::ecs::QueryCallback cb2 = [&sentinel] (
       const gazebo::ecs::EntityQuery &_q) -> void {
         sentinel = "second callback";
       };
@@ -84,9 +84,9 @@ TEST(QueryRegistrar, QueryOrderIsPreserved)
   r.Register(q2, cb2);
   ASSERT_EQ(2, r.Registrations().size());
 
-  (r.Registrations()[0].second)(0, q1);
+  (r.Registrations()[0].second)(q1);
   EXPECT_EQ(std::string("first callback"), sentinel);
-  (r.Registrations()[1].second)(0, q2);
+  (r.Registrations()[1].second)(q2);
   EXPECT_EQ(std::string("second callback"), sentinel);
 }
 
