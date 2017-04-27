@@ -43,3 +43,27 @@ else()
 endif()
 
 ################################################################################
+# Ignition msgs
+find_package(ignition-msgs0 QUIET)
+if (NOT ignition-msgs0_FOUND)
+  BUILD_ERROR ("Missing: Ignition msgs (libignition-msgs0-dev)")
+else()
+  message (STATUS "Found Ignition msgs")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${IGNITION-MSGS_CXX_FLAGS}")
+  include_directories(${IGNITION-MSGS_INCLUDE_DIRS})
+  link_directories(${IGNITION-MSGS_LIBRARY_DIRS})
+endif()
+
+################################################################################
+# Ignition transport
+find_package(ignition-transport3 QUIET)
+if (NOT ignition-transport3_FOUND)
+  BUILD_ERROR ("Missing: Ignition Transport (libignition-transport3-dev)")
+else()
+  message (STATUS "Found Ignition Transport")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${IGNITION-TRANSPORT_CXX_FLAGS}")
+  include_directories(${IGNITION-TRANSPORT_INCLUDE_DIRS})
+  link_directories(${IGNITION-TRANSPORT_LIBRARY_DIRS})
+endif()
+
+################################################################################
