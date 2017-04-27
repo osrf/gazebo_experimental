@@ -31,7 +31,7 @@ GuiDisplayImage::GuiDisplayImage()
 {
   // Show a blank image at first
   this->label = new QLabel;
-  this->label->setPixmap(pixmap);
+  this->label->setPixmap(this->pixmap);
 
   // Create the layout to hold the button
   auto layout = new QHBoxLayout;
@@ -79,6 +79,7 @@ Q_SLOT void GuiDisplayImage::onImageChanged()
 /////////////////////////////////////////////////
 void GuiDisplayImage::onImageReceived(const ignition::msgs::Image &_img)
 {
+  std::cout << "Got an image xxx" << std::endl;
   std::lock_guard<std::mutex> lock(this->mtx);
   this->img = _img;
 
@@ -105,6 +106,8 @@ void GuiDisplayImage::UpdateFromRgbInt8()
       image.setPixel(x_pixel, y_pixel, qRgb(red, green, blue));
     }
   }
+  this->pixmap.convertFromImage(image);
+  this->label->setPixmap(this->pixmap);
 }
 
 // Register this plugin
