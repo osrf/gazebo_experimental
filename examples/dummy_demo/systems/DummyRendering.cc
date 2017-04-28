@@ -159,7 +159,7 @@ void DummyRendering::PublishImages()
   {
     data->push_back(channel);
   }
-  std::cout << " publishing " << std::endl;
+  std::cout << "[rendering] publishing " << std::endl;
   this->pub.Publish(img);
 }
 
