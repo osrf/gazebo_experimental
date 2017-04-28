@@ -41,11 +41,10 @@ GuiDisplayImage::GuiDisplayImage()
   this->setLayout(layout);
 
   // Subscribe to get images
-  // TODO How to tell plugin which topic to subscribe to?
+  // TODO How to tell this gui plugin which topic to subscribe to?
   std::string topic = "/rendering/image";
   if (!node.Subscribe(topic, &GuiDisplayImage::onImageReceived, this))
   {
-    // TODO ignition console log message
     std::cerr << "Unable to subscribe to topic" << std::endl;
   }
 }
@@ -79,7 +78,6 @@ Q_SLOT void GuiDisplayImage::onImageChanged()
 /////////////////////////////////////////////////
 void GuiDisplayImage::onImageReceived(const ignition::msgs::Image &_img)
 {
-  std::cout << "Got an image xxx" << std::endl;
   std::lock_guard<std::mutex> lock(this->mtx);
   this->img = _img;
 
@@ -90,11 +88,9 @@ void GuiDisplayImage::onImageReceived(const ignition::msgs::Image &_img)
 /////////////////////////////////////////////////
 void GuiDisplayImage::UpdateFromRgbInt8()
 {
-  // TODO update image
   QImage image(this->img.width(), this->img.height(), QImage::Format_RGB888);
 
   auto const &data = img.data();
-
   for (int x_pixel = 0; x_pixel < img.width(); ++x_pixel)
   {
     for (int y_pixel = 0; y_pixel < img.height(); ++y_pixel)
