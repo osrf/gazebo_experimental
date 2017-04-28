@@ -156,7 +156,7 @@ int main(int argc, char **argv)
     }
     else
     {
-      std::cerr << "Failed to add world velocity component to entity ["
+      std::cerr << "Failed to add Renderable component to entity ["
                 << e << "]" << std::endl;
     }
   }
