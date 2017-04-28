@@ -20,7 +20,7 @@
 
 #include <cstdint>
 #include <vector>
-
+#include <iostream>
 
 namespace dummy_rendering
 {
@@ -44,11 +44,11 @@ namespace dummy_rendering
         // convert from right handed coordinate system to screen coordinates
         // screen x increases from left to right
         // screen y increases from top to bottom
-        int screen_x = (_width / scene_width) * this->scene_y - _width / 2.0;
-        int screen_y = (_height / scene_height) * this->scene_x - _height / 2.0;
+        int screen_x = (_width / (-1.0 * scene_width)) * this->scene_y + _width / 2.0;
+        int screen_y = (_height / (-1.0 * scene_height)) * this->scene_x + _height / 2.0;
 
-        int x_radius = scene_width / _width * this->radius;
-        int y_radius = scene_height / _height * this->radius;
+        float x_radius = _width / scene_width * this->radius;
+        float y_radius = _height / scene_height * this->radius;
 
         int min_x = screen_x - x_radius;
         if (min_x < 0)
@@ -64,12 +64,14 @@ namespace dummy_rendering
         if (max_y > _height)
           max_y = _height;
 
+        std::cout << _width << " " << _height << " " << min_x << " " << max_x << " " << min_y << " " << max_y << std::endl;
+
         for (int px = min_x; px < max_x; ++px)
         {
           for (int py = min_y; py < max_y; ++py)
           {
             // It's a sphere? Draw an orthographic square
-            int pixel_red = (px * py + py) * 3;
+            int pixel_red = (_width * py + px) * 3;
             int pixel_green = pixel_red + 1;
             int pixel_blue = pixel_red + 2;
             _image[pixel_red] = this->red;
