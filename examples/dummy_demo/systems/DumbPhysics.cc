@@ -132,7 +132,7 @@ void DumbPhysics::Update(const ecs::EntityQuery &_result)
   // time steps will update at an unknown rate
   double changeInTime = 0.001;
   auto contacts = this->world.Update(changeInTime);
-  ignition::common::Time delta(0, changeInTime * 1e6);
+  ignition::common::Time delta(changeInTime);
   mgr.SimulationTime(mgr.SimulationTime() + delta);
 
   // TODO Publish contacts on an ignition transport topic?
