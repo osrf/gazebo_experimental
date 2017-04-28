@@ -20,7 +20,6 @@
 
 #include <cstdint>
 #include <vector>
-#include <iostream>
 
 namespace dummy_rendering
 {
@@ -63,8 +62,6 @@ namespace dummy_rendering
         int max_y = screen_y + y_radius;
         if (max_y > _height)
           max_y = _height;
-
-        std::cout << _width << " " << _height << " " << min_x << " " << max_x << " " << min_y << " " << max_y << std::endl;
 
         for (int px = min_x; px < max_x; ++px)
         {
