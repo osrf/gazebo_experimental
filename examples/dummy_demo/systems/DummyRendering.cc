@@ -57,13 +57,13 @@ void DummyRendering::Update(const ecs::EntityQuery &_result)
 {
   auto &mgr = this->Manager();
   auto const &currentTime = mgr.SimulationTime();
-  if (currentTime < nextRenderTime)
+  if (currentTime < this->nextRenderTime)
   {
     // Too early to publish
     return;
   }
   double framerate = 30.0;
-  this->nextRenderTime = currentTime + ignition::common::Time(1.0 / framerate);
+  this->nextRenderTime += ignition::common::Time(1.0 / framerate);
 
   for (auto const &entityId : _result.EntityIds())
   {
@@ -90,9 +90,9 @@ void DummyRendering::Update(const ecs::EntityQuery &_result)
     {
       this->UpdatePosition(entity);
     }
-
-    this->PublishImages();
   }
+
+  this->PublishImages();
 }
 
 /////////////////////////////////////////////////
@@ -159,6 +159,7 @@ void DummyRendering::PublishImages()
   {
     data->push_back(channel);
   }
+  std::cout << " publishing " << std::endl;
   this->pub.Publish(img);
 }
 
