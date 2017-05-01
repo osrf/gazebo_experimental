@@ -18,6 +18,8 @@
 #ifndef GAZEBO_COMPONENTS_RENDERABLE_HH_
 #define GAZEBO_COMPONENTS_RENDERABLE_HH_
 
+#include "gazebo/components/Geometry.hh"
+
 namespace gazebo
 {
   namespace components
@@ -25,24 +27,10 @@ namespace gazebo
     /// \brief A body that can be rendered
     struct Renderable
     {
-      enum ShapeType {
-        UNKNOWN_SHAPE = 0,
-        SPHERE = 1,
-        CUBE = 2,
-      };
-
       enum MaterialType {
         UNKNOWN_MATERIAL = 0,
         COLOR = 1,
         TEXTURE = 2,
-      };
-
-      struct SphereProperties {
-        double radius;
-      };
-
-      struct CubeProperties {
-        double side;
       };
 
       struct FlatColorProperties {
@@ -51,25 +39,15 @@ namespace gazebo
         float blue;
       };
 
-      struct MeshProperties {
-        void *triangles;
-        float scale;
-      };
-
-      /// \brief the shape of this component
-      ShapeType shape = UNKNOWN_SHAPE;
-
       /// \brief material type of this component
       MaterialType material = UNKNOWN_MATERIAL;
 
-      union {
-        SphereProperties sphere;
-        CubeProperties cube;
-      };
+      // \brief shape of object to render
+      Geometry shape;
 
+      // \brief anon union for color or texture info
       union {
         FlatColorProperties color;
-        MeshProperties mesh;
       };
     };
   }
