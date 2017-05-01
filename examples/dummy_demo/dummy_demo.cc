@@ -147,16 +147,15 @@ int main(int argc, char **argv)
     auto renderable = entity.AddComponent<gazebo::components::Renderable>();
     if (renderable)
     {
-      renderable->shape = gazebo::components::Renderable::SPHERE;
+      renderable->shape = *geom;
       renderable->material = gazebo::components::Renderable::COLOR;
-      renderable->sphere.radius = geom->sphere.radius;
       renderable->color.red = ignition::math::Rand::DblUniform(0.1, 1.0);
       renderable->color.green = ignition::math::Rand::DblUniform(0.1, 1.0);
       renderable->color.blue = ignition::math::Rand::DblUniform(0.1, 1.0);
     }
     else
     {
-      std::cerr << "Failed to add world velocity component to entity ["
+      std::cerr << "Failed to add Renderable component to entity ["
                 << e << "]" << std::endl;
     }
   }

@@ -101,7 +101,7 @@ void DummyRendering::AddObjectToScene(ecs::Entity &_entity)
   // Ogre seems to have a scene manager that objects need to be added to
   auto renderable = _entity.Component<components::Renderable>();
 
-  if (renderable->shape == components::Renderable::SPHERE
+  if (renderable->shape.type == components::Geometry::SPHERE
       && renderable->material == components::Renderable::COLOR)
   {
     auto pose = _entity.Component<components::WorldPose>();
@@ -109,7 +109,7 @@ void DummyRendering::AddObjectToScene(ecs::Entity &_entity)
     obj.scene_x = pose->position.X();
     obj.scene_y = pose->position.Y();
     obj.scene_z = pose->position.Z();
-    obj.radius = renderable->sphere.radius;
+    obj.radius = renderable->shape.sphere.radius;
     obj.red = renderable->color.red * 255;
     obj.green = renderable->color.green * 255;
     obj.blue = renderable->color.blue * 255;
