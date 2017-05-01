@@ -19,7 +19,8 @@
 
 #include "dummy_rendering/Object.hh"
 
-#include "gazebo/components/Renderable.hh"
+#include "gazebo/components/Geometry.hh"
+#include "gazebo/components/Material.hh"
 #include "gazebo/components/WorldPose.hh"
 #include "gazebo/ecs/Entity.hh"
 #include "gazebo/ecs/Manager.hh"
@@ -35,8 +36,10 @@ void DummyRendering::Init(ecs::QueryRegistrar &_registrar)
 {
   ecs::EntityQuery query;
 
-  if (!query.AddComponent("gazebo::components::Renderable"))
-    std::cerr << "Undefined component[gazebo::components::Renderable]\n";
+  if (!query.AddComponent("gazebo::components::Geometry"))
+    std::cerr << "Undefined component[gazebo::components::Geometry]\n";
+  if (!query.AddComponent("gazebo::components::Material"))
+    std::cerr << "Undefined component[gazebo::components::Material]\n";
   if (!query.AddComponent("gazebo::components::WorldPose"))
     std::cerr << "Undefined component[gazebo::components::WorldPose]\n";
 
@@ -68,19 +71,31 @@ void DummyRendering::Update(const ecs::EntityQuery &_result)
   for (auto const &entityId : _result.EntityIds())
   {
     auto &entity = mgr.Entity(entityId);
-    auto difference_renderable = entity.IsDifferent<components::Renderable>();
+    auto difference_material = entity.IsDifferent<components::Material>();
+    auto difference_geometry = entity.IsDifferent<components::Geometry>();
     auto difference_position = entity.IsDifferent<components::WorldPose>();
     dummy_rendering::Object *obj = this->scene.GetById(entityId);
 
-    if (obj == nullptr || ecs::WAS_CREATED == difference_renderable)
-    {
-      this->AddObjectToScene(entity);
-    }
-    else if (ecs::WAS_DELETED == difference_renderable)
+    const bool doDelete = ecs::WAS_DELETED == difference_material ||
+      ecs::WAS_DELETED == difference_geometry ||
+      ecs::WAS_DELETED == difference_position;
+
+    const bool doCreate = ecs::WAS_CREATED == difference_material ||
+      ecs::WAS_CREATED == difference_geometry ||
+      ecs::WAS_CREATED == difference_position;
+
+    const bool doModify = ecs::WAS_MODIFIED == difference_material ||
+      ecs::WAS_MODIFIED == difference_geometry;
+
+    if (obj && doDelete)
     {
       this->RemoveObjectFromScene(entity);
     }
-    else if (ecs::WAS_MODIFIED == difference_renderable)
+    else if (obj == nullptr || doCreate)
+    {
+      this->AddObjectToScene(entity);
+    }
+    else if (doModify)
     {
       this->RemoveObjectFromScene(entity);
       this->AddObjectToScene(entity);
@@ -99,20 +114,21 @@ void DummyRendering::Update(const ecs::EntityQuery &_result)
 void DummyRendering::AddObjectToScene(ecs::Entity &_entity)
 {
   // Ogre seems to have a scene manager that objects need to be added to
-  auto renderable = _entity.Component<components::Renderable>();
+  auto material = _entity.Component<components::Material>();
+  auto geometry = _entity.Component<components::Geometry>();
 
-  if (renderable->shape.type == components::Geometry::SPHERE
-      && renderable->material == components::Renderable::COLOR)
+  if (geometry->type == components::Geometry::SPHERE
+      && material->type == components::Material::COLOR)
   {
     auto pose = _entity.Component<components::WorldPose>();
     dummy_rendering::Object obj;
     obj.scene_x = pose->position.X();
     obj.scene_y = pose->position.Y();
     obj.scene_z = pose->position.Z();
-    obj.radius = renderable->shape.sphere.radius;
-    obj.red = renderable->color.red * 255;
-    obj.green = renderable->color.green * 255;
-    obj.blue = renderable->color.blue * 255;
+    obj.radius = geometry->sphere.radius;
+    obj.red = material->color.red * 255;
+    obj.green = material->color.green * 255;
+    obj.blue = material->color.blue * 255;
     this->scene.AddObject(_entity.Id(), obj);
   }
 }
