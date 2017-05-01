@@ -15,17 +15,16 @@
  *
 */
 
-#ifndef GAZEBO_COMPONENTS_RENDERABLE_HH_
-#define GAZEBO_COMPONENTS_RENDERABLE_HH_
+#ifndef GAZEBO_COMPONENTS_MATERIAL_HH_
+#define GAZEBO_COMPONENTS_MATERIAL_HH_
 
-#include "gazebo/components/Geometry.hh"
 
 namespace gazebo
 {
   namespace components
   {
-    /// \brief A body that can be rendered
-    struct Renderable
+    /// \brief Properties about how something should look
+    struct Material
     {
       enum MaterialType {
         UNKNOWN_MATERIAL = 0,
@@ -39,18 +38,23 @@ namespace gazebo
         float blue;
       };
 
-      /// \brief material type of this component
-      MaterialType material = UNKNOWN_MATERIAL;
+      struct TextureProperties {
+        unsigned int width;
+        unsigned int height;
+        float *uvCoords;
+      };
 
-      // \brief shape of object to render
-      Geometry shape;
+      /// \brief material type of this component
+      MaterialType type = UNKNOWN_MATERIAL;
 
       // \brief anon union for color or texture info
       union {
         FlatColorProperties color;
+        TextureProperties texture;
       };
     };
   }
 }
 
 #endif
+

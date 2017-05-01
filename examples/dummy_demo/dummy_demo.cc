@@ -28,7 +28,7 @@
 
 #include "gazebo/components/Inertial.hh"
 #include "gazebo/components/Geometry.hh"
-#include "gazebo/components/Renderable.hh"
+#include "gazebo/components/Material.hh"
 #include "gazebo/components/WorldPose.hh"
 #include "gazebo/components/WorldVelocity.hh"
 #include "gazebo/ecs/ComponentFactory.hh"
@@ -52,8 +52,8 @@ int main(int argc, char **argv)
       "gazebo::components::WorldPose");
   gazebo::ecs::ComponentFactory::Register<gazebo::components::WorldVelocity>(
       "gazebo::components::WorldVelocity");
-  gazebo::ecs::ComponentFactory::Register<gazebo::components::Renderable>(
-      "gazebo::components::Renderable");
+  gazebo::ecs::ComponentFactory::Register<gazebo::components::Material>(
+      "gazebo::components::Material");
 
   // Plugin loader (plugins are systems)
   ignition::common::PluginLoader pluginLoader;
@@ -144,18 +144,17 @@ int main(int argc, char **argv)
     }
 
     // Renderable
-    auto renderable = entity.AddComponent<gazebo::components::Renderable>();
-    if (renderable)
+    auto material = entity.AddComponent<gazebo::components::Material>();
+    if (material)
     {
-      renderable->shape = *geom;
-      renderable->material = gazebo::components::Renderable::COLOR;
-      renderable->color.red = ignition::math::Rand::DblUniform(0.1, 1.0);
-      renderable->color.green = ignition::math::Rand::DblUniform(0.1, 1.0);
-      renderable->color.blue = ignition::math::Rand::DblUniform(0.1, 1.0);
+      material->type = gazebo::components::Material::COLOR;
+      material->color.red = ignition::math::Rand::DblUniform(0.1, 1.0);
+      material->color.green = ignition::math::Rand::DblUniform(0.1, 1.0);
+      material->color.blue = ignition::math::Rand::DblUniform(0.1, 1.0);
     }
     else
     {
-      std::cerr << "Failed to add Renderable component to entity ["
+      std::cerr << "Failed to add Material component to entity ["
                 << e << "]" << std::endl;
     }
   }
