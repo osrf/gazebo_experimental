@@ -68,6 +68,7 @@ bool DiagnosticsManager::Init(const std::string &_name)
   pub = node.Advertise<ignition::msgs::Diagnostics>(topicName);
 
   this->dataPtr->initialized = pub;
+  return this->dataPtr->initialized;
 }
 
 //////////////////////////////////////////////////
@@ -87,6 +88,7 @@ void DiagnosticsManager::UpdateEnd()
   {
     this->dataPtr->pub.Publish(this->dataPtr->msg);
     this->dataPtr->msg.clear_time();
+    this->dataPtr->timers.clear();
   }
 }
 

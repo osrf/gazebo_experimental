@@ -95,7 +95,27 @@ TEST_F(DiagnosticsManagerTest, PublishSomeDiagnostics)
 
   ASSERT_EQ(1, this->num);
   ASSERT_EQ(1, this->msg.time_size());
-  ASSERT_EQ("PublishSomeDiagnostics:asdf", this->msg.time(0).name());
+  EXPECT_EQ("PublishSomeDiagnostics:asdf", this->msg.time(0).name());
+}
+
+//////////////////////////////////////////////////
+TEST_F(DiagnosticsManagerTest, DiagnosticsClearedEveryUpdate)
+{
+  gzutil::DiagnosticsManager mgr;
+  ASSERT_TRUE(mgr.Init("DiagnosticsClearedEveryUpdate"));
+
+  ignition::common::Time simTime;
+  mgr.UpdateBegin(simTime);
+  mgr.StartTimer("asdf");
+  mgr.StopTimer("asdf");
+  mgr.UpdateEnd();
+  ASSERT_EQ(1, this->num);
+
+  mgr.UpdateBegin(simTime);
+  mgr.StopTimer("asdf");
+  mgr.UpdateEnd();
+  ASSERT_EQ(2, this->num);
+  EXPECT_EQ(0, this->msg.time_size());
 }
 
 int main(int argc, char **argv)
