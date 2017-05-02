@@ -52,7 +52,13 @@ GuiDisplayImage::GuiDisplayImage()
 /////////////////////////////////////////////////
 std::string GuiDisplayImage::Title()
 {
-  return "Image: /rendering/image";
+  std::string title = "Image: ";
+  auto topics = this->node.SubscribedTopics();
+  if (topics.size())
+  {
+    title += topics[0];
+  }
+  return title;
 }
 
 /////////////////////////////////////////////////
