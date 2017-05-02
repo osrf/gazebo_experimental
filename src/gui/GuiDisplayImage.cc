@@ -90,12 +90,12 @@ void GuiDisplayImage::UpdateFromRgbInt8()
 {
   QImage image(this->img.width(), this->img.height(), QImage::Format_RGB888);
 
-  auto const &data = img.data();
-  for (int x_pixel = 0; x_pixel < img.width(); ++x_pixel)
+  auto const &data = this->img.data();
+  for (int x_pixel = 0; x_pixel < this->img.width(); ++x_pixel)
   {
-    for (int y_pixel = 0; y_pixel < img.height(); ++y_pixel)
+    for (int y_pixel = 0; y_pixel < this->img.height(); ++y_pixel)
     {
-      int idx = x_pixel + y_pixel * img.width();
+      int idx = x_pixel + y_pixel * this->img.width();
       unsigned char red = data[3 * idx];
       unsigned char green = data[3 * idx + 1];
       unsigned char blue = data[3 * idx + 2];
