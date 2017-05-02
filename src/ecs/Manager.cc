@@ -24,6 +24,7 @@
 #include "gazebo/ecs/EntityQuery.hh"
 #include "gazebo/ecs/Manager.hh"
 #include "gazebo/ecs/QueryRegistrar.hh"
+#include "gazebo/util/DiagnosticsManager.hh"
 
 using namespace gazebo;
 using namespace ecs;
@@ -62,6 +63,9 @@ class gazebo::ecs::ManagerPrivate
 
   /// \brief true if the simulation is paused
   public: bool paused = false;
+
+  /// \brief tool for publishing diagnostic info
+  public: util::DiagnosticsManager diagnostics;
 };
 
 /////////////////////////////////////////////////
@@ -91,14 +95,19 @@ bool Manager::DeleteEntity(EntityId _id)
 /////////////////////////////////////////////////
 void Manager::UpdateSystems()
 {
+  this->dataPtr->diagnostics.UpdateBegin(this->dataPtr->simTime);
+
   // Decide at the beginning of every update if sim time is paused or not.
   // Some systems (like rendering a camera for a GUI) need to continue to run
   // even when simulation time is paused, so it's up to each system to check
   this->dataPtr->paused = this->dataPtr->pauseCount;
 
   // Let database do some stuff before starting the new update
+  this->dataPtr->diagnostics.StartTimer("update state");
   this->dataPtr->database.Update();
+  this->dataPtr->diagnostics.StopTimer("update state");
 
+  this->dataPtr->diagnostics.StartTimer("update systems");
   // TODO There is a lot of opportunity for parallelization here
   // In general systems are run sequentially, one after the other
   //  Different Systems can run in parallel if they don't share components
@@ -120,9 +129,12 @@ void Manager::UpdateSystems()
       cb(query);
     }
   }
+  this->dataPtr->diagnostics.StopTimer("update systems");
 
   // Advance sim time according to what was set last update
   this->dataPtr->simTime = this->dataPtr->nextSimTime;
+
+  this->dataPtr->diagnostics.UpdateEnd();
 }
 
 /////////////////////////////////////////////////

@@ -9,5 +9,6 @@ set(sources
 )
 
 add_library(GazeboECS SHARED ${sources})
+target_link_libraries(GazeboECS GazeboUtil)
 
 gz_install_library(GazeboECS)
