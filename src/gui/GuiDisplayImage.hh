@@ -46,10 +46,10 @@ namespace gazebo
       public: void UpdateFromRgbInt8();
 
       /// \brief callback in main thread when image changes
-      public slots: void onImageChanged();
+      public slots: void OnImageChanged();
 
       /// \brief subscriber callback when new image is received
-      public: void onImageReceived(const ignition::msgs::Image &_img);
+      public: void OnImageReceived(const ignition::msgs::Image &_img);
 
       /// \brief holds the image data to display
       public: QPixmap pixmap;

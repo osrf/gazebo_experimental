@@ -43,7 +43,7 @@ GuiDisplayImage::GuiDisplayImage()
   // Subscribe to get images
   // TODO How to tell this gui plugin which topic to subscribe to?
   std::string topic = "/rendering/image";
-  if (!node.Subscribe(topic, &GuiDisplayImage::onImageReceived, this))
+  if (!node.Subscribe(topic, &GuiDisplayImage::OnImageReceived, this))
   {
     std::cerr << "Unable to subscribe to topic" << std::endl;
   }
@@ -61,7 +61,7 @@ GuiDisplayImage::~GuiDisplayImage()
 }
 
 /////////////////////////////////////////////////
-Q_SLOT void GuiDisplayImage::onImageChanged()
+Q_SLOT void GuiDisplayImage::OnImageChanged()
 {
   std::lock_guard<std::mutex> lock(this->mtx);
   switch(this->img.pixel_format())
@@ -76,13 +76,13 @@ Q_SLOT void GuiDisplayImage::onImageChanged()
 }
 
 /////////////////////////////////////////////////
-void GuiDisplayImage::onImageReceived(const ignition::msgs::Image &_img)
+void GuiDisplayImage::OnImageReceived(const ignition::msgs::Image &_img)
 {
   std::lock_guard<std::mutex> lock(this->mtx);
   this->img = _img;
 
   // Signal to GUI (main) thread that the image changed
-  QMetaObject::invokeMethod(this, "onImageChanged");
+  QMetaObject::invokeMethod(this, "OnImageChanged");
 }
 
 /////////////////////////////////////////////////
