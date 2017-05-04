@@ -129,6 +129,7 @@ int main(int _argc, char **_argv)
 
     // TODO: load startup plugins and configuration files here before creating
     // the window
+    ignition::gui::loadPlugin("GuiDisplayImage");
 
     // Create main window
     ignition::gui::createMainWindow();
