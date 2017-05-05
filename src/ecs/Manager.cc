@@ -110,27 +110,37 @@ void Manager::UpdateOnce()
 /////////////////////////////////////////////////
 void Manager::UpdateOnce(double _real_time_factor)
 {
+  this->dataPtr->diagnostics.UpdateBegin(this->dataPtr->simTime);
+  this->dataPtr->diagnostics.StartTimer("update");
+
   ignition::common::Time startWallTime = ignition::common::Time::SystemTime();
   ignition::common::Time startSimTime = this->dataPtr->simTime;
 
-  this->dataPtr->diagnostics.UpdateBegin(this->dataPtr->simTime);
   this->dataPtr->UpdateOnce();
+
   ignition::common::Time endSimTime = this->dataPtr->simTime;
   ignition::common::Time endWallTime = ignition::common::Time::SystemTime();
 
   this->dataPtr->diagnostics.StartTimer("sleep");
-  if (endWallTime < startWallTime)
+  const ignition::common::Time scalar(_real_time_factor);
+  const ignition::common::Time deltaWall = endWallTime - startWallTime;
+  const ignition::common::Time deltaSim = endSimTime - startSimTime;
+  const ignition::common::Time expectedDeltaWall = deltaSim / scalar;
+  if (deltaWall < expectedDeltaWall)
   {
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    ignition::common::Time sleep = (expectedDeltaWall - deltaWall);
+    std::this_thread::sleep_for(std::chrono::seconds(sleep.sec) +
+        std::chrono::nanoseconds(sleep.nsec));
   }
   this->dataPtr->diagnostics.StopTimer("sleep");
+
+  this->dataPtr->diagnostics.StopTimer("update");
   this->dataPtr->diagnostics.UpdateEnd();
 }
 
 /////////////////////////////////////////////////
 void ManagerPrivate::UpdateOnce()
 {
-  this->diagnostics.StartTimer("update");
 
   // Decide at the beginning of every update if sim time is paused or not.
   // Some systems (like rendering a camera for a GUI) need to continue to run
@@ -170,8 +180,6 @@ void ManagerPrivate::UpdateOnce()
 
   // Advance sim time according to what was set last update
   this->simTime = this->nextSimTime;
-
-  this->diagnostics.StopTimer("update");
 }
 
 /////////////////////////////////////////////////
