@@ -83,7 +83,17 @@ namespace gazebo
       public: bool LoadSystem(const std::string &_name,
                   std::unique_ptr<System> _sys);
 
+      /// \brief Update everything once and return immediately
       public: void UpdateOnce();
+
+      /// \brief Update everything once, then sleep to achieve a desired
+      ///        real time factor.
+      /// \remark Even if this method is called in a tight loop simulation time
+      //          will very slightly lag behind wall clock time. This is due to
+      //          the sleep time calculations not considering the time it takes
+      //          to calculate the amount of time to sleep before sleeping.
+      /// \param[in] _real_time_factor ratio of sim time to wall clock time
+      public: void UpdateOnce(double _real_time_factor);
 
       /// \brief Returns an entity instance with the given ID
       /// \returns Entity with id set to NO_ENTITY if entity does not exist

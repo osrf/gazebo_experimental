@@ -160,25 +160,10 @@ int main(int argc, char **argv)
   }
 
   // Simulation loop
-  ignition::common::Time lastSimTime;
+  const double real_time_factor = 1.0;
   while (true)
   {
-    manager.UpdateOnce();
-    ignition::common::Time currentSimTime = manager.SimulationTime();
-
-    if (currentSimTime > lastSimTime)
-    {
-      // update in real time
-      double seconds = (currentSimTime - lastSimTime).Double();
-      std::this_thread::sleep_for(std::chrono::duration<double>(seconds));
-    }
-    else
-    {
-      std::cerr << "time moved backwards?" << std::endl;
-      // Time moved backwards? Default update rate
-      std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
-    lastSimTime = currentSimTime;
+    manager.UpdateOnce(real_time_factor);
   }
 
   return 0;

@@ -69,6 +69,9 @@ class gazebo::ecs::ManagerPrivate
 
   /// \brief tool for publishing diagnostic info
   public: util::DiagnosticsManager diagnostics;
+
+  /// \brief Updates the state and systems once
+  public: void UpdateOnce();
 };
 
 /////////////////////////////////////////////////
@@ -100,19 +103,46 @@ bool Manager::DeleteEntity(EntityId _id)
 void Manager::UpdateOnce()
 {
   this->dataPtr->diagnostics.UpdateBegin(this->dataPtr->simTime);
-  this->dataPtr->diagnostics.StartTimer("update");
+  this->dataPtr->UpdateOnce();
+  this->dataPtr->diagnostics.UpdateEnd();
+}
+
+/////////////////////////////////////////////////
+void Manager::UpdateOnce(double _real_time_factor)
+{
+  ignition::common::Time startWallTime = ignition::common::Time::SystemTime();
+  ignition::common::Time startSimTime = this->dataPtr->simTime;
+
+  this->dataPtr->diagnostics.UpdateBegin(this->dataPtr->simTime);
+  this->dataPtr->UpdateOnce();
+  ignition::common::Time endSimTime = this->dataPtr->simTime;
+  ignition::common::Time endWallTime = ignition::common::Time::SystemTime();
+
+  this->dataPtr->diagnostics.StartTimer("sleep");
+  if (endWallTime < startWallTime)
+  {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+  this->dataPtr->diagnostics.StopTimer("sleep");
+  this->dataPtr->diagnostics.UpdateEnd();
+}
+
+/////////////////////////////////////////////////
+void ManagerPrivate::UpdateOnce()
+{
+  this->diagnostics.StartTimer("update");
 
   // Decide at the beginning of every update if sim time is paused or not.
   // Some systems (like rendering a camera for a GUI) need to continue to run
   // even when simulation time is paused, so it's up to each system to check
-  this->dataPtr->paused = this->dataPtr->pauseCount;
+  this->paused = this->pauseCount;
 
   // Let database do some stuff before starting the new update
-  this->dataPtr->diagnostics.StartTimer("database");
-  this->dataPtr->database.Update();
-  this->dataPtr->diagnostics.StopTimer("database");
+  this->diagnostics.StartTimer("database");
+  this->database.Update();
+  this->diagnostics.StopTimer("database");
 
-  this->dataPtr->diagnostics.StartTimer("systems");
+  this->diagnostics.StartTimer("systems");
   // TODO There is a lot of opportunity for parallelization here
   // In general systems are run sequentially, one after the other
   //  Different Systems can run in parallel if they don't share components
@@ -125,24 +155,23 @@ void Manager::UpdateOnce()
   //  other SystemManagers to use multiple machines for one simulation
 
   // But this is a prototype, so here's the basic implementation
-  for(auto &sysInfo : this->dataPtr->systemInfo)
+  for(auto &sysInfo : this->systemInfo)
   {
-    this->dataPtr->diagnostics.StartTimer(sysInfo.name);
+    this->diagnostics.StartTimer(sysInfo.name);
     for (auto &updateInfo : sysInfo.updates)
     {
-      auto query = this->dataPtr->database.Query(updateInfo.first);
+      auto query = this->database.Query(updateInfo.first);
       QueryCallback cb = updateInfo.second;
       cb(query);
     }
-    this->dataPtr->diagnostics.StopTimer(sysInfo.name);
+    this->diagnostics.StopTimer(sysInfo.name);
   }
-  this->dataPtr->diagnostics.StopTimer("systems");
+  this->diagnostics.StopTimer("systems");
 
   // Advance sim time according to what was set last update
-  this->dataPtr->simTime = this->dataPtr->nextSimTime;
+  this->simTime = this->nextSimTime;
 
-  this->dataPtr->diagnostics.StopTimer("update");
-  this->dataPtr->diagnostics.UpdateEnd();
+  this->diagnostics.StopTimer("update");
 }
 
 /////////////////////////////////////////////////
