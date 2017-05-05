@@ -163,7 +163,7 @@ int main(int argc, char **argv)
   ignition::common::Time lastSimTime;
   while (true)
   {
-    manager.UpdateSystems();
+    manager.UpdateOnce();
     ignition::common::Time currentSimTime = manager.SimulationTime();
 
     if (currentSimTime > lastSimTime)

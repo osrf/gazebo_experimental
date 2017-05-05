@@ -83,7 +83,7 @@ namespace gazebo
       public: bool LoadSystem(const std::string &_name,
                   std::unique_ptr<System> _sys);
 
-      public: void UpdateSystems();
+      public: void UpdateOnce();
 
       /// \brief Returns an entity instance with the given ID
       /// \returns Entity with id set to NO_ENTITY if entity does not exist

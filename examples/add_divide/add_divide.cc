@@ -106,7 +106,7 @@ int main(int argc, char **argv)
   }
 
   // Run all the systems once.
-  manager.UpdateSystems();
+  manager.UpdateOnce();
 
   return 0;
 }

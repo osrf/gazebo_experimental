@@ -97,7 +97,7 @@ bool Manager::DeleteEntity(EntityId _id)
 }
 
 /////////////////////////////////////////////////
-void Manager::UpdateSystems()
+void Manager::UpdateOnce()
 {
   this->dataPtr->diagnostics.UpdateBegin(this->dataPtr->simTime);
   this->dataPtr->diagnostics.StartTimer("update");
