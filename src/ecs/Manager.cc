@@ -36,6 +36,9 @@ class System;
 /// \brief struct to hold information required for updating a system
 struct SystemInfo
 {
+  /// \brief name of a system
+  public: std::string name;
+
   /// \brief List of callbacks to call
   public: std::vector<std::pair<EntityQueryId, QueryCallback> > updates;
 };
@@ -124,12 +127,14 @@ void Manager::UpdateSystems()
   // But this is a prototype, so here's the basic implementation
   for(auto &sysInfo : this->dataPtr->systemInfo)
   {
+    this->dataPtr->diagnostics.StartTimer(sysInfo.name);
     for (auto &updateInfo : sysInfo.updates)
     {
       auto query = this->dataPtr->database.Query(updateInfo.first);
       QueryCallback cb = updateInfo.second;
       cb(query);
     }
+    this->dataPtr->diagnostics.StopTimer(sysInfo.name);
   }
   this->dataPtr->diagnostics.StopTimer("systems");
 
@@ -141,12 +146,14 @@ void Manager::UpdateSystems()
 }
 
 /////////////////////////////////////////////////
-bool Manager::LoadSystem(std::unique_ptr<System> _sys)
+bool Manager::LoadSystem(const std::string &_name,
+    std::unique_ptr<System> _sys)
 {
   bool success = false;
   if (_sys)
   {
     SystemInfo sysInfo;
+    sysInfo.name = _name;
     QueryRegistrar registrar;
     _sys->Manager(this);
     _sys->Init(registrar);

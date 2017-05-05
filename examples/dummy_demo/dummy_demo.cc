@@ -73,7 +73,7 @@ int main(int argc, char **argv)
     {
       std::unique_ptr<gazebo::ecs::System> sys;
       sys = pluginLoader.Instantiate<gazebo::ecs::System>(pluginName);
-      if (!manager.LoadSystem(std::move(sys)))
+      if (!manager.LoadSystem(pluginName, std::move(sys)))
         std::cerr << "Failed to load " << pluginName << " from " << libName
           << std::endl;
     }

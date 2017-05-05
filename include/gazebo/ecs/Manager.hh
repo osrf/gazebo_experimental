@@ -72,15 +72,16 @@ namespace gazebo
       ///
       /// Ex: sm->LoadSystem<FancySystemClass>();
       public: template <typename T>
-              bool LoadSystem()
-              {
-                return this->LoadSystem(std::unique_ptr<System>(new T()));
-              }
+        bool LoadSystem(const std::string &_name)
+        {
+          return this->LoadSystem(_name, std::unique_ptr<System>(new T()));
+        }
 
       /// \brief Load a system
       ///
-      /// Ex: sm->LoadSystem(std::move(aUniquePtrInstance))
-      public: bool LoadSystem(std::unique_ptr<System> _sys);
+      /// Ex: sm->LoadSystem("my_system", std::move(aUniquePtrInstance))
+      public: bool LoadSystem(const std::string &_name,
+                  std::unique_ptr<System> _sys);
 
       public: void UpdateSystems();
 
