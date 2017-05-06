@@ -24,3 +24,12 @@ target_link_libraries(GuiDisplayImage
   ${Qt5Widgets_LIBRARIES}
   )
 
+add_library(GuiDiagnostics SHARED GuiDiagnostics.cc)
+
+target_link_libraries(GuiDiagnostics
+  ${IGNITION-MSGS_LIBRARIES}
+  ${IGNITION-TRANSPORT_LIBRARIES}
+  ${IGNITION-GUI_LIBRARIES}
+  ${Qt5Core_LIBRARIES}
+  ${Qt5Widgets_LIBRARIES}
+  )
