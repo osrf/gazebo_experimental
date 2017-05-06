@@ -111,7 +111,6 @@ void Manager::UpdateOnce()
 void Manager::UpdateOnce(double _real_time_factor)
 {
   this->dataPtr->diagnostics.UpdateBegin(this->dataPtr->simTime);
-  this->dataPtr->diagnostics.StartTimer("update");
 
   ignition::common::Time startWallTime = ignition::common::Time::SystemTime();
   ignition::common::Time startSimTime = this->dataPtr->simTime;
@@ -134,7 +133,6 @@ void Manager::UpdateOnce(double _real_time_factor)
   }
   this->dataPtr->diagnostics.StopTimer("sleep");
 
-  this->dataPtr->diagnostics.StopTimer("update");
   this->dataPtr->diagnostics.UpdateEnd();
 }
 
@@ -152,7 +150,6 @@ void ManagerPrivate::UpdateOnce()
   this->database.Update();
   this->diagnostics.StopTimer("database");
 
-  this->diagnostics.StartTimer("systems");
   // TODO There is a lot of opportunity for parallelization here
   // In general systems are run sequentially, one after the other
   //  Different Systems can run in parallel if they don't share components
@@ -176,7 +173,6 @@ void ManagerPrivate::UpdateOnce()
     }
     this->diagnostics.StopTimer(sysInfo.name);
   }
-  this->diagnostics.StopTimer("systems");
 
   // Advance sim time according to what was set last update
   this->simTime = this->nextSimTime;
