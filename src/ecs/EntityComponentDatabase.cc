@@ -325,7 +325,7 @@ void *EntityComponentDatabase::EntityComponentMutable(EntityId _id,
       ComponentTypeInfo info = ComponentFactory::TypeInfo(_type);
       char *storage = new char[info.size];
       component = static_cast<void *>(storage);
-      info.copier(readOnlyComp, component);
+      info.deepCopier(readOnlyComp, component);
       this->dataPtr->toModifyComponents[key] = storage;
     }
   }
@@ -414,17 +414,20 @@ void EntityComponentDatabase::Update()
     ComponentTypeInfo info = ComponentFactory::TypeInfo(key.second);
 
     // Get pointer to temporary storage with modifications
-    const char *modifiedStorage = kv.second;
+    char *modifiedStorage = kv.second;
 
     // Get pointer to component in main storage
     auto mainIdx = this->dataPtr->componentIndices[key];
     char *mainStorage = this->dataPtr->components[mainIdx];
 
-    // Copy modified components to main storage
-    info.copier(static_cast<const void *>(modifiedStorage),
+    // destruct old component in main storage
+    info.destructor(static_cast<void *>(modifiedStorage));
+
+    // Copy modified component to main storage
+    info.shallowCopier(static_cast<const void *>(modifiedStorage),
         static_cast<void *>(mainStorage));
 
-    // Free temporary storage (intentionally not calling destructor)
+    // Free space used for modified component
     delete [] modifiedStorage;
   }
   this->dataPtr->toModifyComponents.clear();
