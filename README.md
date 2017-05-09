@@ -25,22 +25,20 @@ Other dependencies include
 
 This project uses [CMake](https://cmake.org/).
 
-1. Configure the project
 ```
-    cd gazebo_experimental/
-    mkdir build
-    cd build/
-    cmake -DCMAKE_BUILD_TYPE=Debug ..
-```
+# Configure the project
+cd gazebo_experimental/
+mkdir build
+cd build/
+cmake -DCMAKE_BUILD_TYPE=Debug ..
 
-1. Build the project
-```
-    make
+# build the project
+make
 ```
 
 ## Running Tests
 ```
-    make test
+make test
 ```
 
 # Running
