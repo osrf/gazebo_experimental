@@ -15,11 +15,17 @@
  *
 */
 
+#include <atomic>
+#include <functional>
 #include <iostream>
+#include <thread>
 
 #include <gflags/gflags.h>
 
 #include <ignition/common/Console.hh>
+#include <ignition/common/PluginLoader.hh>
+#include <ignition/common/SystemPaths.hh>
+#include "gazebo/ecs/Manager.hh"
 
 #ifndef Q_MOC_RUN
   #include <ignition/gui/Iface.hh>
@@ -67,6 +73,75 @@ void Verbose()
 static bool VerbosityValidator(const char */*_flagname*/, int _value)
 {
   return _value >= 0 && _value <= 4;
+}
+
+
+//////////////////////////////////////////////////
+bool LoadSystems(gazebo::ecs::Manager &_mgr, std::vector<std::string> _libs)
+{
+  ignition::common::PluginLoader pluginLoader;
+  ignition::common::SystemPaths sp;
+  sp.SetPluginPathEnv("GAZEBO_PLUGIN_PATH");
+
+  for (auto const &libName : _libs)
+  {
+    std::string pathToLibrary = sp.FindSharedLibrary(libName);
+    std::string pluginName = pluginLoader.LoadLibrary(pathToLibrary);
+    if (pluginName.size())
+    {
+      std::unique_ptr<gazebo::ecs::System> sys;
+      sys = pluginLoader.Instantiate<gazebo::ecs::System>(pluginName);
+      if (!_mgr.LoadSystem(std::move(sys)))
+      {
+        ignerr << "Failed to load " << pluginName << " from " << libName
+          << std::endl;
+        return false;
+      }
+      else
+      {
+        igndbg << "Loaded plugin " << pluginName << " from " << libName
+          << std::endl;
+      }
+    }
+    else
+    {
+      ignerr << "Failed to load library " << libName << std::endl;
+      return false;
+    }
+  }
+  return true;
+}
+
+//////////////////////////////////////////////////
+void PlaceholderCreateComponents(gazebo::ecs::Manager &_mgr)
+{
+  // Placeholder create components. The componentizer should do this 
+}
+
+//////////////////////////////////////////////////
+void RunECS(gazebo::ecs::Manager &_mgr, std::atomic<bool> &stop)
+{
+  // TODO Use fancy update call once Diagnostics display is merged
+  ignition::common::Time lastSimTime;
+  while (!stop)
+  {
+    _mgr.UpdateSystems();
+    ignition::common::Time currentSimTime = _mgr.SimulationTime();
+
+    if (currentSimTime > lastSimTime)
+    {
+      // update in real time
+      double seconds = (currentSimTime - lastSimTime).Double();
+      std::this_thread::sleep_for(std::chrono::duration<double>(seconds));
+    }
+    else
+    {
+      std::cerr << "time moved backwards?" << std::endl;
+      // Time moved backwards? Default update rate
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    lastSimTime = currentSimTime;
+  }
 }
 
 //////////////////////////////////////////////////
@@ -124,12 +199,29 @@ int main(int _argc, char **_argv)
     // Set verbosity level
     Verbose();
 
+    gazebo::ecs::Manager manager;
+
+    // TODO componentizer
+    PlaceholderCreateComponents(manager);
+
+    // Load ECS systems
+    if (!LoadSystems(manager, {
+        "gazeboPhysicsSystem",
+        }))
+    {
+      return 1;
+    }
+
     // Initialize app
     ignition::gui::initApp();
 
+    // Run the ECS in another thread
+    std::atomic<bool> stop(false);
+    std::thread ecsThread(RunECS, std::ref(manager), std::ref(stop));
+
     // TODO: load startup plugins and configuration files here before creating
     // the window
-    ignition::gui::loadPlugin("GuiDisplayImage");
+    ignition::gui::loadPlugin("gazeboGuiDisplayImage");
 
     // Create main window
     ignition::gui::createMainWindow();
@@ -144,7 +236,13 @@ int main(int _argc, char **_argv)
 
     // Cleanup once main window is closed
     ignition::gui::stop();
+
+    // Stop the ECS
+    stop = true;
+    igndbg << "Waiting for ECS thread" << std::endl;
+    ecsThread.join();
   }
 
+  igndbg << "Shutting down" << std::endl;
   return 0;
 }
