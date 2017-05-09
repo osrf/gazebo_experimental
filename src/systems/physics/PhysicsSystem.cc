@@ -18,39 +18,35 @@
 #include <iostream>
 #include <ignition/common/PluginMacros.hh>
 
-// From external library
-#include "dumb_physics/Body.hh"
-#include "dumb_physics/World.hh"
-
-// Internal to Gazebo
 #include "gazebo/components/Inertial.hh"
 #include "gazebo/components/Geometry.hh"
+#include "gazebo/components/PhysicsProperties.hh"
 #include "gazebo/components/WorldPose.hh"
 #include "gazebo/components/WorldVelocity.hh"
 #include "gazebo/ecs/Manager.hh"
 #include "gazebo/ecs/EntityQuery.hh"
-#include "DumbPhysics.hh"
+#include "PhysicsSystem.hh"
 
+namespace gzsys = gazebo::systems;
+using namespace gzsys;
 using namespace gazebo;
-using namespace systems;
+
 
 /////////////////////////////////////////////////
-void DumbPhysics::Init(ecs::QueryRegistrar &_registrar)
+void PhysicsSystem::Init(ecs::QueryRegistrar &_registrar)
 {
+  // Query for global/configuration info
+  ecs::EntityQuery configQuery;
+  if (!configQuery.AddComponent("gazebo::components::PhysicsProperties"))
+    std::cerr << "Undefined component[gazebo::components::PhysicsProperties]\n";
+
+  _registrar.Register(configQuery,
+      std::bind(&PhysicsSystem::UpdateConfig, this, std::placeholders::_1));
+
+  // Query for bodies to simulate
   ecs::EntityQuery query;
-
-  // TODO how will systems get info that should apply to everything like
-  //      gravity and solver parameters?
-  this->world.Gravity({0.0, 0.0, 0.0});
-  this->world.SetSize({10.0, 10.0, 10.0});
-
-  // Add required components
-
-  // Entities must have a sphere geometry
   if (!query.AddComponent("gazebo::components::Geometry"))
     std::cerr << "Undefined component[gazebo::components::Geometry]\n";
-
-  // Entities must have a world pose
   if (!query.AddComponent("gazebo::components::WorldPose"))
     std::cerr << "Undefined component[gazebo::components::WorldPose]\n";
 
@@ -59,11 +55,29 @@ void DumbPhysics::Init(ecs::QueryRegistrar &_registrar)
   // optional
 
   _registrar.Register(query,
-      std::bind(&DumbPhysics::Update, this, std::placeholders::_1));
+      std::bind(&PhysicsSystem::UpdateBodies, this, std::placeholders::_1));
 }
 
 /////////////////////////////////////////////////
-void DumbPhysics::Update(const ecs::EntityQuery &_result)
+void PhysicsSystem::UpdateConfig(const ecs::EntityQuery &_result)
+{
+  ecs::Manager &mgr = this->Manager();
+  auto const &entityIds = _result.EntityIds();
+  if (!entityIds.empty())
+  {
+    // only consider the first entity
+    auto &entity = mgr.Entity(*entityIds.begin());
+    auto difference = entity.IsDifferent<components::PhysicsProperties>();
+    if (difference == ecs::WAS_CREATED || difference == ecs::WAS_MODIFIED)
+    {
+      auto const *geom = entity.Component<components::PhysicsProperties>();
+      this->maxStepSize = geom->maxStepSize;
+    }
+  }
+}
+
+/////////////////////////////////////////////////
+void PhysicsSystem::UpdateBodies(const ecs::EntityQuery &_result)
 {
   ecs::Manager &mgr = this->Manager();
 
@@ -75,201 +89,51 @@ void DumbPhysics::Update(const ecs::EntityQuery &_result)
     // Get entity (should check if exists?)
     auto &entity = mgr.Entity(entityId);
 
-    // Body is the internal representation of an entity in this system
-    auto body = this->world.BodyById(entityId);
+    // Check for changes since last time step
+    auto diffGeometry = entity.IsDifferent<components::Geometry>();
+    auto diffPose = entity.IsDifferent<components::Geometry>();
 
-    // Check if geometry has changed since last time step
-    // We use the presence of this component to add/remove bodies in this system
-    auto difference = entity.IsDifferent<components::Geometry>();
+    auto doDelete = (diffGeometry == ecs::WAS_DELETED)
+      || (diffPose == ecs::WAS_DELETED);
+    auto doCreate = (!doDelete) && (diffGeometry == ecs::WAS_CREATED
+        || diffPose == ecs::WAS_CREATED);
+    auto doModify = (!doDelete) && (!doCreate) && (
+        diffGeometry == ecs::WAS_CREATED || diffPose == ecs::WAS_CREATED);
 
     // Another system created a new geometry we don't know about yet, so
     // create it internally
-    if (ecs::WAS_CREATED == difference && !body)
+    if (doCreate)
     {
-      body = this->AddBody(entityId, entity);
+      // TODO Add a new body to the physics engine world
     }
-    // Geometry component was removed from this entity by another system.
-    // We remove the whole entity from this system, because we're not
-    // interested in entities without a geometry.
-    else if (ecs::WAS_DELETED == difference && body)
+    else if (doDelete)
     {
-      this->world.RemoveBody(body->Id());
+      // TODO Remove a body from the physics engine world
     }
-    // Another system modified the geometry
-    // TODO How can we be sure it wasn't us who changed it?
-    else if (ecs::WAS_MODIFIED == difference && body)
+    else if (doModify)
     {
-      auto const geom = entity.Component<components::Geometry>();
-      this->SyncInternalGeom(body, geom);
+      // TODO Update body in physics engine world
     }
-    // Something went wrong
-    else if (ecs::NO_DIFFERENCE != difference)
-    {
-      std::cerr << "Unable to handle difference [" << difference
-                << "] on Geometry component for entity [" << entityId
-                << "]" << std::endl;
-    }
-
-    // Sync other properties in case they've been changed by other systems
-    auto const pose = entity.Component<components::WorldPose>();
-    if (pose)
-      this->SyncInternalPose(body, pose);
-    else
-    {
-      std::cerr << "Entity [" << entityId
-                << "] missing required component WorldPose. "
-                << "Removing it from the world." << std::endl;
-      this->world.RemoveBody(body->Id());
-    }
-
-    auto const velocity = entity.Component<components::WorldVelocity>();
-    if (velocity)
-      this->SyncInternalVelocity(body, velocity);
   }
 
-  // STEP 2 do some physics
-  // Physics controls simulation time because physics engines with a variable
-  // time steps will update at an unknown rate
-  double changeInTime = 0.001;
-  auto contacts = this->world.Update(changeInTime);
+  // STEP 2 Update the world
+  // TODO Step the world once
+
+  // STEP 3 Update the simulation time
+  // Physics controls simulation time because engines with a variable time step
+  // will update at an unknown rate
+  const double changeInTime = this->maxStepSize;
   ignition::common::Time delta(changeInTime);
   mgr.SimulationTime(mgr.SimulationTime() + delta);
 
+  // STEP 4
   // TODO Publish contacts on an ignition transport topic?
-  for (auto contact : contacts)
-  {
-    std::cout<< "[phys]Contact " << contact.first << " and "
-      << contact.second << std::endl;
-  }
 
-  // STEP 3 update the components with the results of the physics
-  for (auto const &entityId : _result.EntityIds())
-  {
-    dumb_physics::Body *body = this->world.BodyById(entityId);
-
-    if (!body)
-    {
-      std::cerr << "Null body for entity [" << entityId << "]" << std::endl;
-      continue;
-    }
-
-    auto &entity = mgr.Entity(entityId);
-
-    auto worldPose = entity.ComponentMutable<components::WorldPose>();
-    this->SyncExternalPose(body, worldPose);
-
-    auto worldVel = entity.ComponentMutable<components::WorldVelocity>();
-    this->SyncExternalVelocity(body, worldVel);
-  }
+  // STEP 5 update the components
+  // TODO Update with results from the physics engine
 }
 
-/////////////////////////////////////////////////
-void DumbPhysics::SyncInternalGeom(dumb_physics::Body *_body,
-    const components::Geometry *_component)
-{
-  if (_component->type != components::Geometry::SPHERE)
-  {
-    std::cerr << "DumbPhysics only supports spheres, failed to sync geometry "
-              << "type [" << _component->type << "]" << std::endl;
-    return;
-  }
-
-  _body->Radius(_component->sphere.radius);
-}
 
 /////////////////////////////////////////////////
-void DumbPhysics::SyncInternalMass(dumb_physics::Body *_body,
-    const components::Inertial *_component)
-{
-  _body->Mass(_component->mass);
-}
-
-/////////////////////////////////////////////////
-void DumbPhysics::SyncInternalVelocity(dumb_physics::Body *_body,
-    const components::WorldVelocity *_component)
-{
-  _body->LinearVelocity(_component->linear);
-  _body->AngularVelocity(_component->angular);
-}
-
-/////////////////////////////////////////////////
-void DumbPhysics::SyncInternalPose(dumb_physics::Body *_body,
-    const components::WorldPose *_component)
-{
-  _body->Position(_component->position);
-  _body->Rotation(_component->rotation);
-}
-
-/////////////////////////////////////////////////
-void DumbPhysics::SyncExternalGeom(const dumb_physics::Body *_body,
-    components::Geometry *_component)
-{
-  _component->sphere.radius = _body->Radius();
-}
-
-/////////////////////////////////////////////////
-void DumbPhysics::SyncExternalMass(const dumb_physics::Body *_body,
-    components::Inertial *_component)
-{
-  _component->mass = _body->Mass();
-}
-
-/////////////////////////////////////////////////
-void DumbPhysics::SyncExternalVelocity(const dumb_physics::Body *_body,
-    components::WorldVelocity *_component)
-{
-  _component->linear = _body->LinearVelocity();
-  _component->angular = _body->AngularVelocity();
-}
-
-/////////////////////////////////////////////////
-void DumbPhysics::SyncExternalPose(const dumb_physics::Body *_body,
-    components::WorldPose *_component)
-{
-  _component->position = _body->Position();
-  _component->rotation = _body->Rotation();
-}
-
-/////////////////////////////////////////////////
-dumb_physics::Body *DumbPhysics::AddBody(const ecs::EntityId _id,
-                                         ecs::Entity &_entity)
-{
-  std::cout << "[phys] Add body " << _id << std::endl;
-
-  dumb_physics::Body *body = nullptr;
-
-  // Required components
-  auto geom = _entity.Component<components::Geometry>();
-  auto worldPose = _entity.Component<components::WorldPose>();
-
-  if (!geom || !worldPose)
-  {
-    std::cerr << "Entity [" << _entity.Id() << "] is missing required components."
-             << " Can't create body." << std::endl;
-    return body;
-  }
-
-  // Create body
-  body = this->world.AddBody(_id);
-
-  // Update internal representation
-  this->SyncInternalGeom(body, geom);
-  this->SyncInternalPose(body, worldPose);
-
-  // Optional components
-  auto inertia = _entity.Component<components::Inertial>();
-
-  if (inertia)
-    this->SyncInternalMass(body, inertia);
-
-  auto worldVel = _entity.Component<components::WorldVelocity>();
-
-  if (worldVel)
-    this->SyncInternalVelocity(body, worldVel);
-
-  return body;
-}
-
-/////////////////////////////////////////////////
-IGN_COMMON_REGISTER_SINGLE_PLUGIN(gazebo::systems::DumbPhysics,
+IGN_COMMON_REGISTER_SINGLE_PLUGIN(gazebo::systems::PhysicsSystem,
                                   gazebo::ecs::System)
