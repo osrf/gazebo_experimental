@@ -17,30 +17,31 @@ Build and install them from source in this order:
 * [ign-transport]()
 * [ign-gui]()
 
+Other dependencies include
+* gflags
+    * sudo apt install libgflags-dev
+
 ## Building
 
 This project uses [CMake](https://cmake.org/).
 
 1. Configure the project
-
-    ```
+```
     cd gazebo_experimental/
     mkdir build
     cd build/
     cmake -DCMAKE_BUILD_TYPE=Debug ..
-    ```
+```
 
 1. Build the project
-
-    ```
+```
     make
-    ```
+```
 
 ## Running Tests
-
-    ```
+```
     make test
-    ```
+```
 
 # Running
 This project makes use of plugins to provide most of the features.
@@ -67,3 +68,5 @@ IGN_GUI_PLUGIN_PATH=build/src/gui gazebo
 # Code coverage
 **TO DO**
 
+# Generate documentation
+**TO DO**
