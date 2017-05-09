@@ -18,6 +18,7 @@ Build and install them from source in this order:
 * [ign-gui]()
 
 Other dependencies include
+
 * gflags
     * sudo apt install libgflags-dev
 
@@ -49,9 +50,9 @@ The two important ones are `IGN_GUI_PLUGIN_PATH` and `GAZEBO_PLUGIN_PATH`.
 For example, this will run a demo with a GUI window.
 
 ```
-# assumes you're in the gazebo_experimental/ folder
-GAZEBO_PLUGIN_PATH=build/examples/dummy_demo/systems/ build/examples/dummy_demo/dummy_demo &
-IGN_GUI_PLUGIN_PATH=build/src/gui gazebo
+# assumes you're in the build/ folder
+GAZEBO_PLUGIN_PATH=examples/dummy_demo/systems/ examples/dummy_demo/dummy_demo &
+IGN_GUI_PLUGIN_PATH=src/gui gazebo
 ```
 
 # Installing
