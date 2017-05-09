@@ -109,12 +109,14 @@ void GuiDiagnostics::paintEvent(QPaintEvent *_event)
   const QColor dividerColor = qRgb(50, 50, 50);
   const QColor dataColor = qRgb(10, 100, 10);
   const QColor bgColor = qRgb(255, 255, 255);
+  const QColor timeTextColor = qRgb(255,255,255);
   const float textAreaWidth = sWidth * 0.25;
   const float dataAreaWidth = sWidth - textAreaWidth - dividerWidth;
   const float max_label_height = 100.0;
   const int num_labels = this->msg.time_size();
   const float label_height = (sHeight / num_labels > max_label_height)
     ? max_label_height : (sHeight / num_labels);
+  const float timeTextHeight = max_label_height / 2.0;
 
   // Keep the data centered and square
   float vMargin = 0.0f;
@@ -163,6 +165,7 @@ void GuiDiagnostics::paintEvent(QPaintEvent *_event)
   for (const DiagInfo &info : timingInfo)
   {
     ++dataIdx;
+
     // Draw text labels for all adata
     QString labelText = info.name;
     // Determine font size to fit text to text area
@@ -182,6 +185,8 @@ void GuiDiagnostics::paintEvent(QPaintEvent *_event)
     }
     QRect rect(0, dataIdx * label_height, textAreaWidth, label_height);
     const int flags = Qt::AlignCenter;
+    painter.setPen(QPen(dividerColor, dividerWidth, Qt::SolidLine,
+        Qt::FlatCap, Qt::MiterJoin));
     painter.drawText(rect, flags, labelText);
     painter.drawRect(rect);
 
@@ -194,6 +199,44 @@ void GuiDiagnostics::paintEvent(QPaintEvent *_event)
         dataIdx * label_height + (padding / 2.0f), dataWidthX,
         label_height - padding);
     painter.fillRect(dataRect, dataColor);
+
+    // Draw white text over a black box with the time in nanoseconds
+    const float microseconds = info.elapsed.sec * 1e6 + info.elapsed.nsec * 1e-3;
+    QString timeText;
+    timeText.setNum(microseconds);
+    timeText.append(" micro seconds");
+    // Determing font size to fit text to text area
+    font = painter.font();
+    font.setPointSize(timeTextHeight);
+    painter.setFont(font);
+    for (int i = 0; i < 3; ++i)
+    {
+      float h = painter.fontMetrics().boundingRect(timeText).height();
+      if (h > timeTextHeight - padding)
+      {
+        float scale = (timeTextHeight - padding) / h;
+        QFont font = painter.font();
+        font.setPointSizeF(font.pointSizeF() * scale);
+        painter.setFont(font);
+      }
+    }
+    // black box
+    const float timeTextWidth = painter.fontMetrics().boundingRect(timeText)
+      .width();
+    const float timeTextHeight = painter.fontMetrics().boundingRect(timeText)
+      .height();
+    const float cy = dataIdx * label_height + label_height / 2.0;
+    const float cx = textAreaWidth + dividerWidth + padding +
+      dataAreaWidth / 2.0;
+    QRect blackBoxRect(cx - timeTextWidth / 2.0 - padding,
+        cy - timeTextHeight / 2.0 - padding,
+        timeTextWidth + padding * 2.0,
+        timeTextHeight + padding * 2.0);
+    painter.fillRect(blackBoxRect, qRgb(0, 0, 0));
+    // white text
+    painter.setPen(QPen(timeTextColor, dividerWidth, Qt::SolidLine,
+        Qt::FlatCap, Qt::MiterJoin));
+    painter.drawText(blackBoxRect, flags, timeText);
   }
 }
 
