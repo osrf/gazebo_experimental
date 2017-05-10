@@ -49,6 +49,7 @@ void PhysicsSystem::Init(ecs::QueryRegistrar &_registrar)
     std::cerr << "Undefined component[gazebo::components::Geometry]\n";
   if (!query.AddComponent("gazebo::components::WorldPose"))
     std::cerr << "Undefined component[gazebo::components::WorldPose]\n";
+  // TODO require component with contact or surface properies
 
   // Note that we add only the required components. This system will also make
   // use of the Mass and WorldVelocity components if present, but these are

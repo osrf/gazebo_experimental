@@ -25,6 +25,13 @@
 #include <ignition/common/Console.hh>
 #include <ignition/common/PluginLoader.hh>
 #include <ignition/common/SystemPaths.hh>
+#include <ignition/math/Rand.hh>
+#include "gazebo/components/Inertial.hh"
+#include "gazebo/components/Geometry.hh"
+#include "gazebo/components/PhysicsProperties.hh"
+#include "gazebo/components/WorldPose.hh"
+#include "gazebo/components/WorldVelocity.hh"
+#include "gazebo/ecs/ComponentFactory.hh"
 #include "gazebo/ecs/Manager.hh"
 
 #ifndef Q_MOC_RUN
@@ -32,6 +39,8 @@
 #endif
 
 #include "gazebo/Config.hh"
+
+namespace gzecs = gazebo::ecs;
 
 // Gflag command line argument definitions
 // This flag is an abbreviation for the longer gflags built-in help flag.
@@ -77,7 +86,7 @@ static bool VerbosityValidator(const char */*_flagname*/, int _value)
 
 
 //////////////////////////////////////////////////
-bool LoadSystems(gazebo::ecs::Manager &_mgr, std::vector<std::string> _libs)
+bool LoadSystems(gzecs::Manager &_mgr, std::vector<std::string> _libs)
 {
   ignition::common::PluginLoader pluginLoader;
   ignition::common::SystemPaths sp;
@@ -89,8 +98,8 @@ bool LoadSystems(gazebo::ecs::Manager &_mgr, std::vector<std::string> _libs)
     std::string pluginName = pluginLoader.LoadLibrary(pathToLibrary);
     if (pluginName.size())
     {
-      std::unique_ptr<gazebo::ecs::System> sys;
-      sys = pluginLoader.Instantiate<gazebo::ecs::System>(pluginName);
+      std::unique_ptr<gzecs::System> sys;
+      sys = pluginLoader.Instantiate<gzecs::System>(pluginName);
       if (!_mgr.LoadSystem(std::move(sys)))
       {
         ignerr << "Failed to load " << pluginName << " from " << libName
@@ -113,13 +122,85 @@ bool LoadSystems(gazebo::ecs::Manager &_mgr, std::vector<std::string> _libs)
 }
 
 //////////////////////////////////////////////////
-void PlaceholderCreateComponents(gazebo::ecs::Manager &_mgr)
+void PlaceholderCreateComponents(gzecs::Manager &_mgr)
 {
-  // Placeholder create components. The componentizer should do this 
+  // Componentizer should register components
+  gzecs::ComponentFactory::Register<gazebo::components::Inertial>(
+      "gazebo::components::Inertial");
+  gzecs::ComponentFactory::Register<gazebo::components::Geometry>(
+      "gazebo::components::Geometry");
+  gzecs::ComponentFactory::Register<gazebo::components::PhysicsProperties>(
+      "gazebo::components::PhysicsProperties");
+  gzecs::ComponentFactory::Register<gazebo::components::WorldPose>(
+      "gazebo::components::WorldPose");
+  gzecs::ComponentFactory::Register<gazebo::components::WorldVelocity>(
+      "gazebo::components::WorldVelocity");
+
+  // Placeholder create components. The componentizer should do this
+  // Create 25 sphere entities
+  for (int i = 0; i < 25; i++)
+  {
+    // Create the entity
+    gzecs::EntityId e = _mgr.CreateEntity();
+    gzecs::Entity &entity = _mgr.Entity(e);
+
+    // Inertial component
+    auto inertial = entity.AddComponent<gazebo::components::Inertial>();
+    if (inertial)
+    {
+      inertial->mass = ignition::math::Rand::DblUniform(0.1, 5.0);
+    }
+    else
+    {
+      std::cerr << "Failed to add inertial component to entity [" << e << "]"
+                << std::endl;
+    }
+
+    // Geometry component
+    auto geom = entity.AddComponent<gazebo::components::Geometry>();
+    if (geom)
+    {
+      geom->type = gazebo::components::Geometry::SPHERE;
+      geom->sphere.radius = ignition::math::Rand::DblUniform(0.1, 0.5);
+    }
+    else
+    {
+      std::cerr << "Failed to add geom component to entity [" << e << "]"
+                << std::endl;
+    }
+
+    // World pose
+    auto pose = entity.AddComponent<gazebo::components::WorldPose>();
+    if (pose)
+    {
+      pose->position.X(ignition::math::Rand::DblUniform(-4.0, 4.0));
+      pose->position.Y(ignition::math::Rand::DblUniform(-4.0, 4.0));
+      pose->position.Z(ignition::math::Rand::DblUniform(-4.0, 4.0));
+    }
+    else
+    {
+      std::cerr << "Failed to add world pose component to entity [" << e << "]"
+                << std::endl;
+    }
+
+    // World velocity
+    auto vel = entity.AddComponent<gazebo::components::WorldVelocity>();
+    if (vel)
+    {
+      vel->linear.X(ignition::math::Rand::DblUniform(-1.0, 1.0));
+      vel->linear.Y(ignition::math::Rand::DblUniform(-1.0, 1.0));
+      vel->linear.Z(ignition::math::Rand::DblUniform(-1.0, 1.0));
+    }
+    else
+    {
+      std::cerr << "Failed to add world velocity component to entity ["
+                << e << "]" << std::endl;
+    }
+  }
 }
 
 //////////////////////////////////////////////////
-void RunECS(gazebo::ecs::Manager &_mgr, std::atomic<bool> &stop)
+void RunECS(gzecs::Manager &_mgr, std::atomic<bool> &stop)
 {
   // TODO Use fancy update call once Diagnostics display is merged
   ignition::common::Time lastSimTime;
@@ -199,7 +280,7 @@ int main(int _argc, char **_argv)
     // Set verbosity level
     Verbose();
 
-    gazebo::ecs::Manager manager;
+    gzecs::Manager manager;
 
     // TODO componentizer
     PlaceholderCreateComponents(manager);
