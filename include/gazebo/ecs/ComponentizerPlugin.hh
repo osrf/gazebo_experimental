@@ -14,6 +14,8 @@
  * limitations under the License.
  *
 */
+#ifndef GAZEBO_ECS_COMPONENTIZERPLUGIN_HH__
+#define GAZEBO_ECS_COMPONENTIZERPLUGIN_HH__
 
 #include <sdf/sdf.hh>
 
@@ -34,3 +36,6 @@ namespace gazebo
     };
   }
 }
+
+
+#endif
