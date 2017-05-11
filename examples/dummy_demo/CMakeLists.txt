@@ -1,5 +1,5 @@
 find_package(ignition-math3 REQUIRED)
-include_directories(${IGNITION-MATH_INCLUDE_DIRS} .)
+include_directories(${IGNITION-MATH_INCLUDE_DIRS} ${IGNITION-TRANSPORT_INCLUDE_DIRS} .)
 
 add_subdirectory(dumb_physics)
 add_subdirectory(systems)

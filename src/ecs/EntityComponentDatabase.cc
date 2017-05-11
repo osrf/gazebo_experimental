@@ -16,6 +16,7 @@
 */
 
 #include <algorithm>
+#include <assert.h>
 #include <set>
 #include <utility>
 
@@ -410,11 +411,21 @@ void EntityComponentDatabase::Update()
   {
     StorageKey key = kv.first;
     this->dataPtr->differences[key] = WAS_MODIFIED;
-    // Copy modified components to main storage
     ComponentTypeInfo info = ComponentFactory::TypeInfo(key.second);
-    char *modifiedStorage = kv.second;
-    this->dataPtr->componentIndices[key] = this->dataPtr->components.size();
-    this->dataPtr->components.push_back(modifiedStorage);
+
+    // Get pointer to temporary storage with modifications
+    const char *modifiedStorage = kv.second;
+
+    // Get pointer to component in main storage
+    auto mainIdx = this->dataPtr->componentIndices[key];
+    char *mainStorage = this->dataPtr->components[mainIdx];
+
+    // Copy modified components to main storage
+    info.copier(static_cast<const void *>(modifiedStorage),
+        static_cast<void *>(mainStorage));
+
+    // Free temporary storage (intentionally not calling destructor)
+    delete [] modifiedStorage;
   }
   this->dataPtr->toModifyComponents.clear();
 
@@ -473,4 +484,7 @@ void EntityComponentDatabase::Update()
 
   // Clearing this effectively creates entities
   this->dataPtr->toCreateEntities.clear();
+
+  assert(this->dataPtr->componentIndices.size()
+      == this->dataPtr->components.size());
 }

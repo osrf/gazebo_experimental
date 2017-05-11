@@ -45,8 +45,7 @@ namespace gazebo
       /// returned from Init().
       /// \param[in] _mgr An ecs::Manager instance that can be used to
       /// add/delete entities.
-      public: virtual void Update(const double _dt,
-                  const ecs::EntityQuery &_result);
+      public: virtual void Update(const ecs::EntityQuery &_result);
 
       /// \brief Physics systems need to bridge between entities/components
       ///        and their internal reprentations of the world

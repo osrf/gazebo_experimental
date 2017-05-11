@@ -51,21 +51,18 @@ class TestHookSystem : public gzecs::System
   /// \brief String that's set on update
   public: std::string sentinel;
 
-  public: double lastDelta = 0;
-
   public: virtual void Init(gzecs::QueryRegistrar &_registrar)
     {
       gzecs::EntityQuery q;
       q.AddComponent("TC1");
       _registrar.Register(q, std::bind(&TestHookSystem::Update, this,
-            std::placeholders::_1, std::placeholders::_2));
+            std::placeholders::_1));
       this->sentinel = "Init Ran";
     }
 
-  public: void Update(double _dt, const gzecs::EntityQuery &_result)
+  public: void Update(const gzecs::EntityQuery &_result)
     {
       this->sentinel = "Update Ran";
-      this->lastDelta = _dt;
     }
 };
 
@@ -91,9 +88,9 @@ TEST(Manager, DeleteEntity)
 {
   gzecs::Manager mgr;
   gzecs::EntityId id = mgr.CreateEntity();
-  mgr.UpdateSystems(0);
+  mgr.UpdateSystems();
   mgr.DeleteEntity(id);
-  mgr.UpdateSystems(0);
+  mgr.UpdateSystems();
   EXPECT_EQ(gzecs::NO_ENTITY, mgr.Entity(id).Id());
 }
 
@@ -105,9 +102,104 @@ TEST(Manager, LoadSystem)
   std::unique_ptr<gzecs::System> sys(dynamic_cast<gzecs::System*>(raw));
   mgr.LoadSystem(std::move(sys));
   EXPECT_EQ(std::string("Init Ran"), raw->sentinel);
-  mgr.UpdateSystems(1.09);
+  mgr.UpdateSystems();
   EXPECT_EQ(std::string("Update Ran"), raw->sentinel);
-  EXPECT_FLOAT_EQ(1.09, raw->lastDelta);
+}
+
+/////////////////////////////////////////////////
+TEST(Manager, PauseCount)
+{
+  gzecs::Manager mgr;
+  EXPECT_EQ(1, mgr.BeginPause());
+  EXPECT_EQ(2, mgr.BeginPause());
+  EXPECT_EQ(3, mgr.BeginPause());
+  EXPECT_EQ(2, mgr.EndPause());
+  EXPECT_EQ(1, mgr.EndPause());
+  EXPECT_EQ(0, mgr.EndPause());
+}
+
+/////////////////////////////////////////////////
+TEST(Manager, PauseCountAlwaysPositive)
+{
+  gzecs::Manager mgr;
+  for (int i = 0; i < 10; ++i)
+    EXPECT_EQ(0, mgr.EndPause());
+}
+
+/////////////////////////////////////////////////
+TEST(Manager, InitiallyNotPaused)
+{
+  gzecs::Manager mgr;
+  EXPECT_FALSE(mgr.Paused());
+  mgr.UpdateSystems();
+  EXPECT_FALSE(mgr.Paused());
+}
+
+/////////////////////////////////////////////////
+TEST(Manager, PauseUnpause)
+{
+  gzecs::Manager mgr;
+  mgr.BeginPause();
+  mgr.UpdateSystems();
+  EXPECT_TRUE(mgr.Paused());
+  mgr.EndPause();
+  mgr.UpdateSystems();
+  EXPECT_FALSE(mgr.Paused());
+}
+
+/////////////////////////////////////////////////
+TEST(Manager, InitialTimeZero)
+{
+  gzecs::Manager mgr;
+  ignition::common::Time simTime = mgr.SimulationTime();
+  EXPECT_EQ(0, simTime.sec);
+  EXPECT_EQ(0, simTime.nsec);
+}
+
+/////////////////////////////////////////////////
+TEST(Manager, SetTimeNotPaused)
+{
+  gzecs::Manager mgr;
+  ignition::common::Time simTime(1234, 5678);
+  EXPECT_TRUE(mgr.SimulationTime(simTime));
+
+  mgr.UpdateSystems();
+  simTime = mgr.SimulationTime();
+  EXPECT_EQ(1234, simTime.sec);
+  EXPECT_EQ(5678, simTime.nsec);
+}
+
+/////////////////////////////////////////////////
+TEST(Manager, SetTimeNextUpdate)
+{
+  gzecs::Manager mgr;
+  ignition::common::Time simTime(1234, 5678);
+  EXPECT_TRUE(mgr.SimulationTime(simTime));
+
+  simTime = mgr.SimulationTime();
+  EXPECT_EQ(0, simTime.sec);
+  EXPECT_EQ(0, simTime.nsec);
+
+  mgr.UpdateSystems();
+  simTime = mgr.SimulationTime();
+  EXPECT_EQ(1234, simTime.sec);
+  EXPECT_EQ(5678, simTime.nsec);
+}
+
+/////////////////////////////////////////////////
+TEST(Manager, SetTimePaused)
+{
+  gzecs::Manager mgr;
+  mgr.BeginPause();
+  mgr.UpdateSystems();
+
+  ignition::common::Time simTime(1234, 5678);
+  EXPECT_FALSE(mgr.SimulationTime(simTime));
+
+  mgr.UpdateSystems();
+  simTime = mgr.SimulationTime();
+  EXPECT_EQ(0, simTime.sec);
+  EXPECT_EQ(0, simTime.nsec);
 }
 
 int main(int argc, char **argv)
