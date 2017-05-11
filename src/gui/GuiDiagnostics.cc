@@ -20,9 +20,11 @@
 #include <ignition/common/PluginMacros.hh>
 #include <ignition/common/Image.hh>
 #include <ignition/common/Time.hh>
+#include <map>
 
 #include "GuiDiagnostics.hh"
 
+namespace ign_msgs = ignition::msgs;
 namespace gzgui = gazebo::gui;
 using namespace gzgui;
 
@@ -40,7 +42,8 @@ struct DiagInfo
 };
 
 /////////////////////////////////////////////////
-std::vector<DiagInfo> Convert(const ignition::msgs::Diagnostics &_msg)
+/// \brief Converts a diagnostics message into an easier to use struct
+std::vector<DiagInfo> Convert(const ign_msgs::Diagnostics &_msg)
 {
   std::vector<struct DiagInfo> timingInfo;
   for (int idx = 0; idx < _msg.time_size(); ++idx)
@@ -58,6 +61,7 @@ std::vector<DiagInfo> Convert(const ignition::msgs::Diagnostics &_msg)
   return timingInfo;
 }
 
+
 //////////////////////////////////////////////////
 bool CompareStartTime(const DiagInfo &_d1, const DiagInfo &_d2)
 {
@@ -68,6 +72,45 @@ bool CompareStartTime(const DiagInfo &_d1, const DiagInfo &_d2)
 bool CompareEndTime(const DiagInfo &_d1, const DiagInfo &_d2)
 {
   return _d1.endTime < _d2.endTime;
+}
+
+//////////////////////////////////////////////////
+/// \brief Filters out messages such that the result is messages
+///        from a single sim time with the most possible information
+std::vector<DiagInfo> Condense(const std::vector<ign_msgs::Diagnostics> &_msgs)
+{
+  // Maps a simulation time to diagnostic info rx'd for it
+  std::map<ignition::common::Time, std::vector<DiagInfo> > simTimeInfo;
+
+  // Sort info into buckets according to their sim time
+  for (auto const &msg : _msgs)
+  {
+    ignition::common::Time simTime;
+    simTime.sec = msg.sim_time().sec();
+    simTime.nsec = msg.sim_time().nsec();
+    std::vector<DiagInfo> info = Convert(msg);
+
+    auto iter = simTimeInfo.find(simTime);
+    if (iter == simTimeInfo.end())
+      simTimeInfo[simTime] = info;
+    else
+      iter->second.insert(iter->second.end(), info.begin(), info.end());
+  }
+  if (simTimeInfo.empty())
+    return std::vector<DiagInfo>();
+
+  // figure out which bucket is the biggest
+  ignition::common::Time biggestTime(0,0);
+  std::size_t biggestSize = 0;
+  for (auto &kv : simTimeInfo)
+  {
+    if (kv.second.size() > biggestSize)
+    {
+      biggestSize = kv.second.size();
+      biggestTime = kv.first;
+    }
+  }
+  return simTimeInfo[biggestTime];
 }
 
 /////////////////////////////////////////////////
@@ -113,9 +156,6 @@ void GuiDiagnostics::paintEvent(QPaintEvent *_event)
   const float textAreaWidth = sWidth * 0.25;
   const float dataAreaWidth = sWidth - textAreaWidth - dividerWidth;
   const float max_label_height = 100.0;
-  const int num_labels = this->msg.time_size();
-  const float label_height = (sHeight / num_labels > max_label_height)
-    ? max_label_height : (sHeight / num_labels);
   const float timeTextHeight = max_label_height / 2.0;
 
   // Keep the data centered and square
@@ -150,9 +190,14 @@ void GuiDiagnostics::paintEvent(QPaintEvent *_event)
         Qt::FlatCap, Qt::MiterJoin));
   painter.drawPath(dividerPath);
 
-  std::vector<struct DiagInfo> timingInfo = Convert(this->msg);
+  std::vector<struct DiagInfo> timingInfo = Condense(this->msgs);
+  this->msgs.clear();
   if (timingInfo.empty())
     return;
+
+  const int num_labels = timingInfo.size();
+  const float label_height = (sHeight / num_labels > max_label_height)
+    ? max_label_height : (sHeight / num_labels);
 
   std::sort(timingInfo.begin(), timingInfo.end(), &CompareEndTime);
   const ignition::common::Time maxTime = timingInfo.back().endTime;
@@ -248,10 +293,10 @@ Q_SLOT void GuiDiagnostics::SignalDiagRx()
 }
 
 /////////////////////////////////////////////////
-void GuiDiagnostics::OnDiagRx(const ignition::msgs::Diagnostics &_msg)
+void GuiDiagnostics::OnDiagRx(const ign_msgs::Diagnostics &_msg)
 {
   std::lock_guard<std::mutex> lock(this->mtx);
-  this->msg = _msg;
+  this->msgs.push_back(_msg);
   // Signal to GUI (main) thread that diagnostics are in
   QMetaObject::invokeMethod(this, "SignalDiagRx");
 }

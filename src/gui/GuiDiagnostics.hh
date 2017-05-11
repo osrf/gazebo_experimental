@@ -19,6 +19,7 @@
 #define GAZEBO_GUI_GUIDIAGNOSTICS_HH_
 
 #include <mutex>
+#include <vector>
 
 #include <ignition/gui/qt.h>
 #include <ignition/gui/Plugin.hh>
@@ -58,7 +59,7 @@ namespace gazebo
       public: virtual QSize minimumSizeHint() const;
 
       /// \brief holds received data that has yet to be processed
-      public: ignition::msgs::Diagnostics msg;
+      public: std::vector<ignition::msgs::Diagnostics> msgs;
 
       /// \brief tools for setting up a subscriber
       private: ignition::transport::Node node;
