@@ -36,7 +36,7 @@ namespace gazebo
     class Componentizer
     {
       /// \brief constructor
-      public: Componentizer(Manager &_mgr);
+      public: Componentizer();
 
       /// \brief destructor
       public: ~Componentizer();
@@ -46,8 +46,9 @@ namespace gazebo
       public: void AddPlugin(std::unique_ptr<ComponentizerPlugin> _plugin);
 
       /// \brief turn SDF into entities and components
+      /// \param[in] _mgr Manager used to create entities and components
       /// \param[in] _sdf a parsed sdformat file
-      public: void FromSDF(const sdf::SDF &_sdf);
+      public: void FromSDF(Manager &_mgr, const sdf::SDF &_sdf);
 
       /// \brief private implementation
       private: std::shared_ptr<ComponentizerPrivate> dataPtr;

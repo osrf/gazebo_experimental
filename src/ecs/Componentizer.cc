@@ -30,7 +30,7 @@ class gzecs::ComponentizerPrivate
   public: std::vector<std::unique_ptr<ComponentizerPlugin> > plugins;
 };
 
-Componentizer::Componentizer(Manager &_mgr) :
+Componentizer::Componentizer() :
   dataPtr(new ComponentizerPrivate)
 {
 }
@@ -44,11 +44,10 @@ void Componentizer::AddPlugin(std::unique_ptr<ComponentizerPlugin> _plugin)
   this->dataPtr->plugins.push_back(std::move(_plugin));
 }
 
-void Componentizer::FromSDF(const sdf::SDF &_sdf)
+void Componentizer::FromSDF(Manager &_mgr, const sdf::SDF &_sdf)
 {
   for (auto &plugin : this->dataPtr->plugins)
   {
-    // Give them the SDF
-    // TODO
+    plugin->FromSDF(_mgr, _sdf);
   }
 }
