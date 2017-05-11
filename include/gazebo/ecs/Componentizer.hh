@@ -18,7 +18,7 @@
 #define GAZEBO_ECS_COMPONENTIZER_HH_
 
 #include <memory>
-
+#include <sdf/sdf.hh>
 
 namespace gazebo
 {
@@ -26,6 +26,9 @@ namespace gazebo
   {
     /// \brief forward declaration
     class Manager;
+
+    /// \brief forward declaration
+    class ComponentizerPlugin;
 
     /// \brief forward declaration
     class ComponentizerPrivate;
@@ -38,8 +41,13 @@ namespace gazebo
       /// \brief destructor
       public: ~Componentizer();
 
+      /// \brief Add a componentizer plugin
+      /// \param[in] _plugin a loaded plugin
+      public: void AddPlugin(std::unique_ptr<ComponentizerPlugin> _plugin);
+
       /// \brief turn SDF into entities and components
-      public: void FromSDF(const sdf::SDf &_sdf);
+      /// \param[in] _sdf a parsed sdformat file
+      public: void FromSDF(const sdf::SDF &_sdf);
 
       /// \brief private implementation
       private: std::shared_ptr<ComponentizerPrivate> dataPtr;
