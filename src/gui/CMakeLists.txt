@@ -14,9 +14,9 @@ link_directories(
   ${IGNITION-TRANSPORT_LIBRARY_DIRS}
   )
 
-add_library(GuiDisplayImage SHARED GuiDisplayImage.cc)
+add_library(gazeboGuiDisplayImage SHARED GuiDisplayImage.cc)
 
-target_link_libraries(GuiDisplayImage
+target_link_libraries(gazeboGuiDisplayImage
   ${IGNITION-MSGS_LIBRARIES}
   ${IGNITION-TRANSPORT_LIBRARIES}
   ${IGNITION-GUI_LIBRARIES}
@@ -24,3 +24,4 @@ target_link_libraries(GuiDisplayImage
   ${Qt5Widgets_LIBRARIES}
   )
 
+install(TARGETS gazeboGuiDisplayImage LIBRARY DESTINATION lib)
