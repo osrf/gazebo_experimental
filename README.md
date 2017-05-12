@@ -50,8 +50,8 @@ The two important ones are `IGN_GUI_PLUGIN_PATH` and `GAZEBO_PLUGIN_PATH`.
 For example, this will run a demo with a GUI window.
 
 ```
-# assumes you're in the build/ folder
-GAZEBO_PLUGIN_PATH=examples/dummy_demo/systems/ examples/dummy_demo/dummy_demo &
+# assumes you've done "make install" and are in the build/ folder
+GAZEBO_PLUGIN_PATH=$LD_LIBRARY_PATH examples/dummy_demo/dummy_demo &
 IGN_GUI_PLUGIN_PATH=src/gui gazebo
 ```
 
