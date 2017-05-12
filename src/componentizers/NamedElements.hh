@@ -33,7 +33,7 @@ namespace gazebo
 
       // Inherited
       public: virtual void FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
-                  ecs::EntityId _id);
+                  const std::unordered_map<sdf::Element*, ecs::EntityId> &_ids);
     };
   }
 }

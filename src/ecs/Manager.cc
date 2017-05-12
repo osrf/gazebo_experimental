@@ -175,6 +175,7 @@ bool Manager::LoadWorld(const std::string &_world)
   bool success = false;
   sdf::SDF sdfWorld;
   sdfWorld.SetFromString(_world);
+  std::unordered_map<sdf::Element*, EntityId> ids;
 
   // breadth-first componentization
   std::queue<sdf::ElementPtr> elementQueue;
@@ -187,10 +188,11 @@ bool Manager::LoadWorld(const std::string &_world)
     // An entity makes it easier to group components from different
     // componentizers. However, they are free to create their own entities
     EntityId groupId = this->CreateEntity();
+    ids[nextElement.get()] = groupId;
 
     for (auto &cz : this->dataPtr->componentizers)
     {
-      cz->FromSDF(*this, *nextElement, groupId);
+      cz->FromSDF(*this, *nextElement, ids);
     }
 
     sdf::ElementPtr child = nextElement->GetFirstElement();

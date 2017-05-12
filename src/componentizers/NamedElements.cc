@@ -35,7 +35,7 @@ void NamedElements::Init()
 
 //////////////////////////////////////////////////
 void NamedElements::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
-    ecs::EntityId _id)
+    const std::unordered_map<sdf::Element*, ecs::EntityId> &_ids)
 {
   // Add name component for this element
   if (_elem.HasAttribute("name"))
@@ -44,7 +44,8 @@ void NamedElements::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
     if (!name.empty())
     {
       igndbg << "creating component named " << name << std::endl;
-      ecs::Entity &e = _mgr.Entity(_id);
+      ecs::EntityId id = _ids.at(&_elem);
+      ecs::Entity &e = _mgr.Entity(id);
       auto nameComponent = e.AddComponent<components::Name>();
       nameComponent->name = name;
     }
