@@ -21,7 +21,7 @@
 namespace sdf
 {
   /// \brief forward declaration
-  class SDF;
+  class Element;
 }
 
 namespace gazebo
@@ -41,7 +41,7 @@ namespace gazebo
       /// \brief called when an SDF file is loaded
       /// \param[in] _mgr manager to use to create the entities and components
       /// \param[in] _sdf The sdf to pull data from
-      public: virtual void FromSDF(Manager &_mgr, const sdf::SDF &_sdf) = 0;
+      public: virtual void FromSDF(Manager &_mgr, sdf::Element &_sdf) = 0;
     };
   }
 }

@@ -34,22 +34,12 @@ void NamedElements::Init()
 }
 
 //////////////////////////////////////////////////
-void NamedElements::FromSDF(ecs::Manager &_mgr, const sdf::SDF &_sdf)
-{
-
-  /// find all elements with a name, and add a name component to them
-  if (nullptr != _sdf.Root())
-    this->NameElement(_mgr, _sdf.Root());
-}
-
-//////////////////////////////////////////////////
-void NamedElements::NameElement(ecs::Manager &_mgr,
-    const sdf::ElementPtr &_elem)
+void NamedElements::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem)
 {
   // Add name component for this element
-  if (_elem->HasAttribute("name"))
+  if (_elem.HasAttribute("name"))
   {
-    std::string name = _elem->GetAttribute("name")->GetAsString();
+    std::string name = _elem.GetAttribute("name")->GetAsString();
     if (!name.empty())
     {
       igndbg << "creating component named " << name << std::endl;
@@ -59,15 +49,6 @@ void NamedElements::NameElement(ecs::Manager &_mgr,
       nameComponent->name = name;
     }
   }
-
-  // Add name component for children too
-  sdf::ElementPtr child = _elem->GetFirstElement();
-  while (nullptr != child.get())
-  {
-    this->NameElement(_mgr, child);
-    child = _elem->GetNextElement();
-  }
-
 }
 
 //////////////////////////////////////////////////

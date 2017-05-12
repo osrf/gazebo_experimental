@@ -15,6 +15,7 @@
  *
 */
 #include <atomic>
+#include <queue>
 #include <set>
 #include <unordered_map>
 #include <utility>
@@ -175,9 +176,24 @@ bool Manager::LoadWorld(const std::string &_world)
   sdf::SDF sdfWorld;
   sdfWorld.SetFromString(_world);
 
-  for (auto &cz : this->dataPtr->componentizers)
+  // breadth-first componentization
+  std::queue<sdf::ElementPtr> elementQueue;
+  elementQueue.push(sdfWorld.Root());
+  while (nullptr != elementQueue.front())
   {
-    cz->FromSDF(*this, sdfWorld);
+    sdf::ElementPtr nextElement = elementQueue.front();
+    elementQueue.pop();
+    for (auto &cz : this->dataPtr->componentizers)
+    {
+      cz->FromSDF(*this, *nextElement);
+    }
+
+    sdf::ElementPtr child = nextElement->GetFirstElement();
+    while (nullptr != child.get())
+    {
+      elementQueue.push(child);
+      child = nextElement->GetNextElement();
+    }
   }
 
   return success;

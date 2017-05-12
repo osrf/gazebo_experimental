@@ -33,12 +33,8 @@ namespace gazebo
 
       /// \brief called when an SDF file is loaded
       /// \param[in] _mgr manager to use to create the entities and components
-      /// \param[in] _sdf The sdf to pull data from
-      public: virtual void FromSDF(ecs::Manager &_mgr, const sdf::SDF &_sdf);
-
-      /// \brief Recusively adds a name for an element
-      protected: void NameElement(ecs::Manager &_mgr,
-                     const sdf::ElementPtr &_elem);
+      /// \param[in] _element The sdf element to get data from
+      public: virtual void FromSDF(ecs::Manager &_mgr, sdf::Element &_elem);
     };
   }
 }
