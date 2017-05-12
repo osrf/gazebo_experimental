@@ -14,11 +14,15 @@
  * limitations under the License.
  *
 */
-#ifndef GAZEBO_ECS_COMPONENTIZER_HH_
-#define GAZEBO_ECS_COMPONENTIZER_HH_
+#ifndef GAZEBO_ECS_COMPONENTIZER_HH__
+#define GAZEBO_ECS_COMPONENTIZER_HH__
 
-#include <memory>
-#include <sdf/sdf.hh>
+
+namespace sdf
+{
+  /// \brief forward declaration
+  class SDF;
+}
 
 namespace gazebo
 {
@@ -27,33 +31,20 @@ namespace gazebo
     /// \brief forward declaration
     class Manager;
 
-    /// \brief forward declaration
-    class ComponentizerPlugin;
-
-    /// \brief forward declaration
-    class ComponentizerPrivate;
-
+    /// \brief a plugin that creates entities and components from SDF
     class Componentizer
     {
-      /// \brief constructor
-      public: Componentizer();
+      /// \brief called when componetizer is loaded
+      /// \remarks Use this method to register components
+      public: virtual void Init() = 0;
 
-      /// \brief destructor
-      public: ~Componentizer();
-
-      /// \brief Add a componentizer plugin
-      /// \param[in] _plugin a loaded plugin
-      public: void AddPlugin(std::unique_ptr<ComponentizerPlugin> _plugin);
-
-      /// \brief turn SDF into entities and components
-      /// \param[in] _mgr Manager used to create entities and components
-      /// \param[in] _sdf a parsed sdformat file
-      public: void FromSDF(Manager &_mgr, const sdf::SDF &_sdf);
-
-      /// \brief private implementation
-      private: std::shared_ptr<ComponentizerPrivate> dataPtr;
+      /// \brief called when an SDF file is loaded
+      /// \param[in] _mgr manager to use to create the entities and components
+      /// \param[in] _sdf The sdf to pull data from
+      public: virtual void FromSDF(Manager &_mgr, const sdf::SDF &_sdf) = 0;
     };
   }
 }
+
 
 #endif

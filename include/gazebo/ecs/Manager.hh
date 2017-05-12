@@ -24,6 +24,7 @@
 
 #include <ignition/common/Time.hh>
 
+#include "gazebo/ecs/Componentizer.hh"
 #include "gazebo/ecs/Entity.hh"
 #include "gazebo/ecs/System.hh"
 #include "gazebo/ecs/ComponentFactory.hh"
@@ -81,6 +82,15 @@ namespace gazebo
       ///
       /// Ex: sm->LoadSystem(std::move(aUniquePtrInstance))
       public: bool LoadSystem(std::unique_ptr<System> _sys);
+
+      /// \brief Load a componentizer
+      ///
+      /// Ex: sm->LoadComponentizer(std::move(aUniquePtrInstance))
+      public: bool LoadComponentizer(std::unique_ptr<Componentizer> _cz);
+
+      /// \brief Load a world from sdf string
+      /// \brief returns true if the sdf could be parsed
+      public: bool LoadWorld(const std::string &_world);
 
       public: void UpdateSystems();
 

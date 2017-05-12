@@ -14,28 +14,33 @@
  * limitations under the License.
  *
 */
-#ifndef GAZEBO_ECS_COMPONENTIZERPLUGIN_HH__
-#define GAZEBO_ECS_COMPONENTIZERPLUGIN_HH__
+#ifndef GAZEBO_COMPONENTIZERS_NAMEDELEMENTS_HH__
+#define GAZEBO_COMPONENTIZERS_NAMEDELEMENTS_HH__
 
-#include <sdf/sdf.hh>
+
+#include "gazebo/ecs/Componentizer.hh"
+#include "gazebo/ecs/Manager.hh"
 
 namespace gazebo
 {
-  namespace ecs
+  namespace componentizers
   {
-    /// \brief forward declaration
-    class Manager;
-
-    /// \brief a plugin that creates entities and components from SDF
-    class ComponentizerPlugin
+    /// \brief a plugin creates "Name" components for sdf elements
+    class NamedElements : public ecs::Componentizer
     {
+      /// \brief called whent the componentizer loads the plugin
+      public: virtual void Init();
+
       /// \brief called when an SDF file is loaded
       /// \param[in] _mgr manager to use to create the entities and components
       /// \param[in] _sdf The sdf to pull data from
-      public: virtual void FromSDF(Manager &_mgr, const sdf::SDF &_sdf) = 0;
+      public: virtual void FromSDF(ecs::Manager &_mgr, const sdf::SDF &_sdf);
+
+      /// \brief Recusively adds a name for an element
+      protected: void NameElement(ecs::Manager &_mgr,
+                     const sdf::ElementPtr &_elem);
     };
   }
 }
-
 
 #endif

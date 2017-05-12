@@ -20,6 +20,9 @@
 #include <utility>
 #include <vector>
 
+#include <sdf/sdf.hh>
+
+#include "gazebo/ecs/Componentizer.hh"
 #include "gazebo/ecs/EntityComponentDatabase.hh"
 #include "gazebo/ecs/EntityQuery.hh"
 #include "gazebo/ecs/Manager.hh"
@@ -42,6 +45,9 @@ struct SystemInfo
 /////////////////////////////////////////////////
 class gazebo::ecs::ManagerPrivate
 {
+  /// \brief Componentizers that are added to the manager
+  public: std::vector<std::unique_ptr<Componentizer> > componentizers;
+
   /// \brief Systems that are added to the manager
   public: std::vector<std::unique_ptr<System> > systems;
 
@@ -146,6 +152,34 @@ bool Manager::LoadSystem(std::unique_ptr<System> _sys)
     this->dataPtr->systemInfo.push_back(sysInfo);
     success = true;
   }
+  return success;
+}
+
+//////////////////////////////////////////////////
+bool Manager::LoadComponentizer(std::unique_ptr<Componentizer> _cz)
+{
+  bool success = false;
+  if (_cz)
+  {
+    _cz->Init();
+    this->dataPtr->componentizers.push_back(std::move(_cz));
+    success = true;
+  }
+  return success;
+}
+
+/////////////////////////////////////////////////
+bool Manager::LoadWorld(const std::string &_world)
+{
+  bool success = false;
+  sdf::SDF sdfWorld;
+  sdfWorld.SetFromString(_world);
+
+  for (auto &cz : this->dataPtr->componentizers)
+  {
+    cz->FromSDF(*this, sdfWorld);
+  }
+
   return success;
 }
 

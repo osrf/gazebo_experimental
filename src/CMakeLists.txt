@@ -1,3 +1,4 @@
+add_subdirectory(componentizers)
 add_subdirectory(ecs)
 add_subdirectory(systems)
 add_subdirectory(gui)

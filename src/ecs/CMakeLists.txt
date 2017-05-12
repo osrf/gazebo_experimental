@@ -3,7 +3,6 @@ set(sources
   EntityComponentDatabase.cc
   EntityQuery.cc
   ComponentFactory.cc
-  Componentizer.cc
   Manager.cc
   QueryRegistrar.cc
   System.cc
@@ -12,6 +11,10 @@ set(sources
 include_directories(${SDFormat_INCLUDE_DIRS})
 
 add_library(GazeboECS SHARED ${sources})
-target_link_libraries(GazeboECS ${IGNITION-COMMON_LIBRARIES} ${IGNITION-MATH_LIBRARIES})
+target_link_libraries(GazeboECS
+  ${IGNITION-COMMON_LIBRARIES}
+  ${IGNITION-MATH_LIBRARIES}
+  ${SDFormat_LIBRARIES}
+  )
 
 gz_install_library(GazeboECS)

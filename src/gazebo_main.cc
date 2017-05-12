@@ -122,6 +122,56 @@ bool LoadSystems(gzecs::Manager &_mgr, std::vector<std::string> _libs)
 }
 
 //////////////////////////////////////////////////
+bool LoadComponentizers(gzecs::Manager &_mgr, std::vector<std::string> _libs)
+{
+  ignition::common::PluginLoader pluginLoader;
+  ignition::common::SystemPaths sp;
+  sp.SetPluginPathEnv("GAZEBO_PLUGIN_PATH");
+
+  for (auto const &libName : _libs)
+  {
+    std::string pathToLibrary = sp.FindSharedLibrary(libName);
+    std::string pluginName = pluginLoader.LoadLibrary(pathToLibrary);
+    if (pluginName.size())
+    {
+      std::unique_ptr<gzecs::Componentizer> cz;
+      cz = pluginLoader.Instantiate<gzecs::Componentizer>(pluginName);
+      if (!_mgr.LoadComponentizer(std::move(cz)))
+      {
+        ignerr << "Failed to load " << pluginName << " from " << libName
+          << std::endl;
+        return false;
+      }
+      else
+      {
+        igndbg << "Loaded plugin " << pluginName << " from " << libName
+          << std::endl;
+      }
+    }
+    else
+    {
+      ignerr << "Failed to load library " << libName << std::endl;
+      return false;
+    }
+  }
+  return true;
+}
+
+//////////////////////////////////////////////////
+std::string PlaceholderLoadWorld()
+{
+  return std::string(
+      "<?xml version='1.0'?>"
+      "<sdf version='1.6'>"
+      " <world name='default'>"
+      "   <model name='some_model'>"
+      "   </model>"
+      " </world>"
+      "</sdf>"
+    );
+}
+
+//////////////////////////////////////////////////
 void PlaceholderCreateComponents(gzecs::Manager &_mgr)
 {
   // Componentizer should register components
@@ -209,7 +259,7 @@ void RunECS(gzecs::Manager &_mgr, std::atomic<bool> &stop)
     _mgr.UpdateSystems();
     ignition::common::Time currentSimTime = _mgr.SimulationTime();
 
-    if (currentSimTime > lastSimTime)
+    if (currentSimTime >= lastSimTime)
     {
       // update in real time
       double seconds = (currentSimTime - lastSimTime).Double();
@@ -282,8 +332,15 @@ int main(int _argc, char **_argv)
 
     gzecs::Manager manager;
 
+    if (!LoadComponentizers(manager, {
+          "gazeboNamedElements",
+          }))
+    {
+      return 2;
+    }
+
     // TODO componentizer
-    PlaceholderCreateComponents(manager);
+    // PlaceholderCreateComponents(manager);
 
     // Load ECS systems
     if (!LoadSystems(manager, {
@@ -292,6 +349,9 @@ int main(int _argc, char **_argv)
     {
       return 1;
     }
+
+    // Load the world
+    manager.LoadWorld(PlaceholderLoadWorld());
 
     // Initialize app
     ignition::gui::initApp();
