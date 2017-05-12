@@ -1,7 +1,6 @@
 add_subdirectory(ecs)
 add_subdirectory(systems)
 add_subdirectory(gui)
-add_subdirectory(rendering)
 
 add_executable(gazebo gazebo_main.cc)
 target_link_libraries(gazebo

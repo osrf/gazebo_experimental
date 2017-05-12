@@ -288,6 +288,7 @@ int main(int _argc, char **_argv)
     // Load ECS systems
     if (!LoadSystems(manager, {
         "gazeboPhysicsSystem",
+        "gazeboRenderSystem",
         }))
     {
       return 1;
