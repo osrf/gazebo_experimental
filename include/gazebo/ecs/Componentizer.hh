@@ -17,6 +17,7 @@
 #ifndef GAZEBO_ECS_COMPONENTIZER_HH__
 #define GAZEBO_ECS_COMPONENTIZER_HH__
 
+#include "gazebo/ecs/Entity.hh"
 
 namespace sdf
 {
@@ -40,8 +41,12 @@ namespace gazebo
 
       /// \brief called when an SDF file is loaded
       /// \param[in] _mgr manager to use to create the entities and components
-      /// \param[in] _sdf The sdf to pull data from
-      public: virtual void FromSDF(Manager &_mgr, sdf::Element &_sdf) = 0;
+      /// \param[in] _elem The sdf element to pull data from
+      /// \param[in] _id An entity id associated with this particular element
+      //              Componentizers don't have to use it, but it makes grouping
+      //              things together easier
+      public: virtual void FromSDF(Manager &_mgr, sdf::Element &_elem,
+                  EntityId _id) = 0;
     };
   }
 }

@@ -184,9 +184,13 @@ bool Manager::LoadWorld(const std::string &_world)
     sdf::ElementPtr nextElement = elementQueue.front();
     elementQueue.pop();
 
+    // An entity makes it easier to group components from different
+    // componentizers. However, they are free to create their own entities
+    EntityId groupId = this->CreateEntity();
+
     for (auto &cz : this->dataPtr->componentizers)
     {
-      cz->FromSDF(*this, *nextElement);
+      cz->FromSDF(*this, *nextElement, groupId);
     }
 
     sdf::ElementPtr child = nextElement->GetFirstElement();

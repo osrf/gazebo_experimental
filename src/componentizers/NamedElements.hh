@@ -28,13 +28,12 @@ namespace gazebo
     /// \brief a plugin creates "Name" components for sdf elements
     class NamedElements : public ecs::Componentizer
     {
-      /// \brief called whent the componentizer loads the plugin
+      // Inherited
       public: virtual void Init();
 
-      /// \brief called when an SDF file is loaded
-      /// \param[in] _mgr manager to use to create the entities and components
-      /// \param[in] _element The sdf element to get data from
-      public: virtual void FromSDF(ecs::Manager &_mgr, sdf::Element &_elem);
+      // Inherited
+      public: virtual void FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
+                  ecs::EntityId _id);
     };
   }
 }

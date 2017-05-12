@@ -34,7 +34,8 @@ void NamedElements::Init()
 }
 
 //////////////////////////////////////////////////
-void NamedElements::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem)
+void NamedElements::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
+    ecs::EntityId _id)
 {
   // Add name component for this element
   if (_elem.HasAttribute("name"))
@@ -43,8 +44,7 @@ void NamedElements::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem)
     if (!name.empty())
     {
       igndbg << "creating component named " << name << std::endl;
-      ecs::EntityId id = _mgr.CreateEntity();
-      ecs::Entity &e = _mgr.Entity(id);
+      ecs::Entity &e = _mgr.Entity(_id);
       auto nameComponent = e.AddComponent<components::Name>();
       nameComponent->name = name;
     }
