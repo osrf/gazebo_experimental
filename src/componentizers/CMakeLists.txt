@@ -5,6 +5,7 @@ include_directories(
 )
 
 link_directories(
+  ${IGNITION-MATH_LIBRARIES}
   ${IGNITION-COMMON_LIBRARY_DIRS}
   ${SDFormat_LIBRARY_DIRS}
   )
@@ -15,4 +16,12 @@ target_link_libraries(gazeboNamedElements
   ${SDFormat_LIBRARIES}
 )
 
+add_library(gazeboCZGeometry SHARED CZGeometry.cc)
+target_link_libraries(gazeboCZGeometry
+  ${IGNITION-MATH_LIBRARIES}
+  ${IGNITION-COMMON_LIBRARIES}
+  ${SDFormat_LIBRARIES}
+)
+
 gz_install_library(gazeboNamedElements)
+gz_install_library(gazeboCZGeometry)

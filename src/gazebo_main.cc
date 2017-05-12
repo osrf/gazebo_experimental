@@ -165,6 +165,15 @@ std::string PlaceholderLoadWorld()
       "<sdf version='1.6'>"
       " <world name='default'>"
       "   <model name='some_model'>"
+      "     <link name='some_link'>"
+      "       <collision name='some_collision'>"
+      "         <geometry>"
+      "           <box>"
+      "             <size>1 2 3</size>"
+      "           </box>"
+      "         </geometry>"
+      "       </collision>"
+      "     </link>"
       "   </model>"
       " </world>"
       "</sdf>"
@@ -334,6 +343,7 @@ int main(int _argc, char **_argv)
 
     if (!LoadComponentizers(manager, {
           "gazeboNamedElements",
+          "gazeboCZGeometry",
           }))
     {
       return 2;

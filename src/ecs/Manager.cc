@@ -21,6 +21,7 @@
 #include <utility>
 #include <vector>
 
+#include <ignition/common/Console.hh>
 #include <sdf/sdf.hh>
 
 #include "gazebo/ecs/Componentizer.hh"
@@ -185,22 +186,29 @@ bool Manager::LoadWorld(const std::string &_world)
     sdf::ElementPtr nextElement = elementQueue.front();
     elementQueue.pop();
 
+    assert(ids.find(nextElement.get()) == ids.end());
+
     // An entity makes it easier to group components from different
     // componentizers. However, they are free to create their own entities
     EntityId groupId = this->CreateEntity();
     ids[nextElement.get()] = groupId;
 
+    igndbg << "Begin cz" << std::endl;
     for (auto &cz : this->dataPtr->componentizers)
     {
       cz->FromSDF(*this, *nextElement, ids);
     }
+    igndbg << "end cz" << std::endl;
 
-    sdf::ElementPtr child = nextElement->GetFirstElement();
-    while (nullptr != child.get())
-    {
-      elementQueue.push(child);
-      child = nextElement->GetNextElement();
-    }
+    // TODO SDFormat API for walking sdf tree
+    // sdf::ElementPtr child = nextElement->GetFirstElement();
+    // while (child)
+    // {
+    //   igndbg << "Begin children" << std::endl;
+    //   elementQueue.push(child);
+    //   child = nextElement->GetNextElement();
+    //   igndbg << "end children" << std::endl;
+    // }
   }
 
   return success;
