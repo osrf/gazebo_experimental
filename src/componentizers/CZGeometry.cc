@@ -74,6 +74,7 @@ void CZGeometry::DecodeBox(sdf::ElementPtr &_elem, ecs::Entity &_entity)
   auto geom = _entity.AddComponent<components::Geometry>();
   geom->type = components::Geometry::BOX;
   geom->box.size = _elem->Get<ignition::math::Vector3d>("size");
+  igndbg << "Added box to " << _entity.Id() << std::endl;
 }
 
 //////////////////////////////////////////////////

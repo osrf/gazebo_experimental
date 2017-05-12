@@ -193,22 +193,15 @@ bool Manager::LoadWorld(const std::string &_world)
     EntityId groupId = this->CreateEntity();
     ids[nextElement.get()] = groupId;
 
-    igndbg << "Begin cz" << std::endl;
     for (auto &cz : this->dataPtr->componentizers)
     {
       cz->FromSDF(*this, *nextElement, ids);
     }
-    igndbg << "end cz" << std::endl;
 
-    // TODO SDFormat API for walking sdf tree
-    // sdf::ElementPtr child = nextElement->GetFirstElement();
-    // while (child)
-    // {
-    //   igndbg << "Begin children" << std::endl;
-    //   elementQueue.push(child);
-    //   child = nextElement->GetNextElement();
-    //   igndbg << "end children" << std::endl;
-    // }
+    for (auto &child : nextElement->Children())
+    {
+      elementQueue.push(child);
+    }
   }
 
   return success;
