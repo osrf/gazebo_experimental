@@ -183,6 +183,7 @@ bool Manager::LoadWorld(const std::string &_world)
   {
     sdf::ElementPtr nextElement = elementQueue.front();
     elementQueue.pop();
+
     for (auto &cz : this->dataPtr->componentizers)
     {
       cz->FromSDF(*this, *nextElement);
