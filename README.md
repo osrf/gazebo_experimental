@@ -47,12 +47,11 @@ This project makes use of plugins to provide most of the features.
 The paths to search for these plugins are given using environment variables.
 The two important ones are `IGN_GUI_PLUGIN_PATH` and `GAZEBO_PLUGIN_PATH`.
 
-For example, this will run a demo with a GUI window.
-
 ```
 # assumes you've done "make install" and are in the build/ folder
-GAZEBO_PLUGIN_PATH=$LD_LIBRARY_PATH examples/dummy_demo/dummy_demo &
-IGN_GUI_PLUGIN_PATH=src/gui gazebo
+export GAZEBO_PLUGIN_PATH=$LD_LIBRARY_PATH
+export IGN_GUI_PLUGIN_PATH=src/gui
+gazebo -v 4
 ```
 
 # Installing
