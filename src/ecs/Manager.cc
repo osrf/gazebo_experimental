@@ -198,9 +198,11 @@ bool Manager::LoadWorld(const std::string &_world)
       cz->FromSDF(*this, *nextElement, ids);
     }
 
-    for (auto &child : nextElement->Children())
+    sdf::ElementPtr child = nextElement->GetFirstElement();
+    while (child)
     {
       elementQueue.push(child);
+      child = child->GetNextElement();
     }
   }
 
