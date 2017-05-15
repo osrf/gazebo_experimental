@@ -35,22 +35,29 @@ namespace gazebo
         double radius;
       };
 
-      /// \brief Cube properties
+      /// \brief Rectangular box properties
       struct BoxProperties
       {
         /// \brief Side length in meters
         ignition::math::Vector3d size;
       };
 
+      /// \brief Cylinder properties
+      struct CylinderProperties
+      {
+        /// \brief radius in meters
+        double radius;
+        /// \brief height in meters
+        double length;
+      };
+
       /// \brief Possible geometry types
       enum Type
       {
-        /// \brief Unknown geometry
         UNKNOWN = 0,
-        /// \brief Sphere geometry
         SPHERE = 1,
-        /// \brief Box geometry
         BOX = 2,
+        CYLINDER = 3,
       };
 
       /// \brief constructor
@@ -69,6 +76,8 @@ namespace gazebo
             new (&sphere) SphereProperties(_other.sphere);
           case BOX:
             new (&box) BoxProperties(_other.box);
+          case CYLINDER:
+            new (&cylinder) CylinderProperties(_other.cylinder);
           default:
             break;
         }
@@ -83,6 +92,8 @@ namespace gazebo
             sphere.~SphereProperties();
           case BOX:
             box.~BoxProperties();
+          case CYLINDER:
+            cylinder.~CylinderProperties();
           default:
             break;
         }
@@ -96,6 +107,7 @@ namespace gazebo
       {
         SphereProperties sphere;
         BoxProperties box;
+        CylinderProperties cylinder;
       };
     };
   }

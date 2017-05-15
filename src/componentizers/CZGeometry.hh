@@ -38,6 +38,12 @@ namespace gazebo
 
       /// \brief Populate geometry component with box data
       protected: void DecodeBox(sdf::ElementPtr &_elem, ecs::Entity &_entity);
+
+      /// \brief Populate geometry component with sphere data
+      protected: void DecodeSphere(sdf::ElementPtr &_elem, ecs::Entity &_entity);
+
+      /// \brief Populate geometry component with cylinder data
+      protected: void DecodeCylinder(sdf::ElementPtr &_elem, ecs::Entity &_entity);
     };
   }
 }
