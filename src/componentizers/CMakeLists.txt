@@ -10,8 +10,8 @@ link_directories(
   ${SDFormat_LIBRARY_DIRS}
   )
 
-add_library(gazeboNamedElements SHARED NamedElements.cc)
-target_link_libraries(gazeboNamedElements
+add_library(gazeboCZName SHARED CZName.cc)
+target_link_libraries(gazeboCZName
   ${IGNITION-COMMON_LIBRARIES}
   ${SDFormat_LIBRARIES}
 )
@@ -23,5 +23,5 @@ target_link_libraries(gazeboCZGeometry
   ${SDFormat_LIBRARIES}
 )
 
-gz_install_library(gazeboNamedElements)
+gz_install_library(gazeboCZName)
 gz_install_library(gazeboCZGeometry)

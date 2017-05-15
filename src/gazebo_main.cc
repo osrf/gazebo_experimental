@@ -342,7 +342,7 @@ int main(int _argc, char **_argv)
     gzecs::Manager manager;
 
     if (!LoadComponentizers(manager, {
-          "gazeboNamedElements",
+          "gazeboCZName",
           "gazeboCZGeometry",
           }))
     {

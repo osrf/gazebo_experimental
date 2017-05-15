@@ -19,22 +19,22 @@
 #include <ignition/common/Console.hh>
 #include "gazebo/components/Name.hh"
 #include "gazebo/ecs/ComponentFactory.hh"
-#include "NamedElements.hh"
+#include "CZName.hh"
 
 namespace gzcompz = gazebo::componentizers;
 using namespace gazebo;
 using namespace gzcompz;
 
 //////////////////////////////////////////////////
-void NamedElements::Init()
+void CZName::Init()
 {
-  igndbg << "NamedElements registering Name component" << std::endl;
+  igndbg << "CZName registering Name component" << std::endl;
   ecs::ComponentFactory::Register<gazebo::components::Name>(
       "gazebo::components::Name");
 }
 
 //////////////////////////////////////////////////
-void NamedElements::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
+void CZName::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
     const std::unordered_map<sdf::Element*, ecs::EntityId> &_ids)
 {
   // Add name component for this element
@@ -53,5 +53,5 @@ void NamedElements::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
 }
 
 //////////////////////////////////////////////////
-IGN_COMMON_REGISTER_SINGLE_PLUGIN(gazebo::componentizers::NamedElements,
+IGN_COMMON_REGISTER_SINGLE_PLUGIN(gazebo::componentizers::CZName,
                                   gazebo::ecs::Componentizer)

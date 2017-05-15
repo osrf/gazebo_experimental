@@ -26,7 +26,7 @@ namespace gazebo
   namespace componentizers
   {
     /// \brief a plugin creates "Name" components for sdf elements
-    class NamedElements : public ecs::Componentizer
+    class CZName : public ecs::Componentizer
     {
       // Inherited
       public: virtual void Init();
