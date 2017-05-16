@@ -8,14 +8,15 @@ This is a prototype for the next version of gazebo using an Entity Component Sys
 * **Option 2:** keep reading
 
 ## Get the dependencies
-This project relies on [Ignition Robotics](http://ignitionrobotics.org/).
-Build and install them from source in this order:
+This project uses [CMake](https://cmake.org/).
+Most of the important features come from [Ignition Robotics](http://ignitionrobotics.org/).
+Build and install the Ignition projects from source in this order:
 
-* [ign-common]()
-* [ign-tools]() *optional*
-* [ign-msgs]()
-* [ign-transport]()
-* [ign-gui]()
+* [ign-common](https://bitbucket.org/ignitionrobotics/ign-common)
+* [ign-tools](https://bitbucket.org/ignitionrobotics/ign-tools) *optional*
+* [ign-msgs](https://bitbucket.org/ignitionrobotics/ign-msgs)
+* [ign-transport](https://bitbucket.org/ignitionrobotics/ign-transport)
+* [ign-gui](https://bitbucket.org/ignitionrobotics/ign-gui)
 
 Other dependencies include
 
@@ -23,8 +24,6 @@ Other dependencies include
     * sudo apt install libgflags-dev
 
 ## Building
-
-This project uses [CMake](https://cmake.org/).
 
 ```
 # Configure the project
@@ -35,11 +34,10 @@ cmake -DCMAKE_BUILD_TYPE=Debug ..
 
 # build the project
 make
-```
-
-## Running Tests
-```
+# Run tests
 make test
+# Install the project
+make install
 ```
 
 # Running
@@ -53,9 +51,6 @@ export GAZEBO_PLUGIN_PATH=$LD_LIBRARY_PATH
 export IGN_GUI_PLUGIN_PATH=src/gui
 gazebo -v 4
 ```
-
-# Installing
-**TO DO**
 
 # Uninstalling
 **TO DO**
