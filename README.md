@@ -23,6 +23,11 @@ Other dependencies include
 * gflags
     * sudo apt install libgflags-dev
 
+## Get the source code
+```
+hg clone ssh://hg@bitbucket.org/osrf/gazebo_experimental
+```
+
 ## Building
 
 ```
