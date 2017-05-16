@@ -8,3 +8,5 @@ target_link_libraries(GazeboUtil
   ${IGNITION-MSGS_LIBRARIES}
   ${IGNITION-COMMON_LIBRARIES}
   )
+
+gz_install_library(GazeboUtil)

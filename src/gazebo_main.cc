@@ -15,17 +15,32 @@
  *
 */
 
+#include <atomic>
+#include <functional>
 #include <iostream>
+#include <thread>
 
 #include <gflags/gflags.h>
 
 #include <ignition/common/Console.hh>
+#include <ignition/common/PluginLoader.hh>
+#include <ignition/common/SystemPaths.hh>
+#include <ignition/math/Rand.hh>
+#include "gazebo/components/Inertial.hh"
+#include "gazebo/components/Geometry.hh"
+#include "gazebo/components/PhysicsProperties.hh"
+#include "gazebo/components/WorldPose.hh"
+#include "gazebo/components/WorldVelocity.hh"
+#include "gazebo/ecs/ComponentFactory.hh"
+#include "gazebo/ecs/Manager.hh"
 
 #ifndef Q_MOC_RUN
   #include <ignition/gui/Iface.hh>
 #endif
 
 #include "gazebo/Config.hh"
+
+namespace gzecs = gazebo::ecs;
 
 // Gflag command line argument definitions
 // This flag is an abbreviation for the longer gflags built-in help flag.
@@ -67,6 +82,131 @@ void Verbose()
 static bool VerbosityValidator(const char */*_flagname*/, int _value)
 {
   return _value >= 0 && _value <= 4;
+}
+
+
+//////////////////////////////////////////////////
+bool LoadSystems(gzecs::Manager &_mgr, std::vector<std::string> _libs)
+{
+  ignition::common::PluginLoader pluginLoader;
+  ignition::common::SystemPaths sp;
+  sp.SetPluginPathEnv("GAZEBO_PLUGIN_PATH");
+
+  for (auto const &libName : _libs)
+  {
+    std::string pathToLibrary = sp.FindSharedLibrary(libName);
+    std::string pluginName = pluginLoader.LoadLibrary(pathToLibrary);
+    if (pluginName.size())
+    {
+      std::unique_ptr<gzecs::System> sys;
+      sys = pluginLoader.Instantiate<gzecs::System>(pluginName);
+      if (!_mgr.LoadSystem(pluginName, std::move(sys)))
+      {
+        ignerr << "Failed to load " << pluginName << " from " << libName
+          << std::endl;
+        return false;
+      }
+      else
+      {
+        igndbg << "Loaded plugin " << pluginName << " from " << libName
+          << std::endl;
+      }
+    }
+    else
+    {
+      ignerr << "Failed to load library " << libName << std::endl;
+      return false;
+    }
+  }
+  return true;
+}
+
+//////////////////////////////////////////////////
+void PlaceholderCreateComponents(gzecs::Manager &_mgr)
+{
+  // Componentizer should register components
+  gzecs::ComponentFactory::Register<gazebo::components::Inertial>(
+      "gazebo::components::Inertial");
+  gzecs::ComponentFactory::Register<gazebo::components::Geometry>(
+      "gazebo::components::Geometry");
+  gzecs::ComponentFactory::Register<gazebo::components::PhysicsProperties>(
+      "gazebo::components::PhysicsProperties");
+  gzecs::ComponentFactory::Register<gazebo::components::WorldPose>(
+      "gazebo::components::WorldPose");
+  gzecs::ComponentFactory::Register<gazebo::components::WorldVelocity>(
+      "gazebo::components::WorldVelocity");
+
+  // Placeholder create components. The componentizer should do this
+  // Create 25 sphere entities
+  for (int i = 0; i < 25; i++)
+  {
+    // Create the entity
+    gzecs::EntityId e = _mgr.CreateEntity();
+    gzecs::Entity &entity = _mgr.Entity(e);
+
+    // Inertial component
+    auto inertial = entity.AddComponent<gazebo::components::Inertial>();
+    if (inertial)
+    {
+      inertial->mass = ignition::math::Rand::DblUniform(0.1, 5.0);
+    }
+    else
+    {
+      std::cerr << "Failed to add inertial component to entity [" << e << "]"
+                << std::endl;
+    }
+
+    // Geometry component
+    auto geom = entity.AddComponent<gazebo::components::Geometry>();
+    if (geom)
+    {
+      geom->type = gazebo::components::Geometry::SPHERE;
+      geom->sphere.radius = ignition::math::Rand::DblUniform(0.1, 0.5);
+    }
+    else
+    {
+      std::cerr << "Failed to add geom component to entity [" << e << "]"
+                << std::endl;
+    }
+
+    // World pose
+    auto pose = entity.AddComponent<gazebo::components::WorldPose>();
+    if (pose)
+    {
+      pose->position.X(ignition::math::Rand::DblUniform(-4.0, 4.0));
+      pose->position.Y(ignition::math::Rand::DblUniform(-4.0, 4.0));
+      pose->position.Z(ignition::math::Rand::DblUniform(-4.0, 4.0));
+    }
+    else
+    {
+      std::cerr << "Failed to add world pose component to entity [" << e << "]"
+                << std::endl;
+    }
+
+    // World velocity
+    auto vel = entity.AddComponent<gazebo::components::WorldVelocity>();
+    if (vel)
+    {
+      vel->linear.X(ignition::math::Rand::DblUniform(-1.0, 1.0));
+      vel->linear.Y(ignition::math::Rand::DblUniform(-1.0, 1.0));
+      vel->linear.Z(ignition::math::Rand::DblUniform(-1.0, 1.0));
+    }
+    else
+    {
+      std::cerr << "Failed to add world velocity component to entity ["
+                << e << "]" << std::endl;
+    }
+  }
+}
+
+//////////////////////////////////////////////////
+void RunECS(gzecs::Manager &_mgr, std::atomic<bool> &stop)
+{
+  const double realTimeFactor = 1.0;
+  while (!stop)
+  {
+    _mgr.UpdateOnce(realTimeFactor);
+  }
 }
 
 //////////////////////////////////////////////////
@@ -124,13 +264,30 @@ int main(int _argc, char **_argv)
     // Set verbosity level
     Verbose();
 
+    gzecs::Manager manager;
+
+    // TODO componentizer
+    PlaceholderCreateComponents(manager);
+
+    // Load ECS systems
+    if (!LoadSystems(manager, {
+        "gazeboPhysicsSystem",
+        }))
+    {
+      return 1;
+    }
+
     // Initialize app
     ignition::gui::initApp();
 
+    // Run the ECS in another thread
+    std::atomic<bool> stop(false);
+    std::thread ecsThread(RunECS, std::ref(manager), std::ref(stop));
+
     // TODO: load startup plugins and configuration files here before creating
     // the window
-    ignition::gui::loadPlugin("GuiDisplayImage");
-    ignition::gui::loadPlugin("GuiDiagnostics");
+    ignition::gui::loadPlugin("gazeboGuiDisplayImage");
+    ignition::gui::loadPlugin("gazeboGuiDiagnostics");
 
     // Create main window
     ignition::gui::createMainWindow();
@@ -145,7 +302,13 @@ int main(int _argc, char **_argv)
 
     // Cleanup once main window is closed
     ignition::gui::stop();
+
+    // Stop the ECS
+    stop = true;
+    igndbg << "Waiting for ECS thread" << std::endl;
+    ecsThread.join();
   }
 
+  igndbg << "Shutting down" << std::endl;
   return 0;
 }

@@ -14,9 +14,9 @@ link_directories(
   ${IGNITION-TRANSPORT_LIBRARY_DIRS}
   )
 
-add_library(GuiDisplayImage SHARED GuiDisplayImage.cc)
+add_library(gazeboGuiDisplayImage SHARED GuiDisplayImage.cc)
 
-target_link_libraries(GuiDisplayImage
+target_link_libraries(gazeboGuiDisplayImage
   ${IGNITION-MSGS_LIBRARIES}
   ${IGNITION-TRANSPORT_LIBRARIES}
   ${IGNITION-GUI_LIBRARIES}
@@ -24,12 +24,15 @@ target_link_libraries(GuiDisplayImage
   ${Qt5Widgets_LIBRARIES}
   )
 
-add_library(GuiDiagnostics SHARED GuiDiagnostics.cc)
+add_library(gazeboGuiDiagnostics SHARED GuiDiagnostics.cc)
 
-target_link_libraries(GuiDiagnostics
+target_link_libraries(gazeboGuiDiagnostics
   ${IGNITION-MSGS_LIBRARIES}
   ${IGNITION-TRANSPORT_LIBRARIES}
   ${IGNITION-GUI_LIBRARIES}
   ${Qt5Core_LIBRARIES}
   ${Qt5Widgets_LIBRARIES}
   )
+
+gz_install_library(gazeboGuiDisplayImage)
+gz_install_library(gazeboGuiDiagnostics)
