@@ -63,6 +63,14 @@ void CZGeometry::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
             << std::endl;
       }
     }
+    else
+    {
+      if (parent)
+        ignwarn << "unknown parent tag <" << parent->GetName() << ">"
+          << std::endl;
+      else
+        ignwarn << "geometry tag with no parent" << std::endl;
+    }
   }
 }
 
