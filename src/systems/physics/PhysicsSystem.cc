@@ -38,10 +38,14 @@ void PhysicsSystem::Init(ecs::QueryRegistrar &_registrar)
   // Query for global/configuration info
   ecs::EntityQuery configQuery;
   if (!configQuery.AddComponent("gazebo::components::PhysicsProperties"))
+  {
     std::cerr << "Undefined component[gazebo::components::PhysicsProperties]\n";
-
-  _registrar.Register(configQuery,
-      std::bind(&PhysicsSystem::UpdateConfig, this, std::placeholders::_1));
+  }
+  else
+  {
+    _registrar.Register(configQuery,
+        std::bind(&PhysicsSystem::UpdateConfig, this, std::placeholders::_1));
+  }
 
   // Query for bodies to simulate
   ecs::EntityQuery query;
