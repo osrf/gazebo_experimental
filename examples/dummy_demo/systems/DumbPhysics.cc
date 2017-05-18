@@ -39,6 +39,8 @@ void DumbPhysics::Init(ecs::QueryRegistrar &_registrar)
 {
   ecs::EntityQuery query;
 
+  this->diagnostics.Init("DumbPhysics");
+
   // TODO how will systems get info that should apply to everything like
   //      gravity and solver parameters?
   this->world.Gravity({0.0, 0.0, 0.0});
@@ -66,7 +68,9 @@ void DumbPhysics::Init(ecs::QueryRegistrar &_registrar)
 void DumbPhysics::Update(const ecs::EntityQuery &_result)
 {
   ecs::Manager &mgr = this->Manager();
+  this->diagnostics.UpdateBegin(mgr.SimulationTime());
 
+  this->diagnostics.StartTimer("Update Internal");
   // STEP 1 Loop through entities and update internal representation
   // This is where the effects of other systems get propagated to this one,
   // for example, if a pose is changed or a body is deleted through the GUI.
@@ -126,7 +130,9 @@ void DumbPhysics::Update(const ecs::EntityQuery &_result)
     if (velocity)
       this->SyncInternalVelocity(body, velocity);
   }
+  this->diagnostics.StopTimer("Update Internal");
 
+  this->diagnostics.StartTimer("Simulate");
   // STEP 2 do some physics
   // Physics controls simulation time because physics engines with a variable
   // time steps will update at an unknown rate
@@ -141,7 +147,9 @@ void DumbPhysics::Update(const ecs::EntityQuery &_result)
     std::cout<< "[phys]Contact " << contact.first << " and "
       << contact.second << std::endl;
   }
+  this->diagnostics.StopTimer("Simulate");
 
+  this->diagnostics.StartTimer("UpdateExternal");
   // STEP 3 update the components with the results of the physics
   for (auto const &entityId : _result.EntityIds())
   {
@@ -161,6 +169,9 @@ void DumbPhysics::Update(const ecs::EntityQuery &_result)
     auto worldVel = entity.ComponentMutable<components::WorldVelocity>();
     this->SyncExternalVelocity(body, worldVel);
   }
+  this->diagnostics.StopTimer("UpdateExternal");
+
+  this->diagnostics.UpdateEnd();
 }
 
 /////////////////////////////////////////////////

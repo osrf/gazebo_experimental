@@ -24,4 +24,15 @@ target_link_libraries(gazeboGuiDisplayImage
   ${Qt5Widgets_LIBRARIES}
   )
 
-install(TARGETS gazeboGuiDisplayImage LIBRARY DESTINATION lib)
+add_library(gazeboGuiDiagnostics SHARED GuiDiagnostics.cc)
+
+target_link_libraries(gazeboGuiDiagnostics
+  ${IGNITION-MSGS_LIBRARIES}
+  ${IGNITION-TRANSPORT_LIBRARIES}
+  ${IGNITION-GUI_LIBRARIES}
+  ${Qt5Core_LIBRARIES}
+  ${Qt5Widgets_LIBRARIES}
+  )
+
+gz_install_library(gazeboGuiDisplayImage)
+gz_install_library(gazeboGuiDiagnostics)

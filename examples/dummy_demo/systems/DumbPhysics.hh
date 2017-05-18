@@ -22,6 +22,7 @@
 #include "gazebo/components/WorldVelocity.hh"
 #include "gazebo/ecs/Entity.hh"
 #include "gazebo/ecs/System.hh"
+#include "gazebo/util/DiagnosticsManager.hh"
 #include "dumb_physics/World.hh"
 #include "dumb_physics/Body.hh"
 
@@ -106,6 +107,9 @@ namespace gazebo
       /// \brief Adds a body to the world
       private: dumb_physics::Body *AddBody(const ecs::EntityId _id,
                                            ecs::Entity &_entity);
+
+      /// \brief Tool for publishing diagnostics
+      private: gazebo::util::DiagnosticsManager diagnostics;
     };
   }
 }

@@ -4,6 +4,7 @@
 #   a milisecond to run, there's a good chance it's a different kind of
 #   test
 set(unit_tests
+  DiagnosticsManager_TEST.cc
   Entity_TEST.cc
   EntityComponentDatabase_TEST.cc
   EntityQuery_TEST.cc
@@ -19,7 +20,15 @@ foreach (src_file ${unit_tests})
   string(REGEX REPLACE "\\.cc" "" BINARY_NAME ${src_file})
   set(BINARY_NAME UNIT_${BINARY_NAME})
   add_executable(${BINARY_NAME} ${src_file})
-  target_link_libraries(${BINARY_NAME} gtest gtest_main GazeboECS ${IGNITION-COMMON_LIBRARIES})
+  target_link_libraries(${BINARY_NAME}
+    gtest
+    gtest_main
+    GazeboECS
+    GazeboUtil
+    ${IGNITION-COMMON_LIBRARIES}
+    ${IGNITION-MSGS_LIBRARIES}
+    ${IGNITION-TRANSPORT_LIBRARIES}
+    )
   if (UNIX)
     # gtest uses pthread on UNIX
     target_link_libraries(${BINARY_NAME} pthread)
