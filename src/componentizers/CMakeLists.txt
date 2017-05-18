@@ -8,7 +8,7 @@ link_directories(
   ${IGNITION-MATH_LIBRARIES}
   ${IGNITION-COMMON_LIBRARY_DIRS}
   ${SDFormat_LIBRARY_DIRS}
-  )
+)
 
 add_library(gazeboCZName SHARED CZName.cc)
 target_link_libraries(gazeboCZName
