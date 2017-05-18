@@ -14,8 +14,8 @@
  * limitations under the License.
  *
 */
-#ifndef GAZEBO_COMPONENTIZERS_NAMEDELEMENTS_HH__
-#define GAZEBO_COMPONENTIZERS_NAMEDELEMENTS_HH__
+#ifndef GAZEBO_COMPONENTIZERS_CZNAME_HH__
+#define GAZEBO_COMPONENTIZERS_CZNAME_HH__
 
 
 #include "gazebo/ecs/Componentizer.hh"
