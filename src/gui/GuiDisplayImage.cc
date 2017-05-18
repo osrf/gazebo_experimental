@@ -30,6 +30,7 @@ GuiDisplayImage::GuiDisplayImage()
   : pixmap(128, 128), Plugin()
 {
   // Show a blank image at first
+  this->pixmap.fill();
   this->label = new QLabel;
   this->label->setPixmap(this->pixmap);
 

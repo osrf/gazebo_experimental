@@ -100,7 +100,7 @@ bool LoadSystems(gzecs::Manager &_mgr, std::vector<std::string> _libs)
     {
       std::unique_ptr<gzecs::System> sys;
       sys = pluginLoader.Instantiate<gzecs::System>(pluginName);
-      if (!_mgr.LoadSystem(std::move(sys)))
+      if (!_mgr.LoadSystem(pluginName, std::move(sys)))
       {
         ignerr << "Failed to load " << pluginName << " from " << libName
           << std::endl;
@@ -276,26 +276,10 @@ void PlaceholderCreateComponents(gzecs::Manager &_mgr)
 //////////////////////////////////////////////////
 void RunECS(gzecs::Manager &_mgr, std::atomic<bool> &stop)
 {
-  // TODO Use fancy update call once Diagnostics display is merged
-  ignition::common::Time lastSimTime;
+  const double realTimeFactor = 1.0;
   while (!stop)
   {
-    _mgr.UpdateSystems();
-    ignition::common::Time currentSimTime = _mgr.SimulationTime();
-
-    if (currentSimTime >= lastSimTime)
-    {
-      // update in real time
-      double seconds = (currentSimTime - lastSimTime).Double();
-      std::this_thread::sleep_for(std::chrono::duration<double>(seconds));
-    }
-    else
-    {
-      std::cerr << "time moved backwards?" << std::endl;
-      // Time moved backwards? Default update rate
-      std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
-    lastSimTime = currentSimTime;
+    _mgr.UpdateOnce(realTimeFactor);
   }
 }
 
@@ -388,6 +372,7 @@ int main(int _argc, char **_argv)
     // TODO: load startup plugins and configuration files here before creating
     // the window
     ignition::gui::loadPlugin("gazeboGuiDisplayImage");
+    ignition::gui::loadPlugin("gazeboGuiDiagnostics");
 
     // Create main window
     ignition::gui::createMainWindow();

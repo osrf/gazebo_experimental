@@ -29,6 +29,7 @@
 #include "gazebo/ecs/EntityQuery.hh"
 #include "gazebo/ecs/Manager.hh"
 #include "gazebo/ecs/QueryRegistrar.hh"
+#include "gazebo/util/DiagnosticsManager.hh"
 
 using namespace gazebo;
 using namespace ecs;
@@ -40,6 +41,9 @@ class System;
 /// \brief struct to hold information required for updating a system
 struct SystemInfo
 {
+  /// \brief name of a system
+  public: std::string name;
+
   /// \brief List of callbacks to call
   public: std::vector<std::pair<EntityQueryId, QueryCallback> > updates;
 };
@@ -70,6 +74,12 @@ class gazebo::ecs::ManagerPrivate
 
   /// \brief true if the simulation is paused
   public: bool paused = false;
+
+  /// \brief tool for publishing diagnostic info
+  public: util::DiagnosticsManager diagnostics;
+
+  /// \brief Updates the state and systems once
+  public: void UpdateOnce();
 };
 
 /////////////////////////////////////////////////
@@ -77,6 +87,7 @@ Manager::Manager()
 : dataPtr(new ManagerPrivate)
 {
   this->dataPtr->pauseCount = 0;
+  this->dataPtr->diagnostics.Init("ecs:Manager");
 }
 
 /////////////////////////////////////////////////
@@ -97,15 +108,55 @@ bool Manager::DeleteEntity(EntityId _id)
 }
 
 /////////////////////////////////////////////////
-void Manager::UpdateSystems()
+void Manager::UpdateOnce()
 {
+  this->dataPtr->diagnostics.UpdateBegin(this->dataPtr->simTime);
+  this->dataPtr->UpdateOnce();
+  this->dataPtr->diagnostics.UpdateEnd();
+}
+
+/////////////////////////////////////////////////
+void Manager::UpdateOnce(double _real_time_factor)
+{
+  this->dataPtr->diagnostics.UpdateBegin(this->dataPtr->simTime);
+
+  ignition::common::Time startWallTime = ignition::common::Time::SystemTime();
+  ignition::common::Time startSimTime = this->dataPtr->simTime;
+
+  this->dataPtr->UpdateOnce();
+
+  ignition::common::Time endSimTime = this->dataPtr->simTime;
+  ignition::common::Time endWallTime = ignition::common::Time::SystemTime();
+
+  this->dataPtr->diagnostics.StartTimer("sleep");
+  const ignition::common::Time scalar(_real_time_factor);
+  const ignition::common::Time deltaWall = endWallTime - startWallTime;
+  const ignition::common::Time deltaSim = endSimTime - startSimTime;
+  const ignition::common::Time expectedDeltaWall = deltaSim / scalar;
+  if (deltaWall < expectedDeltaWall)
+  {
+    ignition::common::Time sleep = (expectedDeltaWall - deltaWall);
+    std::this_thread::sleep_for(std::chrono::seconds(sleep.sec) +
+        std::chrono::nanoseconds(sleep.nsec));
+  }
+  this->dataPtr->diagnostics.StopTimer("sleep");
+
+  this->dataPtr->diagnostics.UpdateEnd();
+}
+
+/////////////////////////////////////////////////
+void ManagerPrivate::UpdateOnce()
+{
+
   // Decide at the beginning of every update if sim time is paused or not.
   // Some systems (like rendering a camera for a GUI) need to continue to run
   // even when simulation time is paused, so it's up to each system to check
-  this->dataPtr->paused = this->dataPtr->pauseCount;
+  this->paused = this->pauseCount;
 
   // Let database do some stuff before starting the new update
-  this->dataPtr->database.Update();
+  this->diagnostics.StartTimer("database");
+  this->database.Update();
+  this->diagnostics.StopTimer("database");
 
   // TODO There is a lot of opportunity for parallelization here
   // In general systems are run sequentially, one after the other
@@ -119,27 +170,31 @@ void Manager::UpdateSystems()
   //  other SystemManagers to use multiple machines for one simulation
 
   // But this is a prototype, so here's the basic implementation
-  for(auto &sysInfo : this->dataPtr->systemInfo)
+  for(auto &sysInfo : this->systemInfo)
   {
+    this->diagnostics.StartTimer(sysInfo.name);
     for (auto &updateInfo : sysInfo.updates)
     {
-      auto query = this->dataPtr->database.Query(updateInfo.first);
+      auto query = this->database.Query(updateInfo.first);
       QueryCallback cb = updateInfo.second;
       cb(query);
     }
+    this->diagnostics.StopTimer(sysInfo.name);
   }
 
   // Advance sim time according to what was set last update
-  this->dataPtr->simTime = this->dataPtr->nextSimTime;
+  this->simTime = this->nextSimTime;
 }
 
 /////////////////////////////////////////////////
-bool Manager::LoadSystem(std::unique_ptr<System> _sys)
+bool Manager::LoadSystem(const std::string &_name,
+    std::unique_ptr<System> _sys)
 {
   bool success = false;
   if (_sys)
   {
     SystemInfo sysInfo;
+    sysInfo.name = _name;
     QueryRegistrar registrar;
     _sys->Manager(this);
     _sys->Init(registrar);
