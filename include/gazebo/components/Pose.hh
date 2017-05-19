@@ -19,7 +19,6 @@
 #define GAZEBO_COMPONENTS_WORLDPOSE_HH_
 
 #include <ignition/math/Pose3.hh>
-#include <gazebo/ecs/Entity.hh>
 
 namespace gazebo
 {
