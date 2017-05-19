@@ -174,7 +174,23 @@ std::string PlaceholderLoadWorld()
       "           </box>"
       "         </geometry>"
       "       </collision>"
+      "       <collision name='some_other_collision'>"
+      "         <pose>1 0 0 0 0 0</pose>"
+      "         <geometry>"
+      "           <box>"
+      "             <size>1 2 3</size>"
+      "           </box>"
+      "         </geometry>"
+      "       </collision>"
       "       <visual name='some_visual'>"
+      "         <geometry>"
+      "           <box>"
+      "             <size>1 2 3</size>"
+      "           </box>"
+      "         </geometry>"
+      "       </visual>"
+      "       <visual name='some_other_visual'>"
+      "         <pose>1 0 0 0 0 0</pose>"
       "         <geometry>"
       "           <box>"
       "             <size>1 2 3</size>"
@@ -374,6 +390,7 @@ int main(int _argc, char **_argv)
           "gazeboCZGeometry",
           "gazeboCZMaterial",
           "gazeboCZPose",
+          "gazeboCZCollidable",
           }))
     {
       return 2;

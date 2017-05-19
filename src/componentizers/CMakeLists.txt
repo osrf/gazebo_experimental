@@ -37,7 +37,15 @@ target_link_libraries(gazeboCZPose
   ${SDFormat_LIBRARIES}
 )
 
+add_library(gazeboCZCollidable SHARED CZCollidable.cc)
+target_link_libraries(gazeboCZCollidable
+  ${IGNITION-MATH_LIBRARIES}
+  ${IGNITION-COMMON_LIBRARIES}
+  ${SDFormat_LIBRARIES}
+)
+
 gz_install_library(gazeboCZName)
 gz_install_library(gazeboCZGeometry)
 gz_install_library(gazeboCZMaterial)
 gz_install_library(gazeboCZPose)
+gz_install_library(gazeboCZCollidable)
