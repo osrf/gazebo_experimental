@@ -310,3 +310,19 @@ bool Manager::Paused() const
 {
   return this->dataPtr->paused;
 }
+
+//////////////////////////////////////////////////
+std::set<gazebo::ecs::EntityId> Manager::QueryEntities(
+            const std::vector<std::string> &_components)
+{
+  // Make a query from the component names
+  // demand the database to give us the results now
+  EntityQuery q;
+  for (const std::string compName : _components)
+  {
+    q.AddComponent(compName);
+  }
+
+  this->dataPtr->database.InstantQuery(q);
+  return q.EntityIds();
+}

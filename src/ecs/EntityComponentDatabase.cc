@@ -361,6 +361,16 @@ void EntityComponentDatabasePrivate::UpdateQueries(EntityId _id)
   }
 }
 
+//////////////////////////////////////////////////
+void EntityComponentDatabase::InstantQuery(EntityQuery &_query)
+{
+  for (const gazebo::ecs::Entity &entity : this->dataPtr->entities)
+  {
+    if (this->dataPtr->EntityMatches(entity.Id(), _query.ComponentTypes()))
+      _query.AddEntity(entity.Id());
+  }
+}
+
 /////////////////////////////////////////////////
 bool EntityComponentDatabasePrivate::EntityExists(EntityId _id) const
 {
