@@ -26,10 +26,6 @@
 #include <ignition/common/PluginLoader.hh>
 #include <ignition/common/SystemPaths.hh>
 #include <ignition/math/Rand.hh>
-#include "gazebo/components/Inertial.hh"
-#include "gazebo/components/Geometry.hh"
-#include "gazebo/components/WorldPose.hh"
-#include "gazebo/components/WorldVelocity.hh"
 #include "gazebo/ecs/ComponentFactory.hh"
 #include "gazebo/ecs/Manager.hh"
 
@@ -256,82 +252,6 @@ std::string PlaceholderLoadWorld()
 }
 
 //////////////////////////////////////////////////
-void PlaceholderCreateComponents(gzecs::Manager &_mgr)
-{
-  // Componentizer should register components
-  gzecs::ComponentFactory::Register<gazebo::components::Inertial>(
-      "gazebo::components::Inertial");
-  gzecs::ComponentFactory::Register<gazebo::components::Geometry>(
-      "gazebo::components::Geometry");
-  gzecs::ComponentFactory::Register<gazebo::components::WorldPose>(
-      "gazebo::components::WorldPose");
-  gzecs::ComponentFactory::Register<gazebo::components::WorldVelocity>(
-      "gazebo::components::WorldVelocity");
-
-  // Placeholder create components. The componentizer should do this
-  // Create 25 sphere entities
-  for (int i = 0; i < 25; i++)
-  {
-    // Create the entity
-    gzecs::EntityId e = _mgr.CreateEntity();
-    gzecs::Entity &entity = _mgr.Entity(e);
-
-    // Inertial component
-    auto inertial = entity.AddComponent<gazebo::components::Inertial>();
-    if (inertial)
-    {
-      inertial->mass = ignition::math::Rand::DblUniform(0.1, 5.0);
-    }
-    else
-    {
-      std::cerr << "Failed to add inertial component to entity [" << e << "]"
-                << std::endl;
-    }
-
-    // Geometry component
-    auto geom = entity.AddComponent<gazebo::components::Geometry>();
-    if (geom)
-    {
-      geom->type = gazebo::components::Geometry::SPHERE;
-      geom->sphere.radius = ignition::math::Rand::DblUniform(0.1, 0.5);
-    }
-    else
-    {
-      std::cerr << "Failed to add geom component to entity [" << e << "]"
-                << std::endl;
-    }
-
-    // World pose
-    auto pose = entity.AddComponent<gazebo::components::WorldPose>();
-    if (pose)
-    {
-      pose->position.X(ignition::math::Rand::DblUniform(-4.0, 4.0));
-      pose->position.Y(ignition::math::Rand::DblUniform(-4.0, 4.0));
-      pose->position.Z(ignition::math::Rand::DblUniform(-4.0, 4.0));
-    }
-    else
-    {
-      std::cerr << "Failed to add world pose component to entity [" << e << "]"
-                << std::endl;
-    }
-
-    // World velocity
-    auto vel = entity.AddComponent<gazebo::components::WorldVelocity>();
-    if (vel)
-    {
-      vel->linear.X(ignition::math::Rand::DblUniform(-1.0, 1.0));
-      vel->linear.Y(ignition::math::Rand::DblUniform(-1.0, 1.0));
-      vel->linear.Z(ignition::math::Rand::DblUniform(-1.0, 1.0));
-    }
-    else
-    {
-      std::cerr << "Failed to add world velocity component to entity ["
-                << e << "]" << std::endl;
-    }
-  }
-}
-
-//////////////////////////////////////////////////
 void RunECS(gzecs::Manager &_mgr, std::atomic<bool> &stop)
 {
   const double realTimeFactor = 1.0;
@@ -411,9 +331,6 @@ int main(int _argc, char **_argv)
     {
       return 2;
     }
-
-    // TODO componentizer
-    // PlaceholderCreateComponents(manager);
 
     // Load ECS systems
     if (!LoadSystems(manager, {
