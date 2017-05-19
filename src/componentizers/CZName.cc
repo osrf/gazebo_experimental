@@ -43,11 +43,11 @@ void CZName::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
     std::string name = _elem.GetAttribute("name")->GetAsString();
     if (!name.empty())
     {
-      igndbg << "creating component named " << name << std::endl;
       ecs::EntityId id = _ids.at(&_elem);
       ecs::Entity &e = _mgr.Entity(id);
       auto nameComponent = e.AddComponent<components::Name>();
       nameComponent->name = name;
+      igndbg << "Added Name " << name << " to " << id << std::endl;
     }
   }
 }
