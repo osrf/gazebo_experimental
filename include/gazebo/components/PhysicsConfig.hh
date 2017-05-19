@@ -15,15 +15,15 @@
  *
 */
 
-#ifndef GAZEBO_COMPONENTS_PHYSICS_PROPERTIES_HH_
-#define GAZEBO_COMPONENTS_PHYSICS_PROPERTIES_HH_
+#ifndef GAZEBO_COMPONENTS_PHYSICSCONFIG_HH_
+#define GAZEBO_COMPONENTS_PHYSICSCONFIG_HH_
 
 namespace gazebo
 {
   namespace components
   {
     /// \brief Describes the properties of a physics engine
-    struct PhysicsProperties
+    struct PhysicsConfig
     {
       /// \brief Maximum time step size
       double maxStepSize = 0.001;
