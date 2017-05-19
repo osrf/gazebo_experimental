@@ -41,4 +41,3 @@ namespace gazebo
 }
 
 #endif
-
