@@ -27,7 +27,7 @@ namespace gazebo
 {
   namespace componentizers
   {
-    /// \brief a plugin creates "Pose" component where appropriate
+    /// \brief a plugin creates "PhysicsConfig" component where appropriate
     class CZPhysicsConfig : public ecs::Componentizer
     {
       // Inherited
