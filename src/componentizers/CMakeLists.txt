@@ -64,3 +64,11 @@ target_link_libraries(gazeboCZPhysicsConfig
   ${SDFormat_LIBRARIES}
 )
 gz_install_library(gazeboCZPhysicsConfig)
+
+add_library(gazeboCZWorldVelocity SHARED CZWorldVelocity.cc)
+target_link_libraries(gazeboCZWorldVelocity
+  ${IGNITION-MATH_LIBRARIES}
+  ${IGNITION-COMMON_LIBRARIES}
+  ${SDFormat_LIBRARIES}
+)
+gz_install_library(gazeboCZWorldVelocity)

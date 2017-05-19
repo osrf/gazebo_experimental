@@ -406,6 +406,7 @@ int main(int _argc, char **_argv)
           "gazeboCZCollidable",
           "gazeboCZInertial",
           "gazeboCZPhysicsConfig",
+          "gazeboCZWorldVelocity",
           }))
     {
       return 2;
