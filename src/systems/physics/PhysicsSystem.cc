@@ -20,7 +20,7 @@
 
 #include "gazebo/components/Inertial.hh"
 #include "gazebo/components/Geometry.hh"
-#include "gazebo/components/PhysicsProperties.hh"
+#include "gazebo/components/PhysicsConfig.hh"
 #include "gazebo/components/Pose.hh"
 #include "gazebo/components/WorldVelocity.hh"
 #include "gazebo/ecs/Manager.hh"
@@ -37,9 +37,9 @@ void PhysicsSystem::Init(ecs::QueryRegistrar &_registrar)
 {
   // Query for global/configuration info
   ecs::EntityQuery configQuery;
-  if (!configQuery.AddComponent("gazebo::components::PhysicsProperties"))
+  if (!configQuery.AddComponent("gazebo::components::PhysicsConfig"))
   {
-    std::cerr << "Undefined component[gazebo::components::PhysicsProperties]\n";
+    std::cerr << "Undefined component[gazebo::components::PhysicsConfig]\n";
   }
   else
   {
@@ -72,10 +72,10 @@ void PhysicsSystem::UpdateConfig(const ecs::EntityQuery &_result)
   {
     // only consider the first entity
     auto &entity = mgr.Entity(*entityIds.begin());
-    auto difference = entity.IsDifferent<components::PhysicsProperties>();
+    auto difference = entity.IsDifferent<components::PhysicsConfig>();
     if (difference == ecs::WAS_CREATED || difference == ecs::WAS_MODIFIED)
     {
-      auto const *geom = entity.Component<components::PhysicsProperties>();
+      auto const *geom = entity.Component<components::PhysicsConfig>();
       this->maxStepSize = geom->maxStepSize;
     }
   }

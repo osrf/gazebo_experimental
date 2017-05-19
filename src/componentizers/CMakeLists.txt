@@ -56,3 +56,11 @@ target_link_libraries(gazeboCZInertial
   ${SDFormat_LIBRARIES}
 )
 gz_install_library(gazeboCZInertial)
+
+add_library(gazeboCZPhysicsConfig SHARED CZPhysicsConfig.cc)
+target_link_libraries(gazeboCZPhysicsConfig
+  ${IGNITION-MATH_LIBRARIES}
+  ${IGNITION-COMMON_LIBRARIES}
+  ${SDFormat_LIBRARIES}
+)
+gz_install_library(gazeboCZPhysicsConfig)

@@ -28,7 +28,6 @@
 #include <ignition/math/Rand.hh>
 #include "gazebo/components/Inertial.hh"
 #include "gazebo/components/Geometry.hh"
-#include "gazebo/components/PhysicsProperties.hh"
 #include "gazebo/components/WorldPose.hh"
 #include "gazebo/components/WorldVelocity.hh"
 #include "gazebo/ecs/ComponentFactory.hh"
@@ -164,6 +163,11 @@ std::string PlaceholderLoadWorld()
       "<?xml version='1.0'?>"
       "<sdf version='1.6'>"
       " <world name='default'>"
+      "   <physics type='ode'>"
+      "     <max_step_size>0.001</max_step_size>"
+      "     <real_time_factor>1</real_time_factor>"
+      "     <real_time_update_rate>1000</real_time_update_rate>"
+      "   </physics>"
       "   <model name='some_model'>"
       "     <link name='some_link'>"
       "       <pose>0 0 0 0 0 0</pose>"
@@ -259,8 +263,6 @@ void PlaceholderCreateComponents(gzecs::Manager &_mgr)
       "gazebo::components::Inertial");
   gzecs::ComponentFactory::Register<gazebo::components::Geometry>(
       "gazebo::components::Geometry");
-  gzecs::ComponentFactory::Register<gazebo::components::PhysicsProperties>(
-      "gazebo::components::PhysicsProperties");
   gzecs::ComponentFactory::Register<gazebo::components::WorldPose>(
       "gazebo::components::WorldPose");
   gzecs::ComponentFactory::Register<gazebo::components::WorldVelocity>(
@@ -403,6 +405,7 @@ int main(int _argc, char **_argv)
           "gazeboCZPose",
           "gazeboCZCollidable",
           "gazeboCZInertial",
+          "gazeboCZPhysicsConfig",
           }))
     {
       return 2;
