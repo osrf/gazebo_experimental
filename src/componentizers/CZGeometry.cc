@@ -105,4 +105,3 @@ void CZGeometry::DecodeCylinder(sdf::ElementPtr &_elem, ecs::Entity &_entity)
 //////////////////////////////////////////////////
 IGN_COMMON_REGISTER_SINGLE_PLUGIN(gazebo::componentizers::CZGeometry,
                                   gazebo::ecs::Componentizer)
-

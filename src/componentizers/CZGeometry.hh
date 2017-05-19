@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef GAZEBO_COMPONENTIZERS_GEOMETRYCZ_HH__
-#define GAZEBO_COMPONENTIZERS_GEOMETRYCZ_HH__
+#ifndef GAZEBO_COMPONENTIZERS_CZGEOMETRY_HH__
+#define GAZEBO_COMPONENTIZERS_CZGEOMETRY_HH__
 
 
 #include "gazebo/ecs/Componentizer.hh"
@@ -49,4 +49,3 @@ namespace gazebo
 }
 
 #endif
-
