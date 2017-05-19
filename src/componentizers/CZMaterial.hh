@@ -15,30 +15,28 @@
  *
 */
 
-#ifndef GAZEBO_COMPONENTS_WORLDPOSE_HH_
-#define GAZEBO_COMPONENTS_WORLDPOSE_HH_
+#ifndef GAZEBO_COMPONENTIZERS_CZMATERIAL_HH__
+#define GAZEBO_COMPONENTIZERS_CZMATERIAL_HH__
 
-#include <ignition/math/Vector3.hh>
-#include <ignition/math/Quaternion.hh>
+
+#include "gazebo/ecs/Componentizer.hh"
+#include "gazebo/ecs/Manager.hh"
 
 namespace gazebo
 {
-  namespace components
+  namespace componentizers
   {
-    /// \brief Pose of an object
-    /// \deprecated use Pose.hh instead
-    ///
-    /// This is special in that is always in world frame. For transforming
-    /// poses between different frames the pose graph should be used
-    struct WorldPose
+    /// \brief a plugin creates "Material" component on visuals and collisions
+    class CZMaterial : public ecs::Componentizer
     {
-      /// \brief position in world frame (meters)
-      ignition::math::Vector3<double> position = {0, 0, 0};
-      /// \brief rotation in world frame
-      ignition::math::Quaternion<double> rotation = {1, 0, 0, 0};
+      // Inherited
+      public: virtual void Init();
+
+      // Inherited
+      public: virtual void FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
+                  const std::unordered_map<sdf::Element*, ecs::EntityId> &_ids);
     };
   }
 }
 
 #endif
-

@@ -166,6 +166,7 @@ std::string PlaceholderLoadWorld()
       " <world name='default'>"
       "   <model name='some_model'>"
       "     <link name='some_link'>"
+      "       <pose>0 0 0 0 0 0</pose>"
       "       <collision name='some_collision'>"
       "         <geometry>"
       "           <box>"
@@ -173,6 +174,16 @@ std::string PlaceholderLoadWorld()
       "           </box>"
       "         </geometry>"
       "       </collision>"
+      "       <visual name='some_visual'>"
+      "         <geometry>"
+      "           <box>"
+      "             <size>1 2 3</size>"
+      "           </box>"
+      "         </geometry>"
+      "       </visual>"
+      "     </link>"
+      "     <link name='some_link_2'>"
+      "       <pose>1.5 0 1 0 0 0</pose>"
       "       <collision name='some_collision_2'>"
       "         <geometry>"
       "           <sphere>"
@@ -180,6 +191,16 @@ std::string PlaceholderLoadWorld()
       "           </sphere>"
       "         </geometry>"
       "       </collision>"
+      "       <visual name='some_visual'>"
+      "         <geometry>"
+      "           <sphere>"
+      "             <radius>0.5</radius>"
+      "           </sphere>"
+      "         </geometry>"
+      "       </visual>"
+      "     </link>"
+      "     <link name='some_link_3'>"
+      "       <pose>3 0 2 0 0 0</pose>"
       "       <collision name='some_collision_3'>"
       "         <geometry>"
       "           <cylinder>"
@@ -188,6 +209,14 @@ std::string PlaceholderLoadWorld()
       "           </cylinder>"
       "         </geometry>"
       "       </collision>"
+      "       <visual name='some_visual'>"
+      "         <geometry>"
+      "           <cylinder>"
+      "             <radius>0.5</radius>"
+      "             <length>1.0</length>"
+      "           </cylinder>"
+      "         </geometry>"
+      "       </visual>"
       "     </link>"
       "   </model>"
       " </world>"
@@ -343,6 +372,8 @@ int main(int _argc, char **_argv)
     if (!LoadComponentizers(manager, {
           "gazeboCZName",
           "gazeboCZGeometry",
+          "gazeboCZMaterial",
+          "gazeboCZPose",
           }))
     {
       return 2;

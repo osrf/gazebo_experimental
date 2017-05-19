@@ -18,27 +18,29 @@
 #ifndef GAZEBO_COMPONENTS_WORLDPOSE_HH_
 #define GAZEBO_COMPONENTS_WORLDPOSE_HH_
 
-#include <ignition/math/Vector3.hh>
-#include <ignition/math/Quaternion.hh>
+#include <ignition/math/Pose3.hh>
+#include <gazebo/ecs/Entity.hh>
 
 namespace gazebo
 {
   namespace components
   {
     /// \brief Pose of an object
-    /// \deprecated use Pose.hh instead
-    ///
-    /// This is special in that is always in world frame. For transforming
-    /// poses between different frames the pose graph should be used
-    struct WorldPose
+    struct Pose
     {
-      /// \brief position in world frame (meters)
-      ignition::math::Vector3<double> position = {0, 0, 0};
-      /// \brief rotation in world frame
-      ignition::math::Quaternion<double> rotation = {1, 0, 0, 0};
+      /// \brief What frame is this pose defined in
+      /// \remarks "" is invalid
+      /// \remarks "/" means it's defined in the world frame
+      std::string parentFrame = "/";
+
+      /// \brief Name of the frame cooresponding to this pose
+      /// \remarks "" means this does not define a frame
+      std::string definesFrame = "";
+
+      /// \brief pose in parent frame
+      ignition::math::Pose3d pose;
     };
   }
 }
 
 #endif
-
