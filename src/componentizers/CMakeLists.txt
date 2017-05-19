@@ -15,6 +15,7 @@ target_link_libraries(gazeboCZName
   ${IGNITION-COMMON_LIBRARIES}
   ${SDFormat_LIBRARIES}
 )
+gz_install_library(gazeboCZName)
 
 add_library(gazeboCZGeometry SHARED CZGeometry.cc)
 target_link_libraries(gazeboCZGeometry
@@ -22,6 +23,7 @@ target_link_libraries(gazeboCZGeometry
   ${IGNITION-COMMON_LIBRARIES}
   ${SDFormat_LIBRARIES}
 )
+gz_install_library(gazeboCZGeometry)
 
 add_library(gazeboCZMaterial SHARED CZMaterial.cc)
 target_link_libraries(gazeboCZMaterial
@@ -29,6 +31,7 @@ target_link_libraries(gazeboCZMaterial
   ${IGNITION-COMMON_LIBRARIES}
   ${SDFormat_LIBRARIES}
 )
+gz_install_library(gazeboCZMaterial)
 
 add_library(gazeboCZPose SHARED CZPose.cc)
 target_link_libraries(gazeboCZPose
@@ -36,6 +39,7 @@ target_link_libraries(gazeboCZPose
   ${IGNITION-COMMON_LIBRARIES}
   ${SDFormat_LIBRARIES}
 )
+gz_install_library(gazeboCZPose)
 
 add_library(gazeboCZCollidable SHARED CZCollidable.cc)
 target_link_libraries(gazeboCZCollidable
@@ -43,6 +47,7 @@ target_link_libraries(gazeboCZCollidable
   ${IGNITION-COMMON_LIBRARIES}
   ${SDFormat_LIBRARIES}
 )
+gz_install_library(gazeboCZCollidable)
 
 add_library(gazeboCZInertial SHARED CZInertial.cc)
 target_link_libraries(gazeboCZInertial
@@ -50,10 +55,4 @@ target_link_libraries(gazeboCZInertial
   ${IGNITION-COMMON_LIBRARIES}
   ${SDFormat_LIBRARIES}
 )
-
-gz_install_library(gazeboCZName)
-gz_install_library(gazeboCZGeometry)
-gz_install_library(gazeboCZMaterial)
-gz_install_library(gazeboCZPose)
-gz_install_library(gazeboCZCollidable)
 gz_install_library(gazeboCZInertial)
