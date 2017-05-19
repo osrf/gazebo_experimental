@@ -44,8 +44,16 @@ target_link_libraries(gazeboCZCollidable
   ${SDFormat_LIBRARIES}
 )
 
+add_library(gazeboCZInertial SHARED CZInertial.cc)
+target_link_libraries(gazeboCZInertial
+  ${IGNITION-MATH_LIBRARIES}
+  ${IGNITION-COMMON_LIBRARIES}
+  ${SDFormat_LIBRARIES}
+)
+
 gz_install_library(gazeboCZName)
 gz_install_library(gazeboCZGeometry)
 gz_install_library(gazeboCZMaterial)
 gz_install_library(gazeboCZPose)
 gz_install_library(gazeboCZCollidable)
+gz_install_library(gazeboCZInertial)

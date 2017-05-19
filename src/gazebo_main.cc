@@ -197,6 +197,17 @@ std::string PlaceholderLoadWorld()
       "           </box>"
       "         </geometry>"
       "       </visual>"
+      "       <inertial>"
+      "         <mass>5.0</mass>"
+      "         <inertia>"
+      "           <ixx>1.0</ixx>"
+      "           <ixy>2.0</ixy>"
+      "           <ixz>3.0</ixz>"
+      "           <iyy>0</iyy>"
+      "           <iyz>0</iyz>"
+      "           <izz>0</izz>"
+      "         </inertia>"
+      "       </inertial>"
       "     </link>"
       "     <link name='some_link_2'>"
       "       <pose>1.5 0 1 0 0 0</pose>"
@@ -391,6 +402,7 @@ int main(int _argc, char **_argv)
           "gazeboCZMaterial",
           "gazeboCZPose",
           "gazeboCZCollidable",
+          "gazeboCZInertial",
           }))
     {
       return 2;
