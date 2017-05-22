@@ -38,12 +38,18 @@ namespace gazebo
                   const std::unordered_map<sdf::Element*, ecs::EntityId> &_ids);
 
       /// \brief Populate geometry component with box data
+      /// \param[in] _elem the sdf element <geometry> to get data from
+      /// \param[in] _entity the entity to put a geometry component on to
       protected: void DecodeBox(sdf::ElementPtr &_elem, ecs::Entity &_entity);
 
       /// \brief Populate geometry component with sphere data
+      /// \param[in] _elem the sdf element <geometry> to get data from
+      /// \param[in] _entity the entity to put a geometry component on to
       protected: void DecodeSphere(sdf::ElementPtr &_elem, ecs::Entity &_entity);
 
       /// \brief Populate geometry component with cylinder data
+      /// \param[in] _elem the sdf element <geometry> to get data from
+      /// \param[in] _entity the entity to put a geometry component on to
       protected: void DecodeCylinder(sdf::ElementPtr &_elem, ecs::Entity &_entity);
     };
   }
