@@ -45,7 +45,7 @@ void CZPhysicsConfig::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
     ecs::Entity &entity = _mgr.Entity(id);
 
     auto comp = entity.AddComponent<components::PhysicsConfig>();
-    comp->maxStepSize == _elem.Get<double>("max_step_size");
+    comp->maxStepSize = _elem.Get<double>("max_step_size");
     igndbg << "Added PhysicsConfig to " << id << std::endl;
   }
 }
