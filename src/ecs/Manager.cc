@@ -236,7 +236,7 @@ bool Manager::LoadWorld(const std::string &_world)
   // breadth-first componentization
   std::queue<sdf::ElementPtr> elementQueue;
   elementQueue.push(sdfWorld.Root());
-  while (nullptr != elementQueue.front())
+  while (!elementQueue.empty())
   {
     sdf::ElementPtr nextElement = elementQueue.front();
     elementQueue.pop();
