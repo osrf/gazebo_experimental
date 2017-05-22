@@ -15,6 +15,7 @@ set(unit_tests
   CZMaterial_TEST.cc
   CZName_TEST.cc
   CZPhysicsConfig_TEST.cc
+  CZPose_TEST.cc
 )
 
 

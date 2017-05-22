@@ -89,6 +89,13 @@ void CZPose::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
     igndbg << "Pose " << pose << " in frame " << parentFrame << " on "
       << id << std::endl;
   }
+  else if (tag == "inertial")
+  {
+    if (_elem.HasElement("pose"))
+    {
+      ignwarn << "pose on <inertial> not yet supported" << std::endl;
+    }
+  }
 }
 
 //////////////////////////////////////////////////
