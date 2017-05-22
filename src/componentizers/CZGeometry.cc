@@ -14,7 +14,6 @@
  * limitations under the License.
  *
 */
-#include <sdf/sdf.hh>
 #include <ignition/common/Console.hh>
 #include <ignition/common/PluginMacros.hh>
 #include "gazebo/components/Geometry.hh"

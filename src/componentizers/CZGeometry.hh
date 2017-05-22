@@ -19,6 +19,7 @@
 #define GAZEBO_COMPONENTIZERS_CZGEOMETRY_HH__
 
 
+#include <sdf/sdf.hh>
 #include "gazebo/ecs/Componentizer.hh"
 #include "gazebo/ecs/Manager.hh"
 

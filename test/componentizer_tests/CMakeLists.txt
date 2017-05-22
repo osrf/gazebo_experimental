@@ -2,11 +2,15 @@
 # between a unit test and an integration test, testing one componentizer each.
 
 
-include_directories(../../src)
+include_directories(
+  ../../src
+  ${SDFormat_INCLUDE_DIRS}
+)
 
 
 set(unit_tests
   CZCollidable_TEST.cc
+  CZGeometry_TEST.cc
   CZName_TEST.cc
   CZPhysicsConfig_TEST.cc
 )
