@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef GAZEBO_COMPONENTS_WORLDPOSE_HH_
-#define GAZEBO_COMPONENTS_WORLDPOSE_HH_
+#ifndef GAZEBO_COMPONENTS_POSE_HH_
+#define GAZEBO_COMPONENTS_POSE_HH_
 
 #include <ignition/math/Pose3.hh>
 
