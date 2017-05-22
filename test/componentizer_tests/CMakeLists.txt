@@ -6,6 +6,7 @@ include_directories(../../src)
 
 
 set(unit_tests
+  CZCollidable_TEST.cc
   CZName_TEST.cc
   CZPhysicsConfig_TEST.cc
 )
