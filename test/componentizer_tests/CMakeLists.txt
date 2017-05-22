@@ -16,6 +16,7 @@ set(unit_tests
   CZName_TEST.cc
   CZPhysicsConfig_TEST.cc
   CZPose_TEST.cc
+  CZWorldVelocity_TEST.cc
 )
 
 
