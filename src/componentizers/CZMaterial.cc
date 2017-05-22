@@ -52,6 +52,7 @@ void CZMaterial::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
     material->color.red = 0.7;
     material->color.green = 0.7;
     material->color.blue = 0.7;
+    material->color.alpha = 1.0;
     igndbg << "Added default material to " << id << std::endl;
   }
   else if (_elem.GetName() == "material")
@@ -73,13 +74,14 @@ void CZMaterial::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
       ecs::EntityId id = _ids.at(parent.get());
       ecs::Entity &visualEntity = _mgr.Entity(id);
       sdf::ElementPtr ambient = _elem.GetElement("ambient");
-      auto color = ambient->Get<ignition::math::Color>();
+      auto color = ambient->Get<ignition::math::Vector4d>();
 
       auto material = visualEntity.AddComponent<components::Material>();
       material->type = components::Material::COLOR;
       material->color.red = color[0];
       material->color.green = color[1];
       material->color.blue = color[2];
+      material->color.alpha = color[3];
     igndbg << "Added flat color material to " << id << std::endl;
     }
   }

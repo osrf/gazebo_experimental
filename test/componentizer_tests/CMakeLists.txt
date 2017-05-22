@@ -12,6 +12,7 @@ set(unit_tests
   CZCollidable_TEST.cc
   CZGeometry_TEST.cc
   CZInertial_TEST.cc
+  CZMaterial_TEST.cc
   CZName_TEST.cc
   CZPhysicsConfig_TEST.cc
 )

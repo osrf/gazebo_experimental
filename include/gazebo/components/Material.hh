@@ -36,6 +36,7 @@ namespace gazebo
         float red;
         float green;
         float blue;
+        float alpha;
       };
 
       struct TextureProperties {
