@@ -162,11 +162,12 @@ bool LoadWorld(gzecs::Manager &_mgr, std::string _file)
 {
   bool success = true;
   ignition::common::SystemPaths sp;
-
   // TODO FindFile crashes if callback is not set
   sp.SetFindFileCallback([] (const std::string &_ret) { return ""; });
-  std::string fullPath = sp.FindFile(_file);
 
+  std::string fullPath = sp.FindFile(_file);
+  if (fullPath.empty())
+      fullPath = sp.FindFile(_file, {GAZEBO_WORLD_INSTALL_DIR});
   if (fullPath.empty())
   {
     ignwarn << "Cannot find [" << _file << "]" << std::endl;
