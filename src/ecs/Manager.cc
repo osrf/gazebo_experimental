@@ -228,7 +228,7 @@ bool Manager::LoadComponentizer(std::unique_ptr<Componentizer> _cz)
 /////////////////////////////////////////////////
 bool Manager::LoadWorld(const std::string &_world)
 {
-  bool success = false;
+  bool success = true;
   sdf::SDF sdfWorld;
   sdfWorld.SetFromString(_world);
   std::unordered_map<sdf::Element*, EntityId> ids;
