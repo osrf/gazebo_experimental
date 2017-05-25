@@ -38,7 +38,8 @@ namespace gazebo
       // Documentation Inherited
       public: virtual void Init(ecs::QueryRegistrar &_registrar);
 
-      // Documentation Inherited
+      /// \brief Update the rendering system
+      /// \param[in] _result EntityQuery with results fromm a registered query
       public: void Update(const ecs::EntityQuery &_result);
 
       /// \brief Create a camera for rendering

@@ -23,4 +23,4 @@ target_link_libraries(gazeboRenderSystem
   ${IGNITION-TRANSPORT_LIBRARIES}
   )
 
-install(TARGETS gazeboRenderSystem LIBRARY DESTINATION lib)
+gz_install_library(gazeboRenderSystem)
