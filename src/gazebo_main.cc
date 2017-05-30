@@ -30,6 +30,7 @@
 #include <ignition/math/Rand.hh>
 #include "gazebo/ecs/ComponentFactory.hh"
 #include "gazebo/ecs/Manager.hh"
+#include <sdf/sdf.hh>
 
 #ifndef Q_MOC_RUN
   #include <ignition/gui/Iface.hh>
@@ -206,6 +207,26 @@ void RunECS(gzecs::Manager &_mgr, std::atomic<bool> &stop)
 }
 
 //////////////////////////////////////////////////
+/// \brief configure paths and callbacks for sdformat model lookups
+void SDFormatModelPathSetup()
+{
+  char *env = getenv("GAZEBO_MODEL_PATH");
+  if (env)
+  {
+    sdf::addURIPath("model://", env);
+  }
+
+  char *homePath = getenv("HOME");
+  if (homePath)
+  {
+    std::string home = homePath;
+    sdf::addURIPath("model://", home + "/.gazebo/models");
+  }
+
+  sdf::setFindCallback([] (const std::string &) -> std::string {return "";});
+}
+
+//////////////////////////////////////////////////
 int main(int _argc, char **_argv)
 {
   // Register validators
@@ -275,6 +296,8 @@ int main(int _argc, char **_argv)
   {
     // Set verbosity level
     Verbose();
+
+    SDFormatModelPathSetup();
 
     gzecs::Manager manager;
 
