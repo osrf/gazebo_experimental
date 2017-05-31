@@ -20,6 +20,8 @@
 #include <utility>
 #include <vector>
 
+#include <ignition/common/WorkerPool.hh>
+
 #include "gazebo/ecs/EntityComponentDatabase.hh"
 #include "gazebo/ecs/EntityQuery.hh"
 #include "gazebo/ecs/Manager.hh"
@@ -52,6 +54,9 @@ class gazebo::ecs::ManagerPrivate
   /// \brief System info associated with a system by index
   public: std::vector<SystemInfo> systemInfo;
 
+  /// \brief Pool of workers to do stuff in parallel
+  public: ignition::common::WorkerPool workerThreads;
+
   /// \brief Handles storage and quering of components
   public: EntityComponentDatabase database;
 
@@ -69,6 +74,9 @@ class gazebo::ecs::ManagerPrivate
 
   /// \brief tool for publishing diagnostic info
   public: util::DiagnosticsManager diagnostics;
+
+  /// \brief mutex for protecting diagnostics when doing multi-threaded stuff
+  std::mutex diagMtx;
 
   /// \brief Updates the state and systems once
   public: void UpdateOnce();
@@ -139,7 +147,6 @@ void Manager::UpdateOnce(double _real_time_factor)
 /////////////////////////////////////////////////
 void ManagerPrivate::UpdateOnce()
 {
-
   // Decide at the beginning of every update if sim time is paused or not.
   // Some systems (like rendering a camera for a GUI) need to continue to run
   // even when simulation time is paused, so it's up to each system to check
@@ -150,29 +157,28 @@ void ManagerPrivate::UpdateOnce()
   this->database.Update();
   this->diagnostics.StopTimer("database");
 
-  // TODO There is a lot of opportunity for parallelization here
-  // In general systems are run sequentially, one after the other
-  //  Different Systems can run in parallel if they don't share components
-  //  How to handle systems which add or remove entities?
-  //  Defer creation and deletion?
-  // Some systems could be run on multiple cores, such that several
-  //  instances of a system each run on a subset of the entities returned
-  //  in a query result.
-  // Heck, entity and component data can be shared over the network to
-  //  other SystemManagers to use multiple machines for one simulation
-
-  // But this is a prototype, so here's the basic implementation
+  // Update systems in parallel
   for(auto &sysInfo : this->systemInfo)
   {
-    this->diagnostics.StartTimer(sysInfo.name);
-    for (auto &updateInfo : sysInfo.updates)
-    {
-      auto query = this->database.Query(updateInfo.first);
-      QueryCallback cb = updateInfo.second;
-      cb(query);
-    }
-    this->diagnostics.StopTimer(sysInfo.name);
+    this->workerThreads.AddWork([&sysInfo, this] ()
+        {
+          {
+            std::unique_lock<std::mutex> diagLock(this->diagMtx);
+            this->diagnostics.StartTimer(sysInfo.name);
+          }
+          for (auto &updateInfo : sysInfo.updates)
+          {
+            auto query = this->database.Query(updateInfo.first);
+            QueryCallback cb = updateInfo.second;
+            cb(query);
+          }
+          {
+             std::unique_lock<std::mutex> diagLock(this->diagMtx);
+             this->diagnostics.StopTimer(sysInfo.name);
+          }
+        });
   }
+  assert(this->workerThreads.WaitForResults());
 
   // Advance sim time according to what was set last update
   this->simTime = this->nextSimTime;
