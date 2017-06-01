@@ -69,7 +69,8 @@ void CZMaterial::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
         << std::endl;
     }
     else if (!_elem.GetElement("ambient"))
-      ignwarn << "Only support flat color materials" << std::endl;
+      ignwarn << "Only support flat color materials given with <ambient>"
+        << std::endl;
     else
     {
       ecs::EntityId id = _ids.at(parent.get());
