@@ -23,7 +23,7 @@ namespace gazebo
 {
   namespace components
   {
-    /// \brief Properties about how something should look
+    /// \brief Component for something that has a name
     struct Name
     {
       /// \brief a name
