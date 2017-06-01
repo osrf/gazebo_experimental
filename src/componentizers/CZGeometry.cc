@@ -52,11 +52,11 @@ void CZGeometry::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
       if (childElement)
       {
         if (childElement->GetName() == "box")
-          this->DecodeBox(childElement, parentEntity);
+          this->AttachBox(childElement, parentEntity);
         else if (childElement->GetName() == "sphere")
-          this->DecodeSphere(childElement, parentEntity);
+          this->AttachSphere(childElement, parentEntity);
         else if (childElement->GetName() == "cylinder")
-          this->DecodeCylinder(childElement, parentEntity);
+          this->AttachCylinder(childElement, parentEntity);
         else
           ignwarn << "Unsupported geometry [" << childElement->GetName() << "]"
             << std::endl;
@@ -74,7 +74,7 @@ void CZGeometry::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
 }
 
 //////////////////////////////////////////////////
-void CZGeometry::DecodeBox(sdf::ElementPtr &_elem, ecs::Entity &_entity)
+void CZGeometry::AttachBox(sdf::ElementPtr &_elem, ecs::Entity &_entity)
 {
   auto geom = _entity.AddComponent<components::Geometry>();
   geom->type = components::Geometry::BOX;
@@ -83,7 +83,7 @@ void CZGeometry::DecodeBox(sdf::ElementPtr &_elem, ecs::Entity &_entity)
 }
 
 //////////////////////////////////////////////////
-void CZGeometry::DecodeSphere(sdf::ElementPtr &_elem, ecs::Entity &_entity)
+void CZGeometry::AttachSphere(sdf::ElementPtr &_elem, ecs::Entity &_entity)
 {
   auto geom = _entity.AddComponent<components::Geometry>();
   geom->type = components::Geometry::SPHERE;
@@ -92,7 +92,7 @@ void CZGeometry::DecodeSphere(sdf::ElementPtr &_elem, ecs::Entity &_entity)
 }
 
 //////////////////////////////////////////////////
-void CZGeometry::DecodeCylinder(sdf::ElementPtr &_elem, ecs::Entity &_entity)
+void CZGeometry::AttachCylinder(sdf::ElementPtr &_elem, ecs::Entity &_entity)
 {
   auto geom = _entity.AddComponent<components::Geometry>();
   geom->type = components::Geometry::CYLINDER;

@@ -40,17 +40,17 @@ namespace gazebo
       /// \brief Populate geometry component with box data
       /// \param[in] _elem the sdf element <geometry> to get data from
       /// \param[in] _entity the entity to put a geometry component on to
-      protected: void DecodeBox(sdf::ElementPtr &_elem, ecs::Entity &_entity);
+      protected: void AttachBox(sdf::ElementPtr &_elem, ecs::Entity &_entity);
 
       /// \brief Populate geometry component with sphere data
       /// \param[in] _elem the sdf element <geometry> to get data from
       /// \param[in] _entity the entity to put a geometry component on to
-      protected: void DecodeSphere(sdf::ElementPtr &_elem, ecs::Entity &_entity);
+      protected: void AttachSphere(sdf::ElementPtr &_elem, ecs::Entity &_entity);
 
       /// \brief Populate geometry component with cylinder data
       /// \param[in] _elem the sdf element <geometry> to get data from
       /// \param[in] _entity the entity to put a geometry component on to
-      protected: void DecodeCylinder(sdf::ElementPtr &_elem, ecs::Entity &_entity);
+      protected: void AttachCylinder(sdf::ElementPtr &_elem, ecs::Entity &_entity);
     };
   }
 }
