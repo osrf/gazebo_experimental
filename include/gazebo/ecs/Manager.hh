@@ -100,7 +100,7 @@ namespace gazebo
       public: bool LoadComponentizer(std::unique_ptr<Componentizer> _cz);
 
       /// \brief Load a world from sdf string
-      /// \brief returns true if the sdf could be parsed
+      /// \returns true if the sdf is successfully parsed
       public: bool LoadWorld(const std::string &_world);
 
       /// \brief Update everything once and return immediately
