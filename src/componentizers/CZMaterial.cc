@@ -27,6 +27,11 @@ using namespace gazebo;
 using namespace gzcompz;
 
 //////////////////////////////////////////////////
+CZMaterial::~CZMaterial()
+{
+}
+
+//////////////////////////////////////////////////
 void CZMaterial::Init()
 {
   igndbg << "Registering Material component" << std::endl;
@@ -65,10 +70,12 @@ void CZMaterial::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
     }
     else if (parent->GetName() != "visual")
     {
-      ignwarn << "Unknown parent tag " << parent->GetName() << std::endl;
+      ignwarn << "Parent must be <visual>, not " << parent->GetName()
+        << std::endl;
     }
     else if (!_elem.GetElement("ambient"))
-      ignwarn << "Only support flat color materials" << std::endl;
+      ignwarn << "Only support flat color materials given with <ambient>"
+        << std::endl;
     else
     {
       ecs::EntityId id = _ids.at(parent.get());

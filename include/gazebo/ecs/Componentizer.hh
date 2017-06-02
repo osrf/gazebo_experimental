@@ -37,6 +37,9 @@ namespace gazebo
     /// \brief a plugin that creates entities and components from SDF
     class Componentizer
     {
+      /// \brief Virtual destructor
+      public: virtual ~Componentizer() = 0;
+
       /// \brief called when componetizer is loaded
       /// \remarks Use this method to register components
       public: virtual void Init() = 0;
@@ -48,6 +51,9 @@ namespace gazebo
       public: virtual void FromSDF(Manager &_mgr, sdf::Element &_elem,
                   const std::unordered_map<sdf::Element*, EntityId> &_ids) = 0;
     };
+
+    /// \brief Pure vitual destructors require function bodies
+    Componentizer::~Componentizer() { }
   }
 }
 

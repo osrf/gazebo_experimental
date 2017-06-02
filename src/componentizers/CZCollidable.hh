@@ -27,9 +27,12 @@ namespace gazebo
 {
   namespace componentizers
   {
-    /// \brief a plugin creates "Pose" component where appropriate
+    /// \brief a plugin creates "Collidable" component where appropriate
     class CZCollidable : public ecs::Componentizer
     {
+      // Inherited
+      public: virtual ~CZCollidable();
+
       // Inherited
       public: virtual void Init();
 

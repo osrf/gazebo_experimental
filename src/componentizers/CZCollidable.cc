@@ -27,6 +27,11 @@ using namespace gazebo;
 using namespace gzcompz;
 
 //////////////////////////////////////////////////
+CZCollidable::~CZCollidable()
+{
+}
+
+//////////////////////////////////////////////////
 void CZCollidable::Init()
 {
   igndbg << "Registering Collidable component" << std::endl;

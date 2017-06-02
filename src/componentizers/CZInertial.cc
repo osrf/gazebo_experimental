@@ -27,6 +27,11 @@ using namespace gazebo;
 using namespace gzcompz;
 
 //////////////////////////////////////////////////
+CZInertial::~CZInertial()
+{
+}
+
+//////////////////////////////////////////////////
 void CZInertial::Init()
 {
   igndbg << "Registering Inertial component" << std::endl;
@@ -43,7 +48,7 @@ void CZInertial::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
     sdf::ElementPtr parent = _elem.GetParent();
     if (!parent)
     {
-      ignwarn << "No parent on collision, ignoring" << std::endl;
+      ignwarn << "No parent on inertial, ignoring" << std::endl;
     }
     else if (parent->GetName() != "link")
     {

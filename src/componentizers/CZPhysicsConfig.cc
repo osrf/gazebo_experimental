@@ -27,6 +27,11 @@ using namespace gazebo;
 using namespace gzcompz;
 
 //////////////////////////////////////////////////
+CZPhysicsConfig::~CZPhysicsConfig()
+{
+}
+
+//////////////////////////////////////////////////
 void CZPhysicsConfig::Init()
 {
   igndbg << "Registering PhysicsConfig component" << std::endl;
@@ -40,13 +45,26 @@ void CZPhysicsConfig::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
 {
   if (_elem.GetName() == "physics")
   {
-    // Create the inertial component on the entity associated with the link
-    ecs::EntityId id = _ids.at(&_elem);
-    ecs::Entity &entity = _mgr.Entity(id);
+    sdf::ElementPtr parent = _elem.GetParent();
+    if (!parent)
+    {
+      ignwarn << "No parent of <physics>" << std::endl;
+    }
+    else if (parent->GetName() != "world")
+    {
+      ignwarn << "Parent must be <world>, not " << parent->GetName()
+        << std::endl;
+    }
+    else
+    {
+      // Create the inertial component on the entity associated with the link
+      ecs::EntityId id = _ids.at(&_elem);
+      ecs::Entity &entity = _mgr.Entity(id);
 
-    auto comp = entity.AddComponent<components::PhysicsConfig>();
-    comp->maxStepSize = _elem.Get<double>("max_step_size");
-    igndbg << "Added PhysicsConfig to " << id << std::endl;
+      auto comp = entity.AddComponent<components::PhysicsConfig>();
+      comp->maxStepSize = _elem.Get<double>("max_step_size");
+      igndbg << "Added PhysicsConfig to " << id << std::endl;
+    }
   }
 }
 

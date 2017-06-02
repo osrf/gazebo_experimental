@@ -97,7 +97,7 @@ bool LoadSystems(gzecs::Manager &_mgr, std::vector<std::string> _libs)
   {
     std::string pathToLibrary = sp.FindSharedLibrary(libName);
     std::string pluginName = pluginLoader.LoadLibrary(pathToLibrary);
-    if (pluginName.size())
+    if (!pluginName.empty())
     {
       std::unique_ptr<gzecs::System> sys;
       sys = pluginLoader.Instantiate<gzecs::System>(pluginName);
