@@ -27,6 +27,11 @@ using namespace gazebo;
 using namespace gzcompz;
 
 //////////////////////////////////////////////////
+CZWorldVelocity::~CZWorldVelocity()
+{
+}
+
+//////////////////////////////////////////////////
 void CZWorldVelocity::Init()
 {
   igndbg << "Registering WorldVelocity component" << std::endl;

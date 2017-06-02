@@ -27,6 +27,11 @@ using namespace gazebo;
 using namespace gzcompz;
 
 //////////////////////////////////////////////////
+CZPose::~CZPose()
+{
+}
+
+//////////////////////////////////////////////////
 void CZPose::Init()
 {
   igndbg << "Registering Pose component" << std::endl;

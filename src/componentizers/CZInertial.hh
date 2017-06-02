@@ -31,6 +31,9 @@ namespace gazebo
     class CZInertial : public ecs::Componentizer
     {
       // Inherited
+      public: virtual ~CZInertial();
+
+      // Inherited
       public: virtual void Init();
 
       // Inherited

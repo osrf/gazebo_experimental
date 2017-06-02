@@ -30,6 +30,9 @@ namespace gazebo
     class CZMaterial : public ecs::Componentizer
     {
       // Inherited
+      public: virtual ~CZMaterial();
+
+      // Inherited
       public: virtual void Init();
 
       // Inherited

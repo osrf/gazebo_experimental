@@ -26,6 +26,11 @@ using namespace gazebo;
 using namespace gzcompz;
 
 //////////////////////////////////////////////////
+CZName::~CZName()
+{
+}
+
+//////////////////////////////////////////////////
 void CZName::Init()
 {
   igndbg << "CZName registering Name component" << std::endl;

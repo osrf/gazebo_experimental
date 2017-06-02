@@ -25,6 +25,11 @@ using namespace gazebo;
 using namespace gzcompz;
 
 //////////////////////////////////////////////////
+CZGeometry::~CZGeometry()
+{
+}
+
+//////////////////////////////////////////////////
 void CZGeometry::Init()
 {
   igndbg << "Registering Geometry component" << std::endl;

@@ -29,6 +29,9 @@ namespace gazebo
     class CZName : public ecs::Componentizer
     {
       // Inherited
+      public: virtual ~CZName();
+
+      // Inherited
       public: virtual void Init();
 
       // Inherited

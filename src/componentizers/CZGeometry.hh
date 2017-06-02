@@ -31,6 +31,9 @@ namespace gazebo
     class CZGeometry : public ecs::Componentizer
     {
       // Inherited
+      public: virtual ~CZGeometry();
+
+      // Inherited
       public: virtual void Init();
 
       // Inherited

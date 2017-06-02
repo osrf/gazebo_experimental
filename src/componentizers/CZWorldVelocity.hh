@@ -31,6 +31,9 @@ namespace gazebo
     class CZWorldVelocity : public ecs::Componentizer
     {
       // Inherited
+      public: ~CZWorldVelocity();
+
+      // Inherited
       public: virtual void Init();
 
       // Inherited

@@ -31,6 +31,9 @@ namespace gazebo
     class CZCollidable : public ecs::Componentizer
     {
       // Inherited
+      public: virtual ~CZCollidable();
+
+      // Inherited
       public: virtual void Init();
 
       // Inherited

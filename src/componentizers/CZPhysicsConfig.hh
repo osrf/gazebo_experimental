@@ -31,6 +31,9 @@ namespace gazebo
     class CZPhysicsConfig : public ecs::Componentizer
     {
       // Inherited
+      public: virtual ~CZPhysicsConfig();
+
+      // Inherited
       public: virtual void Init();
 
       // Inherited

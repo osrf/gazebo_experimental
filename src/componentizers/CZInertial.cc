@@ -27,6 +27,11 @@ using namespace gazebo;
 using namespace gzcompz;
 
 //////////////////////////////////////////////////
+CZInertial::~CZInertial()
+{
+}
+
+//////////////////////////////////////////////////
 void CZInertial::Init()
 {
   igndbg << "Registering Inertial component" << std::endl;

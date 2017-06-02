@@ -31,6 +31,9 @@ namespace gazebo
     class CZPose : public ecs::Componentizer
     {
       // Inherited
+      public: virtual ~CZPose();
+
+      // Inherited
       public: virtual void Init();
 
       // Inherited

@@ -27,6 +27,11 @@ using namespace gazebo;
 using namespace gzcompz;
 
 //////////////////////////////////////////////////
+CZPhysicsConfig::~CZPhysicsConfig()
+{
+}
+
+//////////////////////////////////////////////////
 void CZPhysicsConfig::Init()
 {
   igndbg << "Registering PhysicsConfig component" << std::endl;

@@ -27,6 +27,11 @@ using namespace gazebo;
 using namespace gzcompz;
 
 //////////////////////////////////////////////////
+CZMaterial::~CZMaterial()
+{
+}
+
+//////////////////////////////////////////////////
 void CZMaterial::Init()
 {
   igndbg << "Registering Material component" << std::endl;
