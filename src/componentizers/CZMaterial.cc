@@ -81,7 +81,7 @@ void CZMaterial::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
       ecs::EntityId id = _ids.at(parent.get());
       ecs::Entity &visualEntity = _mgr.Entity(id);
       sdf::ElementPtr ambient = _elem.GetElement("ambient");
-      auto color = ambient->Get<ignition::math::Vector4d>();
+      auto color = ambient->Get<ignition::math::Color>();
 
       auto material = visualEntity.AddComponent<components::Material>();
       material->type = components::Material::COLOR;
