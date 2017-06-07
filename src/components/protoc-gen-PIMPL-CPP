@@ -1,0 +1,242 @@
+#!/usr/bin/env python
+
+import copy
+import os
+import sys
+
+file_path = os.path.dirname(os.path.realpath(__file__))
+
+try:
+    from google.protobuf.compiler import plugin_pb2 as plugin
+    from google.protobuf.descriptor import FieldDescriptor
+    from google.protobuf.descriptor_pb2 import DescriptorProto
+    from google.protobuf.descriptor_pb2 import EnumDescriptorProto
+except ImportError:
+    sys.stderr.write("""\n\nNeed python protobuf libraries: 
+        Do `pip install protobuf` or `apt install python-protobuf`
+        
+        """)
+    raise
+
+# nested types that can be swapped for simple types
+known_nested_types = {
+        ".gazebo.components.Vector3d": {
+            "type": "ignition::math::Vector3d",
+            "include": "ignition/math/Vector3.hh",
+            "space": " ",
+            },
+        ".gazebo.components.Quaterniond": {
+            "type": "ignition::math::Quaterniond",
+            "include": "ignition/math/Quaternion.hh",
+            "space": " ",
+            },
+        ".gazebo.components.Pose3d": {
+            "type": "ignition::math::Pose3d",
+            "include": "ignition/math/Pose3.hh",
+            "space": " ",
+            },
+        }
+
+
+# Map protobuf simple types to c++ types
+simple_types_to_cpp = {
+        FieldDescriptor.TYPE_DOUBLE: "double",
+        FieldDescriptor.TYPE_FLOAT: "float",
+        FieldDescriptor.TYPE_INT64: "int64_t",
+        FieldDescriptor.TYPE_UINT64: "uint64_t",
+        FieldDescriptor.TYPE_INT32: "int32_t",
+        FieldDescriptor.TYPE_FIXED64: "uint64_t",
+        FieldDescriptor.TYPE_FIXED32: "uint32_t",
+        FieldDescriptor.TYPE_BOOL: "bool",
+        FieldDescriptor.TYPE_STRING: "std::string",
+        FieldDescriptor.TYPE_BYTES: "uint8_t *",
+        FieldDescriptor.TYPE_UINT32: "uint32_t",
+        FieldDescriptor.TYPE_SFIXED32: "int32_t",
+        FieldDescriptor.TYPE_SFIXED64: "int64_t",
+        FieldDescriptor.TYPE_SINT32: "int32_t",
+        FieldDescriptor.TYPE_SINT64: "int64_t",
+        }
+
+
+cc_template = None
+with open(file_path + "/templates/Component.cc.in", "r") as fin:
+    cc_template = fin.read()
+
+
+hh_template = None
+with open(file_path + "/templates/Component.hh.in", "r") as fin:
+    hh_template = fin.read()
+
+
+declaration_template = None
+with open(file_path + "/templates/ApiDeclaration.hh.in", "r") as fin:
+    declaration_template = fin.read()
+
+
+definition_template = None
+with open(file_path + "/templates/ApiDefinition.cc.in", "r") as fin:
+    definition_template = fin.read()
+
+
+field_template = None
+with open(file_path + "/templates/StorageField.cc.in", "r") as fin:
+    field_template = fin.read()
+
+
+include_template = None
+with open(file_path + "/templates/Include.hh.in", "r") as fin:
+    include_template = fin.read()
+
+
+def generate_code(request, response):
+    """Given a CodeGeneratorRequest and CodeGeneratorResponse,
+    generate C++ code that fulfills the Factory/API/Storage separation
+    required of ECS components"""
+    # Loop through included protobuf fields
+    for proto_file in request.proto_file:
+        # Turn the protobuf package into c++ namespace
+        namespaces = proto_file.package.split(".")
+        full_namespace = "::".join(namespaces)
+        ns_indent = "  " * len(namespaces)
+        ns_begin = ""
+        ns_end = ""
+        for x, ns in enumerate(namespaces):
+            indent = "  " * x
+            ns_begin += "\n{indent}namespace {ns}\n{indent}{{".format(
+                    indent=indent, ns=ns)
+            ns_end = "{indent}}}\n".format(indent=indent) + ns_end
+
+        # Support only one top-level message per file
+        if len(proto_file.message_type) != 1:
+            sys.stderr.write("Must be exactly one top-level message per file")
+            sys.exit(42)
+
+        message_descriptor = proto_file.message_type[0]
+
+        # TODO nested types
+        nested_types = []
+        simple_fields = []
+
+        # Pull simple fields out of the message
+        for field_descriptor in message_descriptor.field:
+            if field_descriptor.type == FieldDescriptor.TYPE_MESSAGE:
+                # Complex/Nested type
+                if field_descriptor.type_name in known_nested_types:
+                    # Swap complex type for a simple type
+                    field = copy.deepcopy(
+                        known_nested_types[field_descriptor.type_name])
+                    field["name"] = field_descriptor.name
+                    simple_fields.append(field)
+                elif FieldDescriptor.TYPE_ENUM == field_descriptor.type:
+                    # Enumerated type
+                    sys.stderr.write("TODO enum types")
+                elif FieldDescriptor.TYPE_MESSAGE == field_descriptor.type:
+                    # Nested message
+                    sys.stderr.write("TODO nested messages")
+                else:
+                    sys.stderr.write("Unknown type " + repr(field_descriptor))
+                    sys.exit(42)
+            else:
+                # Simple type
+                field = {}
+                field["space"] = " "
+                field["include"] = ""
+                field["name"] = field_descriptor.name
+                field["type"] = simple_types_to_cpp[field_descriptor.type]
+                simple_fields.append(field)
+
+        # Create fields/apis with the information gathered
+        component_name = message_descriptor.name
+        factory_doxygen = ns_indent + r"/// \brief Generated Factory class for component " + component_name
+        storage_doxygen = ns_indent + r"/// \brief Generated storage class for component " + component_name
+
+        api_declarations = []
+        api_definitions = []
+        storage_fields = []
+        includes = set()
+
+        for field in simple_fields:
+            field_doxygen = ns_indent + r"  /// \brief TODO field doxygen"
+            api_doxygen = ns_indent + r"  /// \brief Get reference to " + field["name"]
+
+            storage_field = field_template
+            storage_field = storage_field.replace("%%field_doxygen%%", field_doxygen)
+            storage_field = storage_field.replace("%%field_type%%", field["type"])
+            storage_field = storage_field.replace("%%field_space%%", field["space"])
+            storage_field = storage_field.replace("%%field_name%%", field["name"])
+            storage_field = storage_field.replace("%%ns_indent%%", ns_indent)
+            storage_fields.append(storage_field)
+
+            definition = definition_template
+            definition = definition.replace("%%field_type%%", field["type"])
+            definition = definition.replace("%%field_name%%", field["name"])
+            definition = definition.replace("%%ns_indent%%", ns_indent)
+            definition = definition.replace("%%component_name%%", component_name)
+            api_definitions.append(definition)
+
+            declaration = declaration_template
+            declaration = declaration.replace("%%field_type%%", field["type"])
+            declaration = declaration.replace("%%field_name%%", field["name"])
+            declaration = declaration.replace("%%ns_indent%%", ns_indent)
+            declaration = declaration.replace("%%api_doxygen%%", api_doxygen)
+            api_declarations.append(declaration)
+
+            if len(field["include"]):
+                include = include_template
+                include = include.replace("%%include%%", field["include"])
+                includes.add(include)
+
+        api_definitions = "\n".join(api_definitions)
+        api_declarations = "\n".join(api_declarations)
+        storage_fields = "\n".join(storage_fields)
+        includes = "".join(includes)
+        
+        # Add .hh file
+        hh_file = response.file.add()
+        hh_file.name = proto_file.name.split(".")[0] + ".PIMPL-CPP.hh"
+        hh_content = hh_template
+        hh_content = hh_content.replace("%%component_name%%", component_name)
+        hh_content = hh_content.replace("%%full_namespace%%", full_namespace)
+        hh_content = hh_content.replace("%%ns_begin%%", ns_begin)
+        hh_content = hh_content.replace("%%ns_end%%", ns_end)
+        hh_content = hh_content.replace("%%ns_indent%%", ns_indent)
+        hh_content = hh_content.replace("%%includes%%", includes)
+        hh_content = hh_content.replace("%%api_declarations%%", api_declarations)
+        hh_file.content = hh_content
+
+        # Add .cc file
+        cc_file = response.file.add()
+        cc_file.name = proto_file.name.split(".")[0] + ".PIMPL-CPP.cc"
+        # TODO template substitutions
+        cc_content = cc_template
+        cc_content = cc_content.replace("%%component_name%%", component_name)
+        cc_content = cc_content.replace("%%full_namespace%%", full_namespace)
+        cc_content = cc_content.replace("%%ns_begin%%", ns_begin)
+        cc_content = cc_content.replace("%%ns_end%%", ns_end)
+        cc_content = cc_content.replace("%%ns_indent%%", ns_indent)
+        cc_content = cc_content.replace("%%factory_doxygen%%", factory_doxygen)
+        cc_content = cc_content.replace("%%storage_doxygen%%", storage_doxygen)
+        cc_content = cc_content.replace("%%storage_fields%%", storage_fields)
+        cc_content = cc_content.replace("%%api_definitions%%", api_definitions)
+        cc_file.content = cc_content
+
+
+if __name__ == '__main__':
+    # Read request message from stdin
+    data = sys.stdin.read()
+
+    # Parse request
+    request = plugin.CodeGeneratorRequest()
+    request.ParseFromString(data)
+
+    # Create response
+    response = plugin.CodeGeneratorResponse()
+
+    # Generate code
+    generate_code(request, response)
+
+    # Serialise response message
+    output = response.SerializeToString()
+
+    # Write to stdout
+    sys.stdout.write(output)

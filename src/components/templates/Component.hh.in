@@ -1,0 +1,78 @@
+/*
+ * Copyright (C) 2017 Open Source Robotics Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+*/
+
+#ifndef GAZEBO_COMPONENTS_%%component_name%%_HH_
+#define GAZEBO_COMPONENTS_%%component_name%%_HH_
+
+%%includes%%
+
+#include <ignition/common/System.hh>
+#include "gazebo/ecs/Component.hh"
+
+%%ns_begin%%
+%%ns_indent%%/// \brief forward delcaration
+%%ns_indent%%class %%component_name%%Storage;
+
+%%ns_indent%%/// \brief API for interacting with a NewPose component
+%%ns_indent%%class IGNITION_COMMON_VISIBLE %%component_name%% : public ecs::ComponentAPI
+%%ns_indent%%{
+%%ns_indent%%  //////////////////// 
+%%ns_indent%%  // APIs for reading and writing to component
+%%ns_indent%%  //////////////////// 
+
+%%api_declarations%%
+
+%%ns_indent%%  //////////////////// 
+%%ns_indent%%  // Methods for factory
+%%ns_indent%%  //////////////////// 
+
+%%ns_indent%%  /// \brief Constructor for component factory
+%%ns_indent%%  public: %%component_name%%(%%component_name%%Storage *_storage) : dataPtr(_storage)
+%%ns_indent%%  {
+%%ns_indent%%    // Nothing to do
+%%ns_indent%%  }
+
+%%ns_indent%%  /// \brief Constructor for users
+%%ns_indent%%  public: %%component_name%%() : dataPtr(nullptr)
+%%ns_indent%%  {
+%%ns_indent%%  }
+
+%%ns_indent%%  /// \brief private storage pointer
+%%ns_indent%%  private: %%component_name%%Storage *dataPtr;
+
+%%ns_indent%%  //////////////////// 
+%%ns_indent%%  // Inherited Virtual methods
+%%ns_indent%%  //////////////////// 
+
+%%ns_indent%%  /// \brief destructor
+%%ns_indent%%  public: virtual ~%%component_name%%()
+%%ns_indent%%  {
+%%ns_indent%%    // Nothing to do
+%%ns_indent%%  }
+
+%%ns_indent%%  // Inherited
+%%ns_indent%%  public: virtual const char *ComponentName() const override;
+
+%%ns_indent%%  // Inherited
+%%ns_indent%%  public: virtual ecs::ComponentType ComponentType() const override;
+
+%%ns_indent%%  // Inherited
+%%ns_indent%%  public: virtual void ComponentType(ecs::ComponentType _type) override;
+%%ns_indent%%};
+%%ns_end%%
+
+#endif
