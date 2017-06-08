@@ -49,7 +49,7 @@ simple_types_to_cpp = {
         FieldDescriptor.TYPE_FIXED32: "uint32_t",
         FieldDescriptor.TYPE_BOOL: "bool",
         FieldDescriptor.TYPE_STRING: "std::string",
-        FieldDescriptor.TYPE_BYTES: "uint8_t *",
+        FieldDescriptor.TYPE_BYTES: "std::string",
         FieldDescriptor.TYPE_UINT32: "uint32_t",
         FieldDescriptor.TYPE_SFIXED32: "int32_t",
         FieldDescriptor.TYPE_SFIXED64: "int64_t",

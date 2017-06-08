@@ -186,7 +186,7 @@ int main(int _argc, char **_argv)
     ignwarn << "About to load component factories" << std::endl;
     ignition::common::PluginLoader pluginLoader;
     std::vector<std::string> componentFactoryNames = LoadLibraries(pluginLoader, {
-          "gazeboNewPoseComponent",
+          "gazeboComponentNewPose",
           });
 
     if (componentFactoryNames.empty())

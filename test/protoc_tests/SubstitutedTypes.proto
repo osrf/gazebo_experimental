@@ -16,13 +16,16 @@
 */
 syntax = "proto2";
 
-package gazebo.components;
+package gazebo.components.test;
 
-import "Pose3d.proto";
+import "gazebo/components/Vector3d.proto";
+import "gazebo/components/Quaterniond.proto";
+import "gazebo/components/Pose3d.proto";
 
-message NewPose
+message SubstitutedTypes
 {
-  optional string ParentFrame = 1;
-  optional string DefinesFrame = 2;
+  optional Vector3d Vector = 1;
+  optional Quaterniond Quaternion = 2;
   optional Pose3d Pose = 3;
 }
+

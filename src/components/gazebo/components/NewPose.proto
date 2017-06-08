@@ -18,12 +18,11 @@ syntax = "proto2";
 
 package gazebo.components;
 
-import "Vector3d.proto";
-import "Quaterniond.proto";
+import "gazebo/components/Pose3d.proto";
 
-message Pose3d
+message NewPose
 {
-  optional Vector3d Translation = 1;
-  optional Quaterniond Rotation = 2;
+  optional string ParentFrame = 1;
+  optional string DefinesFrame = 2;
+  optional Pose3d Pose = 3;
 }
-

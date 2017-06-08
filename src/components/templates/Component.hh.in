@@ -27,7 +27,7 @@
 %%ns_indent%%/// \brief forward delcaration
 %%ns_indent%%class %%component_name%%Storage;
 
-%%ns_indent%%/// \brief API for interacting with a NewPose component
+%%ns_indent%%/// \brief API for interacting with a %%component_name%% component
 %%ns_indent%%class IGNITION_COMMON_VISIBLE %%component_name%% : public ecs::ComponentAPI
 %%ns_indent%%{
 %%ns_indent%%  //////////////////// 
