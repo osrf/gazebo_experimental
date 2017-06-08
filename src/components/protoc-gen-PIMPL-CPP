@@ -24,16 +24,19 @@ known_nested_types = {
             "type": "ignition::math::Vector3d",
             "include": "ignition/math/Vector3.hh",
             "space": " ",
+            "default": None,
             },
         ".gazebo.components.Quaterniond": {
             "type": "ignition::math::Quaterniond",
             "include": "ignition/math/Quaternion.hh",
             "space": " ",
+            "default": None,
             },
         ".gazebo.components.Pose3d": {
             "type": "ignition::math::Pose3d",
             "include": "ignition/math/Pose3.hh",
             "space": " ",
+            "default": None,
             },
         }
 
@@ -83,9 +86,24 @@ with open(file_path + "/templates/StorageField.cc.in", "r") as fin:
     field_template = fin.read()
 
 
+field_with_default_template = None
+with open(file_path + "/templates/StorageFieldWithDefault.cc.in", "r") as fin:
+    field_with_default_template = fin.read()
+
+
 include_template = None
 with open(file_path + "/templates/Include.hh.in", "r") as fin:
     include_template = fin.read()
+
+
+enum_template = None
+with open(file_path + "/templates/Enum.hh.in", "r") as fin:
+    enum_template = fin.read()
+
+
+enum_field_template = None
+with open(file_path + "/templates/EnumField.hh.in", "r") as fin:
+    enum_field_template = fin.read()
 
 
 def generate_code(request, response):
@@ -94,17 +112,6 @@ def generate_code(request, response):
     required of ECS components"""
     # Loop through included protobuf fields
     for proto_file in request.proto_file:
-        # Turn the protobuf package into c++ namespace
-        namespaces = proto_file.package.split(".")
-        full_namespace = "::".join(namespaces)
-        ns_indent = "  " * len(namespaces)
-        ns_begin = ""
-        ns_end = ""
-        for x, ns in enumerate(namespaces):
-            indent = "  " * x
-            ns_begin += "\n{indent}namespace {ns}\n{indent}{{".format(
-                    indent=indent, ns=ns)
-            ns_end = "{indent}}}\n".format(indent=indent) + ns_end
 
         # Support only one top-level message per file
         if len(proto_file.message_type) != 1:
@@ -115,7 +122,20 @@ def generate_code(request, response):
 
         # TODO nested types
         nested_types = []
+        enumerations = []
         simple_fields = []
+
+        # Pull enumerations out of message
+        for enum_descriptor in message_descriptor.enum_type:
+            enum = {}
+            enum["name"] = enum_descriptor.name
+            enum["fields"] = []
+            for value_descriptor in enum_descriptor.value:
+                field = {}
+                field["name"] = value_descriptor.name
+                field["number"] = value_descriptor.number
+                enum["fields"].append(field)
+            enumerations.append(enum)
 
         # Pull simple fields out of the message
         for field_descriptor in message_descriptor.field:
@@ -127,15 +147,18 @@ def generate_code(request, response):
                         known_nested_types[field_descriptor.type_name])
                     field["name"] = field_descriptor.name
                     simple_fields.append(field)
-                elif FieldDescriptor.TYPE_ENUM == field_descriptor.type:
-                    # Enumerated type
-                    sys.stderr.write("TODO enum types")
-                elif FieldDescriptor.TYPE_MESSAGE == field_descriptor.type:
-                    # Nested message
-                    sys.stderr.write("TODO nested messages")
                 else:
+                    sys.stderr.write("TODO nested messages")
                     sys.stderr.write("Unknown type " + repr(field_descriptor))
                     sys.exit(42)
+            elif FieldDescriptor.TYPE_ENUM == field_descriptor.type:
+                field = {}
+                field["space"] = " "
+                field["include"] = ""
+                field["name"] = field_descriptor.name
+                field["type"] = field_descriptor.type_name.replace(".", "::")
+                field["default"] = "static_cast<" + field["type"] + ">(0)"
+                simple_fields.append(field)
             else:
                 # Simple type
                 field = {}
@@ -143,7 +166,25 @@ def generate_code(request, response):
                 field["include"] = ""
                 field["name"] = field_descriptor.name
                 field["type"] = simple_types_to_cpp[field_descriptor.type]
+                default = field_descriptor.default_value
+                if ( FieldDescriptor.TYPE_STRING == field_descriptor.type or
+                        FieldDescriptor.TYPE_BYTES == field_descriptor.type ):
+                    field["default"] = '"' + default + '"'
+                else:
+                    field["default"] = default
                 simple_fields.append(field)
+
+        # generate c++ namespace from protobuf package
+        namespaces = proto_file.package.split(".")
+        full_namespace = "::".join(namespaces)
+        ns_indent = "  " * len(namespaces)
+        ns_begin = ""
+        ns_end = ""
+        for x, ns in enumerate(namespaces):
+            indent = "  " * x
+            ns_begin += "\n{indent}namespace {ns}\n{indent}{{".format(
+                    indent=indent, ns=ns)
+            ns_end = "{indent}}}\n".format(indent=indent) + ns_end
 
         # Create fields/apis with the information gathered
         component_name = message_descriptor.name
@@ -153,13 +194,33 @@ def generate_code(request, response):
         api_declarations = []
         api_definitions = []
         storage_fields = []
+        enum_types = []
         includes = set()
 
-        for field in simple_fields:
-            field_doxygen = ns_indent + r"  /// \brief TODO field doxygen"
-            api_doxygen = ns_indent + r"  /// \brief Get reference to " + field["name"]
+        # Generate code for enum types
+        for enum in enumerations:
+            gen_fields = []
+            for field in enum["fields"]:
+                gen_field = enum_field_template
+                gen_field = gen_field.replace("%%ns_indent%%", ns_indent)
+                gen_field = gen_field.replace("%%field_name%%", field["name"])
+                gen_field = gen_field.replace("%%field_number%%", str(field["number"]))
+                gen_fields.append(gen_field)
+            gen_enum_hh = enum_template
+            gen_enum_hh = gen_enum_hh.replace("%%ns_indent%%", ns_indent)
+            gen_enum_hh = gen_enum_hh.replace("%%enum_name%%", enum["name"])
+            gen_enum_hh = gen_enum_hh.replace("%%enum_fields%%", "".join(gen_fields))
+            enum_types.append(gen_enum_hh)
 
+        # Generate code for simple fields
+        for field in simple_fields:
+            field_doxygen = ns_indent + r"  /// \brief holds " + field["name"]
+            api_doxygen = ns_indent + r"  /// \brief Get reference to " + field["name"]
+            
             storage_field = field_template
+            if field["default"]:
+                storage_field = field_with_default_template
+                storage_field = storage_field.replace("%%field_default%%", field["default"])
             storage_field = storage_field.replace("%%field_doxygen%%", field_doxygen)
             storage_field = storage_field.replace("%%field_type%%", field["type"])
             storage_field = storage_field.replace("%%field_space%%", field["space"])
@@ -189,6 +250,7 @@ def generate_code(request, response):
         api_definitions = "\n".join(api_definitions)
         api_declarations = "\n".join(api_declarations)
         storage_fields = "\n".join(storage_fields)
+        enum_types = "\n".join(enum_types)
         includes = "".join(includes)
         
         # Add .hh file
@@ -202,12 +264,12 @@ def generate_code(request, response):
         hh_content = hh_content.replace("%%ns_indent%%", ns_indent)
         hh_content = hh_content.replace("%%includes%%", includes)
         hh_content = hh_content.replace("%%api_declarations%%", api_declarations)
+        hh_content = hh_content.replace("%%enumerations%%", enum_types)
         hh_file.content = hh_content
 
         # Add .cc file
         cc_file = response.file.add()
         cc_file.name = proto_file.name.split(".")[0] + ".PIMPL-CPP.cc"
-        # TODO template substitutions
         cc_content = cc_template
         cc_content = cc_content.replace("%%component_name%%", component_name)
         cc_content = cc_content.replace("%%full_namespace%%", full_namespace)

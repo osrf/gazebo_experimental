@@ -1,0 +1,3 @@
+%%ns_indent%%  public: enum %%enum_name%% : uint32_t
+%%ns_indent%%  {
+%%enum_fields%%%%ns_indent%%  };

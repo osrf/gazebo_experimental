@@ -22,6 +22,10 @@
 #include <ignition/common/SystemPaths.hh>
 
 #include "gazebo/ecs/Component.hh"
+
+// Generated header files
+#include "DefaultValues.hh"
+#include "EnumType.hh"
 #include "SimpleTypes.hh"
 #include "SubstitutedTypes.hh"
 
@@ -239,6 +243,65 @@ TEST(PIMPLCPP, MathTypesModifyable)
 
   stFactory->DestructAPI(static_cast<void *>(&st));
   stFactory->DestructStorage(static_cast<void *>(storage.get()));
+}
+
+/////////////////////////////////////////////////
+TEST(PIMPLCPP, EnumTypesModifyable)
+{
+  ignition::common::PluginLoader pl;
+  ignition::common::SystemPaths sp;
+  sp.AddPluginPaths("./");
+  std::string pathToLibrary = sp.FindSharedLibrary(
+      "gazeboComponentEnumType");
+  ASSERT_FALSE(pathToLibrary.empty());
+  std::string pluginName = pl.LoadLibrary(pathToLibrary);
+  ASSERT_EQ("::gazebo::components::test::EnumTypeFactory", pluginName);
+
+  auto etFactory = pl.Instantiate<gazebo::ecs::ComponentFactory>(pluginName);
+  std::unique_ptr<char> storage(new char[etFactory->StorageSize()]);
+  etFactory->ConstructStorage(static_cast<void *>(storage.get()));
+
+  gazebo::components::test::EnumType et;
+  etFactory->ConstructAPI(
+      static_cast<void *>(&et), static_cast<void *>(storage.get()));
+
+  // default is always zero
+  EXPECT_EQ(gazebo::components::test::EnumType::TURTLE, et.SomeEnum());
+  et.SomeEnum() = gazebo::components::test::EnumType::COW;
+  EXPECT_EQ(gazebo::components::test::EnumType::COW, et.SomeEnum());
+
+  etFactory->DestructAPI(static_cast<void *>(&et));
+  etFactory->DestructStorage(static_cast<void *>(storage.get()));
+}
+
+/////////////////////////////////////////////////
+TEST(PIMPLCPP, DefaultValues)
+{
+  ignition::common::PluginLoader pl;
+  ignition::common::SystemPaths sp;
+  sp.AddPluginPaths("./");
+  std::string pathToLibrary = sp.FindSharedLibrary(
+      "gazeboComponentDefaultValues");
+  ASSERT_FALSE(pathToLibrary.empty());
+  std::string pluginName = pl.LoadLibrary(pathToLibrary);
+  ASSERT_EQ("::gazebo::components::test::DefaultValuesFactory", pluginName);
+
+  auto dvFactory = pl.Instantiate<gazebo::ecs::ComponentFactory>(pluginName);
+  std::unique_ptr<char> storage(new char[dvFactory->StorageSize()]);
+  dvFactory->ConstructStorage(static_cast<void *>(storage.get()));
+
+  gazebo::components::test::DefaultValues dv;
+  dvFactory->ConstructAPI(
+      static_cast<void *>(&dv), static_cast<void *>(storage.get()));
+
+  // default is always zero
+  EXPECT_EQ(26, dv.SomeInt());
+  EXPECT_EQ(std::string("Hello World!"), dv.SomeString());
+  EXPECT_EQ(std::string("1234abc"), dv.SomeBytes());
+  EXPECT_FALSE(dv.SomeBool());
+
+  dvFactory->DestructAPI(static_cast<void *>(&dv));
+  dvFactory->DestructStorage(static_cast<void *>(storage.get()));
 }
 
 int main(int argc, char **argv)

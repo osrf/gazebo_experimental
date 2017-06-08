@@ -30,15 +30,21 @@
 %%ns_indent%%/// \brief API for interacting with a %%component_name%% component
 %%ns_indent%%class IGNITION_COMMON_VISIBLE %%component_name%% : public ecs::ComponentAPI
 %%ns_indent%%{
-%%ns_indent%%  //////////////////// 
+%%ns_indent%%  ////////////////////
+%%ns_indent%%  // Enumerations used by this component
+%%ns_indent%%  ////////////////////
+
+%%enumerations%%
+
+%%ns_indent%%  ////////////////////
 %%ns_indent%%  // APIs for reading and writing to component
-%%ns_indent%%  //////////////////// 
+%%ns_indent%%  ////////////////////
 
 %%api_declarations%%
 
-%%ns_indent%%  //////////////////// 
+%%ns_indent%%  ////////////////////
 %%ns_indent%%  // Methods for factory
-%%ns_indent%%  //////////////////// 
+%%ns_indent%%  ////////////////////
 
 %%ns_indent%%  /// \brief Constructor for component factory
 %%ns_indent%%  public: %%component_name%%(%%component_name%%Storage *_storage) : dataPtr(_storage)
@@ -54,9 +60,9 @@
 %%ns_indent%%  /// \brief private storage pointer
 %%ns_indent%%  private: %%component_name%%Storage *dataPtr;
 
-%%ns_indent%%  //////////////////// 
+%%ns_indent%%  ////////////////////
 %%ns_indent%%  // Inherited Virtual methods
-%%ns_indent%%  //////////////////// 
+%%ns_indent%%  ////////////////////
 
 %%ns_indent%%  /// \brief destructor
 %%ns_indent%%  public: virtual ~%%component_name%%()

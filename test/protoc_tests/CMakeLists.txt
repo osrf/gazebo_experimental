@@ -1,4 +1,6 @@
 set(protoc_tests
+  DefaultValues.proto
+  EnumType.proto
   SimpleTypes.proto
   SubstitutedTypes.proto
 )
