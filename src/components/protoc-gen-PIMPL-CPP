@@ -106,13 +106,167 @@ with open(file_path + "/templates/EnumField.hh.in", "r") as fin:
     enum_field_template = fin.read()
 
 
+def generate_enum(indent, enum_dict):
+    """Generate a single enum given a dict of values
+    @param indent is whitespace to indent the enum
+    @param enum_dict is a dictionary with info about the num
+    @returns a string with the generted C++ code
+    """
+    # Generate code for individual values in enum
+    gen_fields = []
+    for field in enum_dict["fields"]:
+        gen_field = enum_field_template
+        gen_field = (gen_field.replace("%%ns_indent%%", indent)
+                             .replace("%%field_name%%", field["name"])
+                             .replace("%%field_number%%",
+                                      str(field["number"])))
+        gen_fields.append(gen_field)
+    gen_fields = "".join(gen_fields)
+    # combine value into a larger enum type
+    gen_enum_hh = enum_template
+    gen_enum_hh = (gen_enum_hh.replace("%%ns_indent%%", indent)
+                             .replace("%%enum_name%%", enum_dict["name"])
+                             .replace("%%enum_fields%%", gen_fields))
+    return gen_enum_hh
+
+
+def generate_namespace(package):
+    """Generates odd bits of C++ code based on a period delimited string
+    @returns tuple
+        ns_indent (whitespace to indent code)
+        full_namespace (c++ namespace using ::)
+        ns_begin (start of namespace block)
+        ns_end (end of namespace block)
+    """
+    namespaces = package.split(".")
+    full_namespace = "::".join(namespaces)
+    ns_indent = "  " * len(namespaces)
+    ns_begin = ""
+    ns_end = ""
+    for x, ns in enumerate(namespaces):
+        indent = "  " * x
+        ns_begin += "\n{indent}namespace {ns}\n{indent}{{".format(
+                indent=indent, ns=ns)
+        ns_end = "{indent}}}\n".format(indent=indent) + ns_end
+    return (ns_indent, full_namespace, ns_begin, ns_end)
+
+
+def generate_api_header(package, component_name, simple_fields, enumerations):
+    """Generates header for API
+    @param package a dot delimited string
+    @param component_name string name of component
+    @param simple_fields dict with info about fields in message
+    @enumerations dict with info about inline enumerations
+    @returns string with header file
+    """
+    # generate c++ namespace from protobuf package
+    (ns_indent, full_namespace,
+            ns_begin, ns_end) = generate_namespace(package)
+
+    api_declarations = []
+    enum_types = []
+    includes = set()
+
+    # Generate code for enum types
+    for enum in enumerations:
+        enum_types.append(generate_enum(ns_indent, enum))
+
+    # Generate code for simple fields
+    for field in simple_fields:
+        api_doxygen = ns_indent + r"  /// \brief Get reference to " + field["name"]
+
+        declaration = declaration_template
+        declaration = declaration.replace("%%field_type%%", field["type"])
+        declaration = declaration.replace("%%field_name%%", field["name"])
+        declaration = declaration.replace("%%ns_indent%%", ns_indent)
+        declaration = declaration.replace("%%api_doxygen%%", api_doxygen)
+        api_declarations.append(declaration)
+
+        if len(field["include"]):
+            include = include_template
+            include = include.replace("%%include%%", field["include"])
+            includes.add(include)
+
+    api_declarations = "\n".join(api_declarations)
+    enum_types = "\n".join(enum_types)
+    includes = "".join(includes)
+
+    # Put all content together
+    hh_content = hh_template
+    hh_content = hh_content.replace("%%component_name%%", component_name)
+    hh_content = hh_content.replace("%%full_namespace%%", full_namespace)
+    hh_content = hh_content.replace("%%ns_begin%%", ns_begin)
+    hh_content = hh_content.replace("%%ns_end%%", ns_end)
+    hh_content = hh_content.replace("%%ns_indent%%", ns_indent)
+    hh_content = hh_content.replace("%%includes%%", includes)
+    hh_content = hh_content.replace("%%api_declarations%%", api_declarations)
+    hh_content = hh_content.replace("%%enumerations%%", enum_types)
+    return hh_content
+
+
+def generate_storage_header(package, component_name, simple_fields):
+    """Generates header for storage class
+    @param package a dot delimited string
+    @param component_name string name of component
+    @param simple_fields dict with info about fields in message
+    @returns string with header file
+    """
+    # generate c++ namespace from protobuf package
+    (ns_indent, full_namespace,
+            ns_begin, ns_end) = generate_namespace(package)
+    factory_doxygen = (ns_indent
+            + r"/// \brief Generated Factory class for component "
+            + component_name)
+    storage_doxygen = (ns_indent
+            + r"/// \brief Generated storage class for component "
+            + component_name)
+
+    api_definitions = []
+    storage_fields = []
+    for field in simple_fields:
+        field_doxygen = ns_indent + r"  /// \brief holds " + field["name"]
+        api_doxygen = ns_indent + r"  /// \brief Get reference to " + field["name"]
+        
+        storage_field = field_template
+        if field["default"]:
+            storage_field = field_with_default_template
+            storage_field = storage_field.replace("%%field_default%%", field["default"])
+        storage_field = storage_field.replace("%%field_doxygen%%", field_doxygen)
+        storage_field = storage_field.replace("%%field_type%%", field["type"])
+        storage_field = storage_field.replace("%%field_space%%", field["space"])
+        storage_field = storage_field.replace("%%field_name%%", field["name"])
+        storage_field = storage_field.replace("%%ns_indent%%", ns_indent)
+        storage_fields.append(storage_field)
+
+        definition = definition_template
+        definition = definition.replace("%%field_type%%", field["type"])
+        definition = definition.replace("%%field_name%%", field["name"])
+        definition = definition.replace("%%ns_indent%%", ns_indent)
+        definition = definition.replace("%%component_name%%", component_name)
+        api_definitions.append(definition)
+
+    api_definitions = "\n".join(api_definitions)
+    storage_fields = "\n".join(storage_fields)
+
+    cc_content = cc_template
+    cc_content = cc_content.replace("%%component_name%%", component_name)
+    cc_content = cc_content.replace("%%full_namespace%%", full_namespace)
+    cc_content = cc_content.replace("%%ns_begin%%", ns_begin)
+    cc_content = cc_content.replace("%%ns_end%%", ns_end)
+    cc_content = cc_content.replace("%%ns_indent%%", ns_indent)
+    cc_content = cc_content.replace("%%factory_doxygen%%", factory_doxygen)
+    cc_content = cc_content.replace("%%storage_doxygen%%", storage_doxygen)
+    cc_content = cc_content.replace("%%storage_fields%%", storage_fields)
+    cc_content = cc_content.replace("%%api_definitions%%", api_definitions)
+    return cc_content
+
+
 def generate_code(request, response):
     """Given a CodeGeneratorRequest and CodeGeneratorResponse,
     generate C++ code that fulfills the Factory/API/Storage separation
     required of ECS components"""
     # Loop through included protobuf fields
     for proto_file in request.proto_file:
-
         # Support only one top-level message per file
         if len(proto_file.message_type) != 1:
             sys.stderr.write("Must be exactly one top-level message per file")
@@ -124,6 +278,11 @@ def generate_code(request, response):
         nested_types = []
         enumerations = []
         simple_fields = []
+
+        # Pull nested messages out of message
+        for nested_descriptor in message_descriptor.nested_type:
+            # TODO
+            sys.stderr.write("[" + nested_descriptor.name + "]\n")
 
         # Pull enumerations out of message
         for enum_descriptor in message_descriptor.enum_type:
@@ -174,113 +333,19 @@ def generate_code(request, response):
                     field["default"] = default
                 simple_fields.append(field)
 
-        # generate c++ namespace from protobuf package
-        namespaces = proto_file.package.split(".")
-        full_namespace = "::".join(namespaces)
-        ns_indent = "  " * len(namespaces)
-        ns_begin = ""
-        ns_end = ""
-        for x, ns in enumerate(namespaces):
-            indent = "  " * x
-            ns_begin += "\n{indent}namespace {ns}\n{indent}{{".format(
-                    indent=indent, ns=ns)
-            ns_end = "{indent}}}\n".format(indent=indent) + ns_end
-
         # Create fields/apis with the information gathered
         component_name = message_descriptor.name
-        factory_doxygen = ns_indent + r"/// \brief Generated Factory class for component " + component_name
-        storage_doxygen = ns_indent + r"/// \brief Generated storage class for component " + component_name
 
-        api_declarations = []
-        api_definitions = []
-        storage_fields = []
-        enum_types = []
-        includes = set()
-
-        # Generate code for enum types
-        for enum in enumerations:
-            gen_fields = []
-            for field in enum["fields"]:
-                gen_field = enum_field_template
-                gen_field = gen_field.replace("%%ns_indent%%", ns_indent)
-                gen_field = gen_field.replace("%%field_name%%", field["name"])
-                gen_field = gen_field.replace("%%field_number%%", str(field["number"]))
-                gen_fields.append(gen_field)
-            gen_enum_hh = enum_template
-            gen_enum_hh = gen_enum_hh.replace("%%ns_indent%%", ns_indent)
-            gen_enum_hh = gen_enum_hh.replace("%%enum_name%%", enum["name"])
-            gen_enum_hh = gen_enum_hh.replace("%%enum_fields%%", "".join(gen_fields))
-            enum_types.append(gen_enum_hh)
-
-        # Generate code for simple fields
-        for field in simple_fields:
-            field_doxygen = ns_indent + r"  /// \brief holds " + field["name"]
-            api_doxygen = ns_indent + r"  /// \brief Get reference to " + field["name"]
-            
-            storage_field = field_template
-            if field["default"]:
-                storage_field = field_with_default_template
-                storage_field = storage_field.replace("%%field_default%%", field["default"])
-            storage_field = storage_field.replace("%%field_doxygen%%", field_doxygen)
-            storage_field = storage_field.replace("%%field_type%%", field["type"])
-            storage_field = storage_field.replace("%%field_space%%", field["space"])
-            storage_field = storage_field.replace("%%field_name%%", field["name"])
-            storage_field = storage_field.replace("%%ns_indent%%", ns_indent)
-            storage_fields.append(storage_field)
-
-            definition = definition_template
-            definition = definition.replace("%%field_type%%", field["type"])
-            definition = definition.replace("%%field_name%%", field["name"])
-            definition = definition.replace("%%ns_indent%%", ns_indent)
-            definition = definition.replace("%%component_name%%", component_name)
-            api_definitions.append(definition)
-
-            declaration = declaration_template
-            declaration = declaration.replace("%%field_type%%", field["type"])
-            declaration = declaration.replace("%%field_name%%", field["name"])
-            declaration = declaration.replace("%%ns_indent%%", ns_indent)
-            declaration = declaration.replace("%%api_doxygen%%", api_doxygen)
-            api_declarations.append(declaration)
-
-            if len(field["include"]):
-                include = include_template
-                include = include.replace("%%include%%", field["include"])
-                includes.add(include)
-
-        api_definitions = "\n".join(api_definitions)
-        api_declarations = "\n".join(api_declarations)
-        storage_fields = "\n".join(storage_fields)
-        enum_types = "\n".join(enum_types)
-        includes = "".join(includes)
-        
-        # Add .hh file
         hh_file = response.file.add()
         hh_file.name = proto_file.name.split(".")[0] + ".PIMPL-CPP.hh"
-        hh_content = hh_template
-        hh_content = hh_content.replace("%%component_name%%", component_name)
-        hh_content = hh_content.replace("%%full_namespace%%", full_namespace)
-        hh_content = hh_content.replace("%%ns_begin%%", ns_begin)
-        hh_content = hh_content.replace("%%ns_end%%", ns_end)
-        hh_content = hh_content.replace("%%ns_indent%%", ns_indent)
-        hh_content = hh_content.replace("%%includes%%", includes)
-        hh_content = hh_content.replace("%%api_declarations%%", api_declarations)
-        hh_content = hh_content.replace("%%enumerations%%", enum_types)
-        hh_file.content = hh_content
+        hh_file.content = generate_api_header(proto_file.package,
+                component_name, simple_fields, enumerations)
 
         # Add .cc file
         cc_file = response.file.add()
         cc_file.name = proto_file.name.split(".")[0] + ".PIMPL-CPP.cc"
-        cc_content = cc_template
-        cc_content = cc_content.replace("%%component_name%%", component_name)
-        cc_content = cc_content.replace("%%full_namespace%%", full_namespace)
-        cc_content = cc_content.replace("%%ns_begin%%", ns_begin)
-        cc_content = cc_content.replace("%%ns_end%%", ns_end)
-        cc_content = cc_content.replace("%%ns_indent%%", ns_indent)
-        cc_content = cc_content.replace("%%factory_doxygen%%", factory_doxygen)
-        cc_content = cc_content.replace("%%storage_doxygen%%", storage_doxygen)
-        cc_content = cc_content.replace("%%storage_fields%%", storage_fields)
-        cc_content = cc_content.replace("%%api_definitions%%", api_definitions)
-        cc_file.content = cc_content
+        cc_file.content = generate_storage_header(proto_file.package,
+                component_name, simple_fields)
 
 
 if __name__ == '__main__':
