@@ -261,6 +261,85 @@ def generate_storage_header(package, component_name, simple_fields):
     return cc_content
 
 
+def generate_message_headers(package, message_descriptor):
+    """Given a MessageDescriptor, get required info and generate two headers
+    for this message
+    @param message_descriptor MessageDescriptor
+    @returns tuple
+        api_header string with C++ code for api class
+        storage_header string with c++ code for storage class
+    """
+    # TODO nested types
+    nested_types = []
+    enumerations = []
+    simple_fields = []
+
+    # Pull nested messages out of message
+    for nested_descriptor in message_descriptor.nested_type:
+        # TODO
+        sys.stderr.write("[" + nested_descriptor.name + "]\n")
+
+    # Pull enumerations out of message
+    for enum_descriptor in message_descriptor.enum_type:
+        enum = {}
+        enum["name"] = enum_descriptor.name
+        enum["fields"] = []
+        for value_descriptor in enum_descriptor.value:
+            field = {}
+            field["name"] = value_descriptor.name
+            field["number"] = value_descriptor.number
+            enum["fields"].append(field)
+        enumerations.append(enum)
+
+    # Pull simple fields out of the message
+    for field_descriptor in message_descriptor.field:
+        if field_descriptor.type == FieldDescriptor.TYPE_MESSAGE:
+            # Complex/Nested type
+            if field_descriptor.type_name in known_nested_types:
+                # Swap complex type for a simple type
+                field = copy.deepcopy(
+                    known_nested_types[field_descriptor.type_name])
+                field["name"] = field_descriptor.name
+                simple_fields.append(field)
+            else:
+                sys.stderr.write("TODO nested messages")
+                sys.stderr.write("Unknown type " + repr(field_descriptor))
+                sys.exit(42)
+        elif FieldDescriptor.TYPE_ENUM == field_descriptor.type:
+            field = {}
+            field["space"] = " "
+            field["include"] = ""
+            field["name"] = field_descriptor.name
+            field["type"] = field_descriptor.type_name.replace(".", "::")
+            field["default"] = "static_cast<" + field["type"] + ">(0)"
+            simple_fields.append(field)
+        else:
+            # Simple type
+            field = {}
+            field["space"] = " "
+            field["include"] = ""
+            field["name"] = field_descriptor.name
+            field["type"] = simple_types_to_cpp[field_descriptor.type]
+            default = field_descriptor.default_value
+            if ( FieldDescriptor.TYPE_STRING == field_descriptor.type or
+                    FieldDescriptor.TYPE_BYTES == field_descriptor.type ):
+                field["default"] = '"' + default + '"'
+            else:
+                field["default"] = default
+            simple_fields.append(field)
+
+    # Generate code with the information gathered
+    component_name = message_descriptor.name
+
+    api_header = generate_api_header(package,
+            component_name, simple_fields, enumerations)
+
+    storage_header = generate_storage_header(package,
+            component_name, simple_fields)
+
+    return api_header, storage_header
+
+
 def generate_code(request, response):
     """Given a CodeGeneratorRequest and CodeGeneratorResponse,
     generate C++ code that fulfills the Factory/API/Storage separation
@@ -274,78 +353,18 @@ def generate_code(request, response):
 
         message_descriptor = proto_file.message_type[0]
 
-        # TODO nested types
-        nested_types = []
-        enumerations = []
-        simple_fields = []
-
-        # Pull nested messages out of message
-        for nested_descriptor in message_descriptor.nested_type:
-            # TODO
-            sys.stderr.write("[" + nested_descriptor.name + "]\n")
-
-        # Pull enumerations out of message
-        for enum_descriptor in message_descriptor.enum_type:
-            enum = {}
-            enum["name"] = enum_descriptor.name
-            enum["fields"] = []
-            for value_descriptor in enum_descriptor.value:
-                field = {}
-                field["name"] = value_descriptor.name
-                field["number"] = value_descriptor.number
-                enum["fields"].append(field)
-            enumerations.append(enum)
-
-        # Pull simple fields out of the message
-        for field_descriptor in message_descriptor.field:
-            if field_descriptor.type == FieldDescriptor.TYPE_MESSAGE:
-                # Complex/Nested type
-                if field_descriptor.type_name in known_nested_types:
-                    # Swap complex type for a simple type
-                    field = copy.deepcopy(
-                        known_nested_types[field_descriptor.type_name])
-                    field["name"] = field_descriptor.name
-                    simple_fields.append(field)
-                else:
-                    sys.stderr.write("TODO nested messages")
-                    sys.stderr.write("Unknown type " + repr(field_descriptor))
-                    sys.exit(42)
-            elif FieldDescriptor.TYPE_ENUM == field_descriptor.type:
-                field = {}
-                field["space"] = " "
-                field["include"] = ""
-                field["name"] = field_descriptor.name
-                field["type"] = field_descriptor.type_name.replace(".", "::")
-                field["default"] = "static_cast<" + field["type"] + ">(0)"
-                simple_fields.append(field)
-            else:
-                # Simple type
-                field = {}
-                field["space"] = " "
-                field["include"] = ""
-                field["name"] = field_descriptor.name
-                field["type"] = simple_types_to_cpp[field_descriptor.type]
-                default = field_descriptor.default_value
-                if ( FieldDescriptor.TYPE_STRING == field_descriptor.type or
-                        FieldDescriptor.TYPE_BYTES == field_descriptor.type ):
-                    field["default"] = '"' + default + '"'
-                else:
-                    field["default"] = default
-                simple_fields.append(field)
-
-        # Create fields/apis with the information gathered
-        component_name = message_descriptor.name
+        api_header, storage_header = generate_message_headers(
+                proto_file.package, message_descriptor)
 
         hh_file = response.file.add()
         hh_file.name = proto_file.name.split(".")[0] + ".PIMPL-CPP.hh"
-        hh_file.content = generate_api_header(proto_file.package,
-                component_name, simple_fields, enumerations)
+        hh_file.content = api_header
 
         # Add .cc file
         cc_file = response.file.add()
         cc_file.name = proto_file.name.split(".")[0] + ".PIMPL-CPP.cc"
-        cc_file.content = generate_storage_header(proto_file.package,
-                component_name, simple_fields)
+        cc_file.content = storage_header
+
 
 
 if __name__ == '__main__':
