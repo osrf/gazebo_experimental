@@ -173,13 +173,15 @@ def generate_api_header(package, component_name, simple_fields, enumerations):
 
     # Generate code for simple fields
     for field in simple_fields:
-        api_doxygen = ns_indent + r"  /// \brief Get reference to " + field["name"]
+        api_doxygen = (ns_indent
+                + r"  /// \brief Get reference to "
+                + field["name"])
 
         declaration = declaration_template
-        declaration = declaration.replace("%%field_type%%", field["type"])
-        declaration = declaration.replace("%%field_name%%", field["name"])
-        declaration = declaration.replace("%%ns_indent%%", ns_indent)
-        declaration = declaration.replace("%%api_doxygen%%", api_doxygen)
+        declaration = (declaration.replace("%%field_type%%", field["type"])
+                                  .replace("%%field_name%%", field["name"])
+                                  .replace("%%ns_indent%%", ns_indent)
+                                  .replace("%%api_doxygen%%", api_doxygen))
         api_declarations.append(declaration)
 
         if len(field["include"]):
@@ -193,14 +195,14 @@ def generate_api_header(package, component_name, simple_fields, enumerations):
 
     # Put all content together
     hh_content = hh_template
-    hh_content = hh_content.replace("%%component_name%%", component_name)
-    hh_content = hh_content.replace("%%full_namespace%%", full_namespace)
-    hh_content = hh_content.replace("%%ns_begin%%", ns_begin)
-    hh_content = hh_content.replace("%%ns_end%%", ns_end)
-    hh_content = hh_content.replace("%%ns_indent%%", ns_indent)
-    hh_content = hh_content.replace("%%includes%%", includes)
-    hh_content = hh_content.replace("%%api_declarations%%", api_declarations)
-    hh_content = hh_content.replace("%%enumerations%%", enum_types)
+    hh_content = (hh_content.replace("%%component_name%%", component_name)
+                            .replace("%%full_namespace%%", full_namespace)
+                            .replace("%%ns_begin%%", ns_begin)
+                            .replace("%%ns_end%%", ns_end)
+                            .replace("%%ns_indent%%", ns_indent)
+                            .replace("%%includes%%", includes)
+                            .replace("%%api_declarations%%", api_declarations)
+                            .replace("%%enumerations%%", enum_types))
     return hh_content
 
 
@@ -231,33 +233,33 @@ def generate_storage_header(package, component_name, simple_fields):
         if field["default"]:
             storage_field = field_with_default_template
             storage_field = storage_field.replace("%%field_default%%", field["default"])
-        storage_field = storage_field.replace("%%field_doxygen%%", field_doxygen)
-        storage_field = storage_field.replace("%%field_type%%", field["type"])
-        storage_field = storage_field.replace("%%field_space%%", field["space"])
-        storage_field = storage_field.replace("%%field_name%%", field["name"])
-        storage_field = storage_field.replace("%%ns_indent%%", ns_indent)
+        storage_field = (storage_field.replace("%%field_doxygen%%", field_doxygen)
+                                      .replace("%%field_type%%", field["type"])
+                                      .replace("%%field_space%%", field["space"])
+                                      .replace("%%field_name%%", field["name"])
+                                      .replace("%%ns_indent%%", ns_indent))
         storage_fields.append(storage_field)
 
         definition = definition_template
-        definition = definition.replace("%%field_type%%", field["type"])
-        definition = definition.replace("%%field_name%%", field["name"])
-        definition = definition.replace("%%ns_indent%%", ns_indent)
-        definition = definition.replace("%%component_name%%", component_name)
+        definition = (definition.replace("%%field_type%%", field["type"])
+                                .replace("%%field_name%%", field["name"])
+                                .replace("%%ns_indent%%", ns_indent)
+                                .replace("%%component_name%%", component_name))
         api_definitions.append(definition)
 
     api_definitions = "\n".join(api_definitions)
     storage_fields = "\n".join(storage_fields)
 
     cc_content = cc_template
-    cc_content = cc_content.replace("%%component_name%%", component_name)
-    cc_content = cc_content.replace("%%full_namespace%%", full_namespace)
-    cc_content = cc_content.replace("%%ns_begin%%", ns_begin)
-    cc_content = cc_content.replace("%%ns_end%%", ns_end)
-    cc_content = cc_content.replace("%%ns_indent%%", ns_indent)
-    cc_content = cc_content.replace("%%factory_doxygen%%", factory_doxygen)
-    cc_content = cc_content.replace("%%storage_doxygen%%", storage_doxygen)
-    cc_content = cc_content.replace("%%storage_fields%%", storage_fields)
-    cc_content = cc_content.replace("%%api_definitions%%", api_definitions)
+    cc_content = (cc_content.replace("%%component_name%%", component_name)
+                            .replace("%%full_namespace%%", full_namespace)
+                            .replace("%%ns_begin%%", ns_begin)
+                            .replace("%%ns_end%%", ns_end)
+                            .replace("%%ns_indent%%", ns_indent)
+                            .replace("%%factory_doxygen%%", factory_doxygen)
+                            .replace("%%storage_doxygen%%", storage_doxygen)
+                            .replace("%%storage_fields%%", storage_fields)
+                            .replace("%%api_definitions%%", api_definitions))
     return cc_content
 
 
