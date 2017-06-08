@@ -116,6 +116,62 @@ TEST(PIMPLCPP, SimpleHaveRightTypes)
 }
 
 /////////////////////////////////////////////////
+TEST(PIMPLCPP, SimpleTypesModifyable)
+{
+  ignition::common::PluginLoader pl;
+  ignition::common::SystemPaths sp;
+  sp.AddPluginPaths("./");
+  std::string pathToLibrary = sp.FindSharedLibrary(
+      "gazeboComponentSimpleTypes");
+  ASSERT_FALSE(pathToLibrary.empty());
+  std::string pluginName = pl.LoadLibrary(pathToLibrary);
+  ASSERT_EQ("::gazebo::components::test::SimpleTypesFactory", pluginName);
+
+  auto stFactory = pl.Instantiate<gazebo::ecs::ComponentFactory>(pluginName);
+  std::unique_ptr<char> storage(new char[stFactory->StorageSize()]);
+  stFactory->ConstructStorage(static_cast<void *>(storage.get()));
+
+  gazebo::components::test::SimpleTypes st;
+  stFactory->ConstructAPI(
+      static_cast<void *>(&st), static_cast<void *>(storage.get()));
+
+  st.DoubleField() = 5.0;
+  st.FloatField() = 4.0f;
+  st.Int32Field() = -42;
+  st.Int64Field() = -84;
+  st.Uint32Field() = 42;
+  st.Uint64Field() = 84;
+  st.Sint32Field() = -123;
+  st.Sint64Field() = -456;
+  st.Fixed32Field() = 789;
+  st.Fixed64Field() = 987;
+  st.Sfixed32Field() = -543;
+  st.Sfixed64Field() = -643;
+  st.BoolField() = true;
+  st.StringField() = "Hello world";
+  st.BytesField() = "100001111011";
+
+  EXPECT_EQ(5.0, st.DoubleField());
+  EXPECT_EQ(4.0f, st.FloatField());
+  EXPECT_EQ(-42, st.Int32Field());
+  EXPECT_EQ(-84, st.Int64Field());
+  EXPECT_EQ(42, st.Uint32Field());
+  EXPECT_EQ(84, st.Uint64Field());
+  EXPECT_EQ(-123, st.Sint32Field());
+  EXPECT_EQ(-456, st.Sint64Field());
+  EXPECT_EQ(789, st.Fixed32Field());
+  EXPECT_EQ(987, st.Fixed64Field());
+  EXPECT_EQ(-543, st.Sfixed32Field());
+  EXPECT_EQ(-643, st.Sfixed64Field());
+  EXPECT_EQ(true, st.BoolField());
+  EXPECT_EQ(std::string("Hello world"), st.StringField());
+  EXPECT_EQ(std::string("100001111011"), st.BytesField());
+
+  stFactory->DestructAPI(static_cast<void *>(&st));
+  stFactory->DestructStorage(static_cast<void *>(storage.get()));
+}
+
+/////////////////////////////////////////////////
 TEST(PIMPLCPP, MathTypesAreSubstituted)
 {
   ignition::common::PluginLoader pl;
@@ -146,6 +202,40 @@ TEST(PIMPLCPP, MathTypesAreSubstituted)
   EXPECT_TRUE(TypesAreSame(VectorField, uutVectorField));
   EXPECT_TRUE(TypesAreSame(QuaternionField, uutQuaternionField));
   EXPECT_TRUE(TypesAreSame(PoseField, uutPoseField));
+
+  stFactory->DestructAPI(static_cast<void *>(&st));
+  stFactory->DestructStorage(static_cast<void *>(storage.get()));
+}
+
+/////////////////////////////////////////////////
+TEST(PIMPLCPP, MathTypesModifyable)
+{
+  ignition::common::PluginLoader pl;
+  ignition::common::SystemPaths sp;
+  sp.AddPluginPaths("./");
+  std::string pathToLibrary = sp.FindSharedLibrary(
+      "gazeboComponentSubstitutedTypes");
+  ASSERT_FALSE(pathToLibrary.empty());
+  std::string pluginName = pl.LoadLibrary(pathToLibrary);
+  ASSERT_EQ("::gazebo::components::test::SubstitutedTypesFactory", pluginName);
+
+  auto stFactory = pl.Instantiate<gazebo::ecs::ComponentFactory>(pluginName);
+  std::unique_ptr<char> storage(new char[stFactory->StorageSize()]);
+  stFactory->ConstructStorage(static_cast<void *>(storage.get()));
+
+  gazebo::components::test::SubstitutedTypes st;
+  stFactory->ConstructAPI(
+      static_cast<void *>(&st), static_cast<void *>(storage.get()));
+
+  st.Vector().X(5);
+  st.Quaternion().Y(6);
+  st.Pose().Pos().Z(7);
+  st.Pose().Rot().W(8);
+
+  EXPECT_DOUBLE_EQ(5, st.Vector().X());
+  EXPECT_DOUBLE_EQ(6, st.Quaternion().Y());
+  EXPECT_DOUBLE_EQ(7, st.Pose().Pos().Z());
+  EXPECT_DOUBLE_EQ(8, st.Pose().Rot().W());
 
   stFactory->DestructAPI(static_cast<void *>(&st));
   stFactory->DestructStorage(static_cast<void *>(storage.get()));
