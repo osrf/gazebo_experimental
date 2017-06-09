@@ -1,8 +1,8 @@
 %%ns_indent%%/// \brief forward delcaration for storage
-%%ns_indent%%class %%class_name%%Storage;
+%%ns_indent%%public: class %%class_name%%Storage;
 
 %%ns_indent%%/// \brief API for interacting with a %%class_name%% component
-%%ns_indent%%class IGNITION_COMMON_VISIBLE %%class_name%%
+%%ns_indent%%public: class IGNITION_COMMON_VISIBLE %%class_name%%
 %%ns_indent%%{
 %%ns_indent%%  ////////////////////
 %%ns_indent%%  // Enumerations used by this component
@@ -39,4 +39,3 @@
 %%ns_indent%%  /// \brief private storage pointer
 %%ns_indent%%  private: %%class_name%%Storage *dataPtr;
 %%ns_indent%%};
-

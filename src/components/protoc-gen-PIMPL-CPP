@@ -101,6 +101,9 @@ storage_hh_template = None
 with open(file_path + "/templates/Storage.hh.in", "r") as fin:
     storage_hh_template = fin.read()
 
+storage_decl_template = None
+with open(file_path + "/templates/storage_decl.hh.in", "r") as fin:
+    storage_decl_template = fin.read()
 
 declaration_template = None
 with open(file_path + "/templates/ApiDeclaration.hh.in", "r") as fin:
@@ -577,10 +580,6 @@ def generate_message_files(dependency, package, message_descriptor):
 
     nested_types = {}
     info = gather_message_info(package, message_descriptor, nested_types)
-    sys.stderr.write(repr(info))
-    sys.stderr.write("\n")
-    sys.stderr.write(repr(nested_types))
-    sys.stderr.write("\n"*5)
 
     dependency = [dep for dep in dependency if dep not in ignore_dependencies]
 

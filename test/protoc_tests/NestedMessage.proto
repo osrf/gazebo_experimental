@@ -36,9 +36,10 @@ message NestedMessage
       optional string DeepString = 2;
     }
     optional InlineNestedType SecondLevelMessage = 1;
+    optional DoubleInlineNestedType ThirdLeveLMessage = 2;
   }
 
   optional DefaultValues ImportedNested = 1;
-  // optional InlineNestedType InlineNested = 2;
-  // optional DoubleNestedType DoubleNested = 3;
+  optional InlineNestedType InlineNested = 2;
+  optional DoubleNestedType DoubleNested = 3;
 }
