@@ -11,13 +11,15 @@ set(component_files
 
 set(generator_files
   protoc-gen-PIMPL-CPP
+  templates/Api.cc.in
+  templates/Api.hh.in
   templates/ApiDeclaration.hh.in
   templates/ApiDefinition.cc.in
-  templates/Component.cc.in
-  templates/Component.hh.in
   templates/Enum.hh.in
   templates/EnumField.hh.in
+  templates/Factory.cc.in
   templates/Include.hh.in
+  templates/Storage.hh.in
   templates/StorageField.cc.in
   templates/StorageFieldWithDefault.cc.in
 )
@@ -36,12 +38,27 @@ add_custom_target(generator_files_target ALL DEPENDS ${generator_files} VERBATIM
 # Generate code for all of the protobuf files
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/include/gazebo/components)
 foreach(comp_file ${component_files})
-  GAZEBO_GENERATE_COMPONENT(${comp_file}
-    "${CMAKE_BINARY_DIR}/include/gazebo/components/")
+  GAZEBO_GENERATE_COMPONENT(${comp_file})
 
-  # make libs get regenerated when generator files change
-  get_filename_component(no_ext_name ${comp_file} NAME_WE)
-  add_dependencies(gazeboComponent${no_ext_name} generator_files_target)
+  add_dependencies(${GAZEBO_GENERATE_COMPONENT_LIBRARY} generator_files_target)
+
+  foreach(generated_header ${GAZEBO_GENERATE_COMPONENT_HEADERS})
+    # Copy headers to build folder
+    get_filename_component(hh_name ${generated_header} NAME)
+    set (hh_renamed ${CMAKE_BINARY_DIR}/include/gazebo/components/${hh_name})
+    add_custom_command(OUTPUT ${hh_renamed}
+      COMMAND ${CMAKE_COMMAND} -E copy ${generated_header} ${hh_renamed}
+      DEPENDS ${generated_header} generator_files_target
+      COMMENT Copying ${generated_header} to ${hh_renamed}
+      )
+    add_custom_target(hdr_${comp_name}_${hh_name} ALL DEPENDS ${hh_renamed})
+    # Install header
+    install(TARGETS ${hdr_${comp_name}_${hh_name}} DESTINATION ${INCLUDE_INSTALL_DIR}/gazebo/components/)
+  endforeach()
+
+  # Install library
+  install(TARGETS ${hdr_${comp_name}} DESTINATION ${INCLUDE_INSTALL_DIR}/gazebo/components/)
+  gz_install_library(${GAZEBO_GENERATE_COMPONENT_LIBRARY})
 endforeach()
 
 # install macro and protoc plugin so others can use it

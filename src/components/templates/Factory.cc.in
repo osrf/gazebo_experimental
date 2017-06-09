@@ -18,15 +18,10 @@
 #include <ignition/common/PluginMacros.hh>
 #include <gazebo/ecs/Component.hh>
 
-#include "%%component_name%%.PIMPL-CPP.hh"
+#include "%%component_name%%.api.hh"
+#include "%%component_name%%.storage.hh"
 
 %%ns_begin%%
-%%storage_doxygen%%
-%%ns_indent%%class %%component_name%%Storage
-%%ns_indent%%{
-%%storage_fields%%
-%%ns_indent%%};
-
 %%factory_doxygen%%
 %%ns_indent%%class IGNITION_COMMON_VISIBLE %%component_name%%Factory :
 %%ns_indent%%  public ::gazebo::ecs::ComponentFactoryHelper<%%component_name%%, %%component_name%%Storage>
@@ -40,31 +35,3 @@
 
 IGN_COMMON_REGISTER_SINGLE_PLUGIN(%%full_namespace%%::%%component_name%%Factory,
     gazebo::ecs::ComponentFactory)
-
-namespace generated_ns = %%full_namespace%%;
-using namespace generated_ns;
-
-
-//////////////////////////////////////////////////
-static gazebo::ecs::ComponentType g%%component_name%%ComponentType = gazebo::ecs::NO_COMPONENT;
-
-//////////////////////////////////////////////////
-const char *%%component_name%%::ComponentName() const
-{
-  return "%%full_namespace%%::%%component_name%%";
-}
-
-//////////////////////////////////////////////////
-gazebo::ecs::ComponentType %%component_name%%::ComponentType() const
-{
-  return g%%component_name%%ComponentType;
-}
-
-void %%component_name%%::ComponentType(gazebo::ecs::ComponentType _type)
-{
-  // allow type assignment once per run
-  if (g%%component_name%%ComponentType == gazebo::ecs::NO_COMPONENT)
-    g%%component_name%%ComponentType = _type;
-}
-
-%%api_definitions%%

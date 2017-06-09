@@ -24,10 +24,10 @@
 #include "gazebo/ecs/Component.hh"
 
 // Generated header files
-#include "DefaultValues.hh"
-#include "EnumType.hh"
-#include "SimpleTypes.hh"
-#include "SubstitutedTypes.hh"
+#include "DefaultValues.api.hh"
+#include "EnumType.api.hh"
+#include "SimpleTypes.api.hh"
+#include "SubstitutedTypes.api.hh"
 
 
 // Type comparison

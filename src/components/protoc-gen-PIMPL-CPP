@@ -18,6 +18,7 @@ except ImportError:
         """)
     raise
 
+
 # nested types that can be swapped for simple types
 known_nested_types = {
         ".gazebo.components.Vector3d": {
@@ -61,14 +62,24 @@ simple_types_to_cpp = {
         }
 
 
-cc_template = None
-with open(file_path + "/templates/Component.cc.in", "r") as fin:
-    cc_template = fin.read()
+factory_cc_template = None
+with open(file_path + "/templates/Factory.cc.in", "r") as fin:
+    factory_cc_template = fin.read()
 
 
-hh_template = None
-with open(file_path + "/templates/Component.hh.in", "r") as fin:
-    hh_template = fin.read()
+api_hh_template = None
+with open(file_path + "/templates/Api.hh.in", "r") as fin:
+    api_hh_template = fin.read()
+
+
+api_cc_template = None
+with open(file_path + "/templates/Api.cc.in", "r") as fin:
+    api_cc_template = fin.read()
+
+
+storage_hh_template = None
+with open(file_path + "/templates/Storage.hh.in", "r") as fin:
+    storage_hh_template = fin.read()
 
 
 declaration_template = None
@@ -151,18 +162,21 @@ def generate_namespace(package):
     return (ns_indent, full_namespace, ns_begin, ns_end)
 
 
-def generate_api_header(package, component_name, simple_fields, enumerations):
-    """Generates header for API
+def generate_api_files(package, component_name, simple_fields, enumerations):
+    """Generates header and source file for API
     @param package a dot delimited string
     @param component_name string name of component
     @param simple_fields dict with info about fields in message
     @enumerations dict with info about inline enumerations
-    @returns string with header file
+    @returns tuple
+        string with header file
+        string with source file
     """
     # generate c++ namespace from protobuf package
     (ns_indent, full_namespace,
             ns_begin, ns_end) = generate_namespace(package)
 
+    api_definitions = []
     api_declarations = []
     enum_types = []
     includes = set()
@@ -184,17 +198,25 @@ def generate_api_header(package, component_name, simple_fields, enumerations):
                                   .replace("%%api_doxygen%%", api_doxygen))
         api_declarations.append(declaration)
 
+        definition = definition_template
+        definition = (definition.replace("%%field_type%%", field["type"])
+                                .replace("%%field_name%%", field["name"])
+                                .replace("%%ns_indent%%", ns_indent)
+                                .replace("%%component_name%%", component_name))
+        api_definitions.append(definition)
+
         if len(field["include"]):
             include = include_template
             include = include.replace("%%include%%", field["include"])
             includes.add(include)
 
+    api_definitions = "\n".join(api_definitions)
     api_declarations = "\n".join(api_declarations)
     enum_types = "\n".join(enum_types)
     includes = "".join(includes)
 
     # Put all content together
-    hh_content = hh_template
+    hh_content = api_hh_template
     hh_content = (hh_content.replace("%%component_name%%", component_name)
                             .replace("%%full_namespace%%", full_namespace)
                             .replace("%%ns_begin%%", ns_begin)
@@ -203,7 +225,15 @@ def generate_api_header(package, component_name, simple_fields, enumerations):
                             .replace("%%includes%%", includes)
                             .replace("%%api_declarations%%", api_declarations)
                             .replace("%%enumerations%%", enum_types))
-    return hh_content
+
+    cc_content = api_cc_template
+    cc_content = (cc_content.replace("%%component_name%%", component_name)
+                            .replace("%%full_namespace%%", full_namespace)
+                            .replace("%%ns_begin%%", ns_begin)
+                            .replace("%%ns_end%%", ns_end)
+                            .replace("%%ns_indent%%", ns_indent)
+                            .replace("%%api_definitions%%", api_definitions))
+    return hh_content, cc_content
 
 
 def generate_storage_header(package, component_name, simple_fields):
@@ -216,14 +246,10 @@ def generate_storage_header(package, component_name, simple_fields):
     # generate c++ namespace from protobuf package
     (ns_indent, full_namespace,
             ns_begin, ns_end) = generate_namespace(package)
-    factory_doxygen = (ns_indent
-            + r"/// \brief Generated Factory class for component "
-            + component_name)
     storage_doxygen = (ns_indent
             + r"/// \brief Generated storage class for component "
             + component_name)
 
-    api_definitions = []
     storage_fields = []
     for field in simple_fields:
         field_doxygen = ns_indent + r"  /// \brief holds " + field["name"]
@@ -232,43 +258,55 @@ def generate_storage_header(package, component_name, simple_fields):
         storage_field = field_template
         if field["default"]:
             storage_field = field_with_default_template
-            storage_field = storage_field.replace("%%field_default%%", field["default"])
+            storage_field = storage_field.replace(
+                    "%%field_default%%", field["default"])
         storage_field = (storage_field.replace("%%field_doxygen%%", field_doxygen)
                                       .replace("%%field_type%%", field["type"])
                                       .replace("%%field_space%%", field["space"])
                                       .replace("%%field_name%%", field["name"])
                                       .replace("%%ns_indent%%", ns_indent))
         storage_fields.append(storage_field)
-
-        definition = definition_template
-        definition = (definition.replace("%%field_type%%", field["type"])
-                                .replace("%%field_name%%", field["name"])
-                                .replace("%%ns_indent%%", ns_indent)
-                                .replace("%%component_name%%", component_name))
-        api_definitions.append(definition)
-
-    api_definitions = "\n".join(api_definitions)
     storage_fields = "\n".join(storage_fields)
 
-    cc_content = cc_template
+    hh_content = storage_hh_template
+    hh_content = (hh_content.replace("%%component_name%%", component_name)
+                            .replace("%%full_namespace%%", full_namespace)
+                            .replace("%%ns_begin%%", ns_begin)
+                            .replace("%%ns_end%%", ns_end)
+                            .replace("%%ns_indent%%", ns_indent)
+                            .replace("%%storage_doxygen%%", storage_doxygen)
+                            .replace("%%storage_fields%%", storage_fields))
+    return hh_content
+
+
+def generate_factory_cc(package, component_name):
+    """Generates cc file with factory class
+    @param package string dot delimited
+    @param component_name string name of component
+    @returns string content of factory .cc file
+    """
+    (ns_indent, full_namespace,
+            ns_begin, ns_end) = generate_namespace(package)
+    factory_doxygen = (ns_indent
+            + r"/// \brief Generated Factory class for component "
+            + component_name)
+    cc_content = factory_cc_template
     cc_content = (cc_content.replace("%%component_name%%", component_name)
                             .replace("%%full_namespace%%", full_namespace)
                             .replace("%%ns_begin%%", ns_begin)
                             .replace("%%ns_end%%", ns_end)
                             .replace("%%ns_indent%%", ns_indent)
-                            .replace("%%factory_doxygen%%", factory_doxygen)
-                            .replace("%%storage_doxygen%%", storage_doxygen)
-                            .replace("%%storage_fields%%", storage_fields)
-                            .replace("%%api_definitions%%", api_definitions))
+                            .replace("%%factory_doxygen%%", factory_doxygen))
     return cc_content
 
 
-def generate_message_headers(package, message_descriptor):
+def generate_message_files(package, message_descriptor):
     """Given a MessageDescriptor, get required info and generate two headers
     for this message
     @param message_descriptor MessageDescriptor
     @returns tuple
         api_header string with C++ code for api class
+        api_source string with C++ code for api implementation
         storage_header string with c++ code for storage class
     """
     # TODO nested types
@@ -333,13 +371,13 @@ def generate_message_headers(package, message_descriptor):
     # Generate code with the information gathered
     component_name = message_descriptor.name
 
-    api_header = generate_api_header(package,
+    api_header, api_source = generate_api_files(package,
             component_name, simple_fields, enumerations)
 
     storage_header = generate_storage_header(package,
             component_name, simple_fields)
 
-    return api_header, storage_header
+    return api_header, api_source, storage_header
 
 
 def generate_code(request, response):
@@ -354,18 +392,30 @@ def generate_code(request, response):
             sys.exit(42)
 
         message_descriptor = proto_file.message_type[0]
+        component_name = message_descriptor.name
 
-        api_header, storage_header = generate_message_headers(
+        api_header, api_source, storage_header = generate_message_files(
                 proto_file.package, message_descriptor)
 
-        hh_file = response.file.add()
-        hh_file.name = proto_file.name.split(".")[0] + ".PIMPL-CPP.hh"
-        hh_file.content = api_header
+        factory_cc = generate_factory_cc(proto_file.package, component_name)
 
-        # Add .cc file
-        cc_file = response.file.add()
-        cc_file.name = proto_file.name.split(".")[0] + ".PIMPL-CPP.cc"
-        cc_file.content = storage_header
+        base_filename = proto_file.name.split(".")[0]
+
+        api_hh_file = response.file.add()
+        api_hh_file.name = base_filename + ".api.hh"
+        api_hh_file.content = api_header
+
+        api_cc_file = response.file.add()
+        api_cc_file.name = base_filename + ".api.cc"
+        api_cc_file.content = api_source
+
+        storage_hh_file = response.file.add()
+        storage_hh_file.name = base_filename + ".storage.hh"
+        storage_hh_file.content = storage_header
+
+        factory_cc_file = response.file.add()
+        factory_cc_file.name = base_filename + ".factory.cc"
+        factory_cc_file.content = factory_cc
 
 
 

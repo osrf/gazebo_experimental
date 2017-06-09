@@ -19,7 +19,6 @@
 #define GAZEBO_COMPONENTS_%%component_name%%_HH_
 
 %%includes%%
-
 #include <ignition/common/System.hh>
 #include "gazebo/ecs/Component.hh"
 
@@ -37,7 +36,7 @@
 %%enumerations%%
 
 %%ns_indent%%  ////////////////////
-%%ns_indent%%  // APIs for reading and writing to component
+%%ns_indent%%  // APIs for accessing component fields
 %%ns_indent%%  ////////////////////
 
 %%api_declarations%%
@@ -80,5 +79,4 @@
 %%ns_indent%%  public: virtual void ComponentType(ecs::ComponentType _type) override;
 %%ns_indent%%};
 %%ns_end%%
-
 #endif

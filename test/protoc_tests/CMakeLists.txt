@@ -1,6 +1,7 @@
 set(protoc_tests
   DefaultValues.proto
   EnumType.proto
+  # NestedMessage.proto
   SimpleTypes.proto
   SubstitutedTypes.proto
 )
@@ -16,8 +17,7 @@ include_directories("${CMAKE_CURRENT_BINARY_DIR}/include")
 foreach(protobuf_file ${protoc_tests})
   GAZEBO_GENERATE_COMPONENT(${protobuf_file}
     "${CMAKE_CURRENT_BINARY_DIR}/include")
-  get_filename_component(no_ext ${protobuf_file} NAME_WE)
-  set(protoc_test_libs ${protoc_test_libs} gazeboComponent${no_ext})
+  set(protoc_test_libs ${protoc_test_libs} ${GAZEBO_GENERATE_COMPONENT_LIBRARY})
 endforeach()
 
 set (src_file pimpl-cpp_TEST.cc)

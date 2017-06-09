@@ -29,7 +29,7 @@
 #include <ignition/common/SystemPaths.hh>
 #include <ignition/math/Rand.hh>
 #include "gazebo/ecs/Component.hh"
-#include "gazebo/components/NewPose.hh"
+#include "gazebo/components/NewPose.api.hh"
 #include <sdf/sdf.hh>
 
 #ifndef Q_MOC_RUN
