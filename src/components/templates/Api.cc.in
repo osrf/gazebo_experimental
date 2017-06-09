@@ -47,4 +47,6 @@ void %%class_name%%::ComponentType(gazebo::ecs::ComponentType _type)
     g%%class_name%%ComponentType = _type;
 }
 
+%%inline_definitions%%
+
 %%api_definitions%%

@@ -237,6 +237,7 @@ def generate_class_pieces(package, component_name, simple_fields, enumerations,
         definition = (definition.replace("%%field_type%%", field_type)
                                 .replace("%%field_name%%", field["name"])
                                 .replace("%%ns_indent%%", ns_indent)
+                                .replace("%%full_namespace%%", full_namespace)
                                 .replace("%%component_name%%", component_name))
         api_definitions.append(definition)
 
@@ -262,6 +263,7 @@ def generate_class_pieces(package, component_name, simple_fields, enumerations,
         definition = (definition.replace("%%field_type%%", field_type)
                                 .replace("%%field_name%%", field["name"])
                                 .replace("%%ns_indent%%", ns_indent)
+                                .replace("%%full_namespace%%", full_namespace)
                                 .replace("%%component_name%%", component_name))
         api_definitions.append(definition)
 
@@ -332,7 +334,8 @@ def generate_class_partial(decl_template, def_template, package, class_name,
     cc_content = def_template
     cc_content = (cc_content.replace("%%class_name%%", class_name)
                             .replace("%%ns_indent%%", ns_indent)
-                            .replace("%%inline_defintions%%", inline_def)
+                            .replace("%%full_namespace%%", full_namespace)
+                            .replace("%%inline_definitions%%", inline_def)
                             .replace("%%api_definitions%%", api_definitions))
     return {
             "hh_includes": hh_includes,
