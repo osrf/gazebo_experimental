@@ -39,6 +39,14 @@ known_complex_types = {
         }
 
 
+# Known complex types get swapped out, no need to include api files for them
+ignore_dependencies = [
+        "gazebo/components/Vector3d.proto",
+        "gazebo/components/Quaterniond.proto",
+        "gazebo/components/Pose3d.proto",
+        ]
+
+
 # Map protobuf simple types to c++ types
 simple_types_to_cpp = {
         FieldDescriptor.TYPE_DOUBLE: "double",
@@ -146,7 +154,8 @@ def generate_namespace(package):
         ns_begin (start of namespace block)
         ns_end (end of namespace block)
     """
-    namespaces = package.split(".")
+    # discard empty pieces (leading dot)
+    namespaces = [piece for piece in package.split(".") if piece]
     full_namespace = "::".join(namespaces)
     ns_indent = "  " * len(namespaces)
     ns_begin = ""
@@ -159,11 +168,14 @@ def generate_namespace(package):
     return (ns_indent, full_namespace, ns_begin, ns_end)
 
 
-def generate_api_files(package, component_name, simple_fields, enumerations):
+def generate_api_files(dependency, package, component_name, simple_fields,
+        enumerations, complex_fields):
     """Generates header and source file for API
+    @param dependency iterable of strings of protofiles
     @param package a dot delimited string
     @param component_name string name of component
     @param simple_fields dict with info about fields in message
+    @param complex_fields list with info about fields that are messages
     @enumerations dict with info about inline enumerations
     @returns tuple
         string with header file
@@ -176,7 +188,7 @@ def generate_api_files(package, component_name, simple_fields, enumerations):
     api_definitions = []
     api_declarations = []
     enum_types = []
-    includes = set()
+    hh_includes = set()
 
     # Generate code for enum types
     for enum in enumerations:
@@ -205,12 +217,26 @@ def generate_api_files(package, component_name, simple_fields, enumerations):
         if field["include"]:
             include = include_template
             include = include.replace("%%include%%", field["include"])
-            includes.add(include)
+            hh_includes.add(include)
+
+    # Generate code for complex fields
+    for field in complex_fields:
+        # todo
+        pass
+
+    # Includes for dependencies
+    for dep in dependency:
+        #discard ".proto"
+        pieces = dep.split(".")[:-1]
+        base_include = "/".join(pieces)
+        hh_include = include_template.replace("%%include%%",
+                base_include + ".api.hh")
+        hh_includes.add(hh_include)
 
     api_definitions = "\n".join(api_definitions)
     api_declarations = "\n".join(api_declarations)
     enum_types = "\n".join(enum_types)
-    includes = "".join(includes)
+    hh_includes = "".join(hh_includes)
 
     # Put all content together
     hh_content = api_hh_template
@@ -219,7 +245,7 @@ def generate_api_files(package, component_name, simple_fields, enumerations):
                             .replace("%%ns_begin%%", ns_begin)
                             .replace("%%ns_end%%", ns_end)
                             .replace("%%ns_indent%%", ns_indent)
-                            .replace("%%includes%%", includes)
+                            .replace("%%includes%%", hh_includes)
                             .replace("%%api_declarations%%", api_declarations)
                             .replace("%%enumerations%%", enum_types))
 
@@ -233,11 +259,14 @@ def generate_api_files(package, component_name, simple_fields, enumerations):
     return hh_content, cc_content
 
 
-def generate_storage_header(package, component_name, simple_fields):
+def generate_storage_header(dependency, package, component_name, simple_fields,
+        complex_fields):
     """Generates header for storage class
+    @param dependency iterable of strings of protofiles
     @param package a dot delimited string
     @param component_name string name of component
     @param simple_fields dict with info about fields in message
+    @param complex_fields list with info about fields that are messages
     @returns string with header file
     """
     # generate c++ namespace from protobuf package
@@ -311,18 +340,18 @@ def generate_message_class(package, message_descriptor):
     definitions = []
 
 
-def gather_message_info(package, message_descriptor):
+def gather_message_info(package, message_descriptor, nested_types):
     """Given a MessageDescriptor, get required info from it
+    @param package string dot delimited
+    @param nested_types dict mapping full type name to nested message info
     @param message_descriptor MessageDescriptor
     @returns dict
         package dot delimited string indicating namespace
         name string of message name
-        nested_types dict mapping full type name to nested message info tuples
         enumerations list of info about inline enumerations
         simple_fields list of info about simple fields
         complex_fields list of info about complex fields
     """
-    nested_types = {}
     enumerations = []
     simple_fields = []
     complex_fields = []
@@ -335,7 +364,7 @@ def gather_message_info(package, message_descriptor):
         nested_package = ".".join([package, component_name])
         type_name = ".".join([nested_package, nested_descriptor.name])
         nested_types[type_name] = gather_message_info(
-                nested_package, nested_descriptor)
+                nested_package, nested_descriptor, nested_types)
 
     # Pull enumerations out of message
     for enum_descriptor in message_descriptor.enum_type:
@@ -349,7 +378,7 @@ def gather_message_info(package, message_descriptor):
             enum["fields"].append(field)
         enumerations.append(enum)
 
-    # Pull simple fields out of the message
+    # Pull info about fields from the message
     for field_descriptor in message_descriptor.field:
         if field_descriptor.type == FieldDescriptor.TYPE_MESSAGE:
             # Complex/Nested type
@@ -360,17 +389,8 @@ def gather_message_info(package, message_descriptor):
                 field["name"] = field_descriptor.name
                 simple_fields.append(field)
             else:
-                # is it nested or inline?
                 field = {}
-                if field_descriptor.type_name in nested_types:
-                    # Inline defined type
-                    field["include"] = None
-                else:
-                    # Imported type
-                    field["include"] = (
-                            field_descriptor.type_name.replace(".", "/"))
-                field["type_name"] = (
-                        field_descriptor.type_name.replace(".", "::"))
+                field["type"] = field_descriptor.type_name.replace(".", "::")
                 field["name"] = field_descriptor.name
                 complex_fields.append(field)
         elif FieldDescriptor.TYPE_ENUM == field_descriptor.type:
@@ -396,16 +416,17 @@ def gather_message_info(package, message_descriptor):
 
     return {"package": package,
             "name": component_name,
-            "nested_types": nested_types,
             "enumerations": enumerations,
             "simple_fields": simple_fields,
             "complex_fields": complex_fields,
             }
 
 
-def generate_message_files(package, message_descriptor):
+def generate_message_files(dependency, package, message_descriptor):
     """Given a MessageDescriptor, get required info and generate two headers
     for this message
+    @param dependency iterable of strings of imported files
+    @param package string dot delimited
     @param message_descriptor MessageDescriptor
     @returns tuple
         api_header string with C++ code for api class
@@ -413,19 +434,25 @@ def generate_message_files(package, message_descriptor):
         storage_header string with c++ code for storage class
     """
 
-    info = gather_message_info(package, message_descriptor)
-    sys.stderr.write(repr(info)  + "\n"*5)
+    nested_types = {}
+    info = gather_message_info(package, message_descriptor, nested_types)
+    sys.stderr.write(repr(info))
+    sys.stderr.write("\n")
+    sys.stderr.write(repr(nested_types))
+    sys.stderr.write("\n"*5)
 
-    if info["nested_types"]:
-        sys.exit(42)
+    dependency = [dep for dep in dependency if dep not in ignore_dependencies]
 
     # Generate code with the information gathered
-    api_header, api_source = generate_api_files(info["package"], info["name"],
-            info["simple_fields"], info["enumerations"])
+    api_header, api_source = generate_api_files(dependency, info["package"],
+            info["name"], info["simple_fields"], info["enumerations"],
+            info["complex_fields"])
 
-    storage_header = generate_storage_header(info["package"], info["name"],
-            info["simple_fields"])
+    storage_header = generate_storage_header(dependency, info["package"],
+            info["name"], info["simple_fields"], info["complex_fields"])
 
+    # if nested_types:
+    #     sys.exit(42)
     return api_header, api_source, storage_header
 
 
@@ -444,7 +471,7 @@ def generate_code(request, response):
         component_name = message_descriptor.name
 
         api_header, api_source, storage_header = generate_message_files(
-                proto_file.package, message_descriptor)
+                proto_file.dependency, proto_file.package, message_descriptor)
 
         factory_cc = generate_factory_cc(proto_file.package, component_name)
 
