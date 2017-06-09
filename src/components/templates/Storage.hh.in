@@ -15,24 +15,29 @@
  *
 */
 
-#ifndef GAZEBO_COMPONENTS_%%component_name%%STORAGE_HH_
-#define GAZEBO_COMPONENTS_%%component_name%%STORAGE_HH_
+#ifndef GAZEBO_COMPONENTS_%%class_name%%STORAGE_HH_
+#define GAZEBO_COMPONENTS_%%class_name%%STORAGE_HH_
 
 #include <ignition/common/PluginMacros.hh>
 #include <gazebo/ecs/Component.hh>
 
-#include "%%component_name%%.api.hh"
+#include "%%class_name%%.api.hh"
 
 %%includes%%
+
+////////////////////
+// Nested message storage definitions
+////////////////////
+%%inline_storage%%
 
 %%ns_begin%%
 %%storage_doxygen%%
 %%ns_indent%%/// \remarks this class is private, it may change without notice
-%%ns_indent%%class %%component_name%%Storage
+%%ns_indent%%class %%class_name%%Storage
 %%ns_indent%%{
 %%storage_fields%%
 %%ns_indent%%  /// \brief Only the API class may interact with this storage
-%%ns_indent%%  friend %%full_namespace%%::%%component_name%%;
+%%ns_indent%%  friend %%full_namespace%%::%%class_name%%;
 %%ns_indent%%};
 %%ns_end%%
 

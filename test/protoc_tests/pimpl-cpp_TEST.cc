@@ -326,11 +326,27 @@ TEST(PIMPLCPP, NestedMessages)
       static_cast<void *>(&nm), static_cast<void *>(storage.get()));
 
   // Check imported message works correclty
-  EXPECT_EQ(26, nm.ImportedNested().SomeInt());
-  nm.ImportedNested().SomeInt() = 35;
-  EXPECT_EQ(35, nm.ImportedNested().SomeInt());
+  nm.Imported().SomeInt() = 35;
 
-  // TODO Inline messages
+  // First level nested message
+  nm.FirstLevelMessage().SomeFloat() = 26.7f;
+  nm.FirstLevelMessage().SomeInt() = 7;
+
+  // Second level nested message
+  nm.DoubleInlined().SecondLevelMessage().SomeFloat() = 8111.1f;
+  nm.DoubleInlined().SecondLevelMessage().SomeInt() = -12345;
+
+  // Third level nested message
+  nm.DoubleInlined().ThirdLevelMessage().DeepFloat() = -7711.0f;
+  nm.DoubleInlined().ThirdLevelMessage().DeepString() = "Hello World!";
+
+  EXPECT_EQ(35, nm.Imported().SomeInt());
+  EXPECT_EQ(26.7f, nm.FirstLevelMessage().SomeFloat());
+  EXPECT_EQ(7, nm.FirstLevelMessage().SomeInt());
+  EXPECT_FLOAT_EQ(8111.1f, nm.DoubleInlined().SecondLevelMessage().SomeFloat());
+  EXPECT_EQ(-12345, nm.DoubleInlined().SecondLevelMessage().SomeInt());
+  EXPECT_FLOAT_EQ(-7711.0f, nm.DoubleInlined().ThirdLevelMessage().DeepFloat());
+  EXPECT_EQ(std::string("Hello World!"), nm.DoubleInlined().ThirdLevelMessage().DeepString());
 
   nmFactory->DestructAPI(static_cast<void *>(&nm));
   nmFactory->DestructStorage(static_cast<void *>(storage.get()));
