@@ -57,7 +57,6 @@ foreach(comp_file ${component_files})
   endforeach()
 
   # Install library
-  install(TARGETS ${hdr_${comp_name}} DESTINATION ${INCLUDE_INSTALL_DIR}/gazebo/components/)
   gz_install_library(${GAZEBO_GENERATE_COMPONENT_LIBRARY})
 endforeach()
 
