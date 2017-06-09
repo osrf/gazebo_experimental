@@ -14,26 +14,26 @@
  * limitations under the License.
  *
 */
+syntax = "proto2";
 
-#ifndef GAZEBO_COMPONENTS_%%component_name%%STORAGE_HH_
-#define GAZEBO_COMPONENTS_%%component_name%%STORAGE_HH_
+package gazebo.components.test;
 
-#include <ignition/common/PluginMacros.hh>
-#include <gazebo/ecs/Component.hh>
+import "DefaultValues.proto";
 
-#include "%%component_name%%.api.hh"
+message NestedMessage
+{
+  // message InlineNestedType
+  // {
+  //   optional float SomeFloat = 1;
+  //   optional int32 SomeInt = 2;
+  // }
 
-%%includes%%
+  // message DoubleNestedType
+  // {
+  //   optional InlineNestedType SecondLevelMessage = 1;
+  // }
 
-%%ns_begin%%
-%%storage_doxygen%%
-%%ns_indent%%/// \remarks this class is private, it may change without notice
-%%ns_indent%%class %%component_name%%Storage
-%%ns_indent%%{
-%%storage_fields%%
-%%ns_indent%%  /// \brief Only the API class may interact with this storage
-%%ns_indent%%  friend %%full_namespace%%::%%component_name%%;
-%%ns_indent%%};
-%%ns_end%%
-
-#endif
+  optional DefaultValues ImportedNested = 1;
+  // optional InlineNestedType InlineNested = 2;
+  // optional DoubleNestedType DoubleNested = 3;
+}

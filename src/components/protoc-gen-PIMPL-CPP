@@ -97,6 +97,11 @@ with open(file_path + "/templates/ApiDefinition.cc.in", "r") as fin:
     definition_template = fin.read()
 
 
+complex_definition_template = None
+with open(file_path + "/templates/ApiComplexDefinition.cc.in", "r") as fin:
+    complex_definition_template = fin.read()
+
+
 field_template = None
 with open(file_path + "/templates/StorageField.cc.in", "r") as fin:
     field_template = fin.read()
@@ -200,15 +205,17 @@ def generate_api_files(dependency, package, component_name, simple_fields,
                 + r"  /// \brief Get reference to "
                 + field["name"])
 
+        field_type = field["type"] + " &"
+
         declaration = declaration_template
-        declaration = (declaration.replace("%%field_type%%", field["type"])
+        declaration = (declaration.replace("%%field_type%%", field_type)
                                   .replace("%%field_name%%", field["name"])
                                   .replace("%%ns_indent%%", ns_indent)
                                   .replace("%%api_doxygen%%", api_doxygen))
         api_declarations.append(declaration)
 
         definition = definition_template
-        definition = (definition.replace("%%field_type%%", field["type"])
+        definition = (definition.replace("%%field_type%%", field_type)
                                 .replace("%%field_name%%", field["name"])
                                 .replace("%%ns_indent%%", ns_indent)
                                 .replace("%%component_name%%", component_name))
@@ -221,8 +228,23 @@ def generate_api_files(dependency, package, component_name, simple_fields,
 
     # Generate code for complex fields
     for field in complex_fields:
-        # todo
-        pass
+        api_doxygen = (ns_indent
+                + r"  /// \brief Get accessor to "
+                + field["name"])
+        field_type = field["type"] + " "
+        declaration = declaration_template
+        declaration = (declaration.replace("%%field_type%%", field_type)
+                                  .replace("%%field_name%%", field["name"])
+                                  .replace("%%ns_indent%%", ns_indent)
+                                  .replace("%%api_doxygen%%", api_doxygen))
+        api_declarations.append(declaration)
+
+        definition = complex_definition_template
+        definition = (definition.replace("%%field_type%%", field_type)
+                                .replace("%%field_name%%", field["name"])
+                                .replace("%%ns_indent%%", ns_indent)
+                                .replace("%%component_name%%", component_name))
+        api_definitions.append(definition)
 
     # Includes for dependencies
     for dep in dependency:
@@ -279,8 +301,6 @@ def generate_storage_header(dependency, package, component_name, simple_fields,
     storage_fields = []
     for field in simple_fields:
         field_doxygen = ns_indent + r"  /// \brief holds " + field["name"]
-        api_doxygen = ns_indent + r"  /// \brief Get reference to " + field["name"]
-        
         storage_field = field_template
         if field["default"]:
             storage_field = field_with_default_template
@@ -291,7 +311,29 @@ def generate_storage_header(dependency, package, component_name, simple_fields,
                                       .replace("%%field_name%%", field["name"])
                                       .replace("%%ns_indent%%", ns_indent))
         storage_fields.append(storage_field)
+
+    for field in complex_fields:
+        field_doxygen = ns_indent + r"  /// \brief holds " + field["name"]
+        storage_field = field_template
+        field_type = field["type"] + "Storage"
+        storage_field = (storage_field.replace("%%field_doxygen%%", field_doxygen)
+                                      .replace("%%field_type%%", field_type)
+                                      .replace("%%field_name%%", field["name"])
+                                      .replace("%%ns_indent%%", ns_indent))
+        storage_fields.append(storage_field)
+
     storage_fields = "\n".join(storage_fields)
+
+    includes = set()
+    for dep in dependency:
+        #discard ".proto"
+        pieces = dep.split(".")[:-1]
+        base_include = "/".join(pieces)
+        include = include_template.replace("%%include%%",
+                base_include + ".storage.hh")
+        includes.add(include)
+
+    includes = "".join(includes)
 
     hh_content = storage_hh_template
     hh_content = (hh_content.replace("%%component_name%%", component_name)
@@ -299,6 +341,7 @@ def generate_storage_header(dependency, package, component_name, simple_fields,
                             .replace("%%ns_begin%%", ns_begin)
                             .replace("%%ns_end%%", ns_end)
                             .replace("%%ns_indent%%", ns_indent)
+                            .replace("%%includes%%", includes)
                             .replace("%%storage_doxygen%%", storage_doxygen)
                             .replace("%%storage_fields%%", storage_fields))
     return hh_content

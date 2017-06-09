@@ -28,6 +28,7 @@
 #include "EnumType.api.hh"
 #include "SimpleTypes.api.hh"
 #include "SubstitutedTypes.api.hh"
+#include "NestedMessage.api.hh"
 
 
 // Type comparison
@@ -294,14 +295,43 @@ TEST(PIMPLCPP, DefaultValues)
   dvFactory->ConstructAPI(
       static_cast<void *>(&dv), static_cast<void *>(storage.get()));
 
-  // default is always zero
   EXPECT_EQ(26, dv.SomeInt());
   EXPECT_EQ(std::string("Hello World!"), dv.SomeString());
   EXPECT_EQ(std::string("1234abc"), dv.SomeBytes());
+  // default enum is always zero
   EXPECT_FALSE(dv.SomeBool());
 
   dvFactory->DestructAPI(static_cast<void *>(&dv));
   dvFactory->DestructStorage(static_cast<void *>(storage.get()));
+}
+
+/////////////////////////////////////////////////
+TEST(PIMPLCPP, NestedMessages)
+{
+  ignition::common::PluginLoader pl;
+  ignition::common::SystemPaths sp;
+  sp.AddPluginPaths("./");
+  std::string pathToLibrary = sp.FindSharedLibrary(
+      "gazeboComponentNestedMessage");
+  ASSERT_FALSE(pathToLibrary.empty());
+  std::string pluginName = pl.LoadLibrary(pathToLibrary);
+  ASSERT_EQ("::gazebo::components::test::NestedMessageFactory", pluginName);
+
+  auto nmFactory = pl.Instantiate<gazebo::ecs::ComponentFactory>(pluginName);
+  std::unique_ptr<char> storage(new char[nmFactory->StorageSize()]);
+  nmFactory->ConstructStorage(static_cast<void *>(storage.get()));
+
+  gazebo::components::test::NestedMessage nm;
+  nmFactory->ConstructAPI(
+      static_cast<void *>(&nm), static_cast<void *>(storage.get()));
+
+  // Check imported message works correclty
+  EXPECT_EQ(26, nm.ImportedNested().SomeInt());
+  nm.ImportedNested().SomeInt() = 35;
+  EXPECT_EQ(35, nm.ImportedNested().SomeInt());
+
+  nmFactory->DestructAPI(static_cast<void *>(&nm));
+  nmFactory->DestructStorage(static_cast<void *>(storage.get()));
 }
 
 int main(int argc, char **argv)
