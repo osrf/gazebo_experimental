@@ -20,23 +20,20 @@ except ImportError:
 
 
 # nested types that can be swapped for simple types
-known_nested_types = {
+known_complex_types = {
         ".gazebo.components.Vector3d": {
             "type": "ignition::math::Vector3d",
             "include": "ignition/math/Vector3.hh",
-            "space": " ",
             "default": None,
             },
         ".gazebo.components.Quaterniond": {
             "type": "ignition::math::Quaterniond",
             "include": "ignition/math/Quaternion.hh",
-            "space": " ",
             "default": None,
             },
         ".gazebo.components.Pose3d": {
             "type": "ignition::math::Pose3d",
             "include": "ignition/math/Pose3.hh",
-            "space": " ",
             "default": None,
             },
         }
@@ -205,7 +202,7 @@ def generate_api_files(package, component_name, simple_fields, enumerations):
                                 .replace("%%component_name%%", component_name))
         api_definitions.append(definition)
 
-        if len(field["include"]):
+        if field["include"]:
             include = include_template
             include = include.replace("%%include%%", field["include"])
             includes.add(include)
@@ -262,7 +259,6 @@ def generate_storage_header(package, component_name, simple_fields):
                     "%%field_default%%", field["default"])
         storage_field = (storage_field.replace("%%field_doxygen%%", field_doxygen)
                                       .replace("%%field_type%%", field["type"])
-                                      .replace("%%field_space%%", field["space"])
                                       .replace("%%field_name%%", field["name"])
                                       .replace("%%ns_indent%%", ns_indent))
         storage_fields.append(storage_field)
@@ -300,24 +296,46 @@ def generate_factory_cc(package, component_name):
     return cc_content
 
 
-def generate_message_files(package, message_descriptor):
-    """Given a MessageDescriptor, get required info and generate two headers
-    for this message
+def generate_message_class(package, message_descriptor):
+    """Given a MessageDescriptor, get required info and generate classes
     @param message_descriptor MessageDescriptor
     @returns tuple
-        api_header string with C++ code for api class
-        api_source string with C++ code for api implementation
-        storage_header string with c++ code for storage class
+        includes list of C++ code with includes for all imported types
+        forward_declarations list of C++ code declaring all nested types
+        declaraions list of C++ code with class declarations for nested types
+        definitions list of C++ code with class api definitions
     """
-    # TODO nested types
-    nested_types = []
+    includes = []
+    forward_declarations = []
+    declarations = []
+    definitions = []
+
+
+def gather_message_info(package, message_descriptor):
+    """Given a MessageDescriptor, get required info from it
+    @param message_descriptor MessageDescriptor
+    @returns dict
+        package dot delimited string indicating namespace
+        name string of message name
+        nested_types dict mapping full type name to nested message info tuples
+        enumerations list of info about inline enumerations
+        simple_fields list of info about simple fields
+        complex_fields list of info about complex fields
+    """
+    nested_types = {}
     enumerations = []
     simple_fields = []
+    complex_fields = []
+    component_name = message_descriptor.name
 
-    # Pull nested messages out of message
+    # Recursively get info from nested messages
     for nested_descriptor in message_descriptor.nested_type:
-        # TODO
-        sys.stderr.write("[" + nested_descriptor.name + "]\n")
+        if package and package[0] != ".":
+            package = "." + package
+        nested_package = ".".join([package, component_name])
+        type_name = ".".join([nested_package, nested_descriptor.name])
+        nested_types[type_name] = gather_message_info(
+                nested_package, nested_descriptor)
 
     # Pull enumerations out of message
     for enum_descriptor in message_descriptor.enum_type:
@@ -335,20 +353,29 @@ def generate_message_files(package, message_descriptor):
     for field_descriptor in message_descriptor.field:
         if field_descriptor.type == FieldDescriptor.TYPE_MESSAGE:
             # Complex/Nested type
-            if field_descriptor.type_name in known_nested_types:
+            if field_descriptor.type_name in known_complex_types:
                 # Swap complex type for a simple type
                 field = copy.deepcopy(
-                    known_nested_types[field_descriptor.type_name])
+                    known_complex_types[field_descriptor.type_name])
                 field["name"] = field_descriptor.name
                 simple_fields.append(field)
             else:
-                sys.stderr.write("TODO nested messages")
-                sys.stderr.write("Unknown type " + repr(field_descriptor))
-                sys.exit(42)
+                # is it nested or inline?
+                field = {}
+                if field_descriptor.type_name in nested_types:
+                    # Inline defined type
+                    field["include"] = None
+                else:
+                    # Imported type
+                    field["include"] = (
+                            field_descriptor.type_name.replace(".", "/"))
+                field["type_name"] = (
+                        field_descriptor.type_name.replace(".", "::"))
+                field["name"] = field_descriptor.name
+                complex_fields.append(field)
         elif FieldDescriptor.TYPE_ENUM == field_descriptor.type:
             field = {}
-            field["space"] = " "
-            field["include"] = ""
+            field["include"] = None
             field["name"] = field_descriptor.name
             field["type"] = field_descriptor.type_name.replace(".", "::")
             field["default"] = "static_cast<" + field["type"] + ">(0)"
@@ -356,8 +383,7 @@ def generate_message_files(package, message_descriptor):
         else:
             # Simple type
             field = {}
-            field["space"] = " "
-            field["include"] = ""
+            field["include"] = None
             field["name"] = field_descriptor.name
             field["type"] = simple_types_to_cpp[field_descriptor.type]
             default = field_descriptor.default_value
@@ -368,14 +394,37 @@ def generate_message_files(package, message_descriptor):
                 field["default"] = default
             simple_fields.append(field)
 
+    return {"package": package,
+            "name": component_name,
+            "nested_types": nested_types,
+            "enumerations": enumerations,
+            "simple_fields": simple_fields,
+            "complex_fields": complex_fields,
+            }
+
+
+def generate_message_files(package, message_descriptor):
+    """Given a MessageDescriptor, get required info and generate two headers
+    for this message
+    @param message_descriptor MessageDescriptor
+    @returns tuple
+        api_header string with C++ code for api class
+        api_source string with C++ code for api implementation
+        storage_header string with c++ code for storage class
+    """
+
+    info = gather_message_info(package, message_descriptor)
+    sys.stderr.write(repr(info)  + "\n"*5)
+
+    if info["nested_types"]:
+        sys.exit(42)
+
     # Generate code with the information gathered
-    component_name = message_descriptor.name
+    api_header, api_source = generate_api_files(info["package"], info["name"],
+            info["simple_fields"], info["enumerations"])
 
-    api_header, api_source = generate_api_files(package,
-            component_name, simple_fields, enumerations)
-
-    storage_header = generate_storage_header(package,
-            component_name, simple_fields)
+    storage_header = generate_storage_header(info["package"], info["name"],
+            info["simple_fields"])
 
     return api_header, api_source, storage_header
 
