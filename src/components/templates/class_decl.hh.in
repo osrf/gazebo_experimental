@@ -1,0 +1,42 @@
+%%ns_indent%%/// \brief forward delcaration for storage
+%%ns_indent%%class %%class_name%%Storage;
+
+%%ns_indent%%/// \brief API for interacting with a %%class_name%% component
+%%ns_indent%%class IGNITION_COMMON_VISIBLE %%class_name%%
+%%ns_indent%%{
+%%ns_indent%%  ////////////////////
+%%ns_indent%%  // Enumerations used by this component
+%%ns_indent%%  ////////////////////
+
+%%enumerations%%
+
+%%ns_indent%%  ////////////////////
+%%ns_indent%%  // Class declarations for inline messages
+%%ns_indent%%  ////////////////////
+%%inline_declarations%%
+
+%%ns_indent%%  ////////////////////
+%%ns_indent%%  // APIs for accessing component fields
+%%ns_indent%%  ////////////////////
+
+%%api_declarations%%
+
+%%ns_indent%%  ////////////////////
+%%ns_indent%%  // Constructors + PIMPL
+%%ns_indent%%  ////////////////////
+
+%%ns_indent%%  /// \brief Constructor for component factory
+%%ns_indent%%  public: %%class_name%%(%%class_name%%Storage *_storage) : dataPtr(_storage)
+%%ns_indent%%  {
+%%ns_indent%%    // Nothing to do
+%%ns_indent%%  }
+
+%%ns_indent%%  /// \brief Constructor for users
+%%ns_indent%%  public: %%class_name%%() : dataPtr(nullptr)
+%%ns_indent%%  {
+%%ns_indent%%  }
+
+%%ns_indent%%  /// \brief private storage pointer
+%%ns_indent%%  private: %%class_name%%Storage *dataPtr;
+%%ns_indent%%};
+

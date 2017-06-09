@@ -15,9 +15,11 @@ set(generator_files
   templates/Api.hh.in
   templates/ApiDeclaration.hh.in
   templates/ApiDefinition.cc.in
+  templates/ApiComplexDefinition.cc.in
   templates/Enum.hh.in
   templates/EnumField.hh.in
   templates/Factory.cc.in
+  templates/ForwardDeclaration.hh.in
   templates/Include.hh.in
   templates/Storage.hh.in
   templates/StorageField.cc.in

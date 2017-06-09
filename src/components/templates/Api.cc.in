@@ -18,33 +18,33 @@
 #include <ignition/common/PluginMacros.hh>
 #include <gazebo/ecs/Component.hh>
 
-#include "%%component_name%%.api.hh"
-#include "%%component_name%%.storage.hh"
+#include "%%class_name%%.api.hh"
+#include "%%class_name%%.storage.hh"
 
 namespace generated_ns = %%full_namespace%%;
 using namespace generated_ns;
 
 
 //////////////////////////////////////////////////
-static gazebo::ecs::ComponentType g%%component_name%%ComponentType = gazebo::ecs::NO_COMPONENT;
+static gazebo::ecs::ComponentType g%%class_name%%ComponentType = gazebo::ecs::NO_COMPONENT;
 
 //////////////////////////////////////////////////
-const char *%%component_name%%::ComponentName() const
+const char *%%class_name%%::ComponentName() const
 {
-  return "%%full_namespace%%::%%component_name%%";
+  return "%%full_namespace%%::%%class_name%%";
 }
 
 //////////////////////////////////////////////////
-gazebo::ecs::ComponentType %%component_name%%::ComponentType() const
+gazebo::ecs::ComponentType %%class_name%%::ComponentType() const
 {
-  return g%%component_name%%ComponentType;
+  return g%%class_name%%ComponentType;
 }
 
-void %%component_name%%::ComponentType(gazebo::ecs::ComponentType _type)
+void %%class_name%%::ComponentType(gazebo::ecs::ComponentType _type)
 {
   // allow type assignment once per run
-  if (g%%component_name%%ComponentType == gazebo::ecs::NO_COMPONENT)
-    g%%component_name%%ComponentType = _type;
+  if (g%%class_name%%ComponentType == gazebo::ecs::NO_COMPONENT)
+    g%%class_name%%ComponentType = _type;
 }
 
 %%api_definitions%%

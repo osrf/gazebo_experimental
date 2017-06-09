@@ -72,6 +72,11 @@ with open(file_path + "/templates/Factory.cc.in", "r") as fin:
     factory_cc_template = fin.read()
 
 
+fw_decl_hh_template = None
+with open(file_path + "/templates/ForwardDeclaration.hh.in", "r") as fin:
+    fw_decl_hh_template = fin.read()
+
+
 api_hh_template = None
 with open(file_path + "/templates/Api.hh.in", "r") as fin:
     api_hh_template = fin.read()
@@ -80,6 +85,16 @@ with open(file_path + "/templates/Api.hh.in", "r") as fin:
 api_cc_template = None
 with open(file_path + "/templates/Api.cc.in", "r") as fin:
     api_cc_template = fin.read()
+
+
+class_decl_template = None
+with open(file_path + "/templates/class_decl.hh.in", "r") as fin:
+    class_decl_template = fin.read()
+
+
+class_def_template = None
+with open(file_path + "/templates/class_def.cc.in", "r") as fin:
+    class_def_template = fin.read()
 
 
 storage_hh_template = None
@@ -173,18 +188,19 @@ def generate_namespace(package):
     return (ns_indent, full_namespace, ns_begin, ns_end)
 
 
-def generate_api_files(dependency, package, component_name, simple_fields,
-        enumerations, complex_fields):
-    """Generates header and source file for API
-    @param dependency iterable of strings of protofiles
+def generate_class_pieces(package, component_name, simple_fields, enumerations,
+        complex_fields):
+    """Generates C++ code for pieces of a class
     @param package a dot delimited string
     @param component_name string name of component
     @param simple_fields dict with info about fields in message
-    @param complex_fields list with info about fields that are messages
     @enumerations dict with info about inline enumerations
-    @returns tuple
-        string with header file
-        string with source file
+    @param complex_fields list with info about fields that are messages
+    @returns dict
+        api_definitions list with C++ api defintions
+        api_declarations list with C++ api declarations
+        enum_types list with C++ enum declarations
+        hh_includes set with C++ includes
     """
     # generate c++ namespace from protobuf package
     (ns_indent, full_namespace,
@@ -246,6 +262,102 @@ def generate_api_files(dependency, package, component_name, simple_fields,
                                 .replace("%%component_name%%", component_name))
         api_definitions.append(definition)
 
+    return {
+            "api_definitions": api_definitions,
+            "api_declarations": api_declarations,
+            "enum_types": enum_types,
+            "hh_includes": hh_includes,
+            }
+
+
+def generate_class_partial(decl_template, def_template, package, class_name,
+        simple_fields, enumerations, complex_fields, inline_nested_names,
+        nested_types):
+    """Generates part of class declaration
+    @param decl_template class declaration template
+    @param def_template class definition template
+    @param package a dot delimited string
+    @param class_name string name of class
+    @param simple_fields dict with info about fields in message
+    @enumerations dict with info about inline enumerations
+    @param complex_fields list with info about fields that are messages
+    @param inline_nested_names list of names defined in top-level message
+    @param nested_types dict of types that are defined inline
+    @returns dict
+        hh_includes set of headers that need to be included
+        class_decl string C++ code with class declaration
+        class_def string C++ code with class declaration
+    """
+    # generate c++ namespace from protobuf package
+    (ns_indent, full_namespace,
+            ns_begin, ns_end) = generate_namespace(package)
+
+    class_pieces = generate_class_pieces(package, class_name,
+            simple_fields, enumerations, complex_fields)
+
+    inline_decl = []
+    inline_def = []
+    hh_includes = class_pieces["hh_includes"]
+
+    for nested_name in inline_nested_names:
+        # Recursively generate nested messages
+        nested_info = nested_types[nested_name]
+        nested_package = ".".join(nested_name.split(".")[:-1])
+        nested_partial = generate_class_partial(class_decl_template,
+                class_def_template, nested_package, nested_info["name"],
+                nested_info["simple_fields"], nested_info["enumerations"],
+                nested_info["complex_fields"], nested_info["nested_types"],
+                nested_types)
+        hh_includes.update(nested_partial["hh_includes"])
+        inline_decl.append(nested_partial["class_decl"])
+        inline_def.append(nested_partial["class_def"])
+
+    api_definitions = "\n".join(class_pieces["api_definitions"])
+    api_declarations = "\n".join(class_pieces["api_declarations"])
+    inline_decl = "\n".join(inline_decl)
+    inline_def = "\n".join(inline_def)
+    enum_types = "\n".join(class_pieces["enum_types"])
+
+    # Put all content together
+    hh_content = decl_template
+    hh_content = (hh_content.replace("%%class_name%%", class_name)
+                            .replace("%%ns_indent%%", ns_indent)
+                            .replace("%%api_declarations%%", api_declarations)
+                            .replace("%%inline_declarations%%", inline_decl)
+                            .replace("%%enumerations%%", enum_types))
+
+    cc_content = def_template
+    cc_content = (cc_content.replace("%%class_name%%", class_name)
+                            .replace("%%ns_indent%%", ns_indent)
+                            .replace("%%inline_defintions%%", inline_def)
+                            .replace("%%api_definitions%%", api_definitions))
+    return {
+            "hh_includes": hh_includes,
+            "class_decl": hh_content,
+            "class_def": cc_content}
+
+
+def generate_api_files(dependency, package, component_name, simple_fields,
+        enumerations, complex_fields, inline_nested_names, nested_types):
+    """Generates header and source file for API
+    @param dependency iterable of strings of protofiles
+    @param package a dot delimited string
+    @param component_name string name of component
+    @param simple_fields dict with info about fields in message
+    @enumerations dict with info about inline enumerations
+    @param complex_fields list with info about fields that are messages
+    @param inline_nested_names list of names defined in top-level message
+    @param nested_types dict of types that are defined inline
+    @returns tuple
+        string with header file
+        string with source file
+    """
+    # generate c++ namespace from protobuf package
+    (ns_indent, full_namespace,
+            ns_begin, ns_end) = generate_namespace(package)
+
+    hh_includes = set()
+
     # Includes for dependencies
     for dep in dependency:
         #discard ".proto"
@@ -255,34 +367,30 @@ def generate_api_files(dependency, package, component_name, simple_fields,
                 base_include + ".api.hh")
         hh_includes.add(hh_include)
 
-    api_definitions = "\n".join(api_definitions)
-    api_declarations = "\n".join(api_declarations)
-    enum_types = "\n".join(enum_types)
+    partial_cpp = generate_class_partial(api_hh_template, api_cc_template,
+            package, component_name, simple_fields, enumerations,
+            complex_fields, inline_nested_names, nested_types);
+    hh_includes.update(partial_cpp["hh_includes"])
+
     hh_includes = "".join(hh_includes)
 
     # Put all content together
-    hh_content = api_hh_template
-    hh_content = (hh_content.replace("%%component_name%%", component_name)
-                            .replace("%%full_namespace%%", full_namespace)
+    hh_content = partial_cpp["class_decl"]
+    hh_content = (hh_content.replace("%%full_namespace%%", full_namespace)
                             .replace("%%ns_begin%%", ns_begin)
                             .replace("%%ns_end%%", ns_end)
-                            .replace("%%ns_indent%%", ns_indent)
-                            .replace("%%includes%%", hh_includes)
-                            .replace("%%api_declarations%%", api_declarations)
-                            .replace("%%enumerations%%", enum_types))
+                            .replace("%%includes%%", hh_includes))
 
-    cc_content = api_cc_template
+    cc_content = partial_cpp["class_def"]
     cc_content = (cc_content.replace("%%component_name%%", component_name)
                             .replace("%%full_namespace%%", full_namespace)
                             .replace("%%ns_begin%%", ns_begin)
-                            .replace("%%ns_end%%", ns_end)
-                            .replace("%%ns_indent%%", ns_indent)
-                            .replace("%%api_definitions%%", api_definitions))
+                            .replace("%%ns_end%%", ns_end))
     return hh_content, cc_content
 
 
 def generate_storage_header(dependency, package, component_name, simple_fields,
-        complex_fields):
+        complex_fields, nested_types):
     """Generates header for storage class
     @param dependency iterable of strings of protofiles
     @param package a dot delimited string
@@ -368,36 +476,24 @@ def generate_factory_cc(package, component_name):
     return cc_content
 
 
-def generate_message_class(package, message_descriptor):
-    """Given a MessageDescriptor, get required info and generate classes
-    @param message_descriptor MessageDescriptor
-    @returns tuple
-        includes list of C++ code with includes for all imported types
-        forward_declarations list of C++ code declaring all nested types
-        declaraions list of C++ code with class declarations for nested types
-        definitions list of C++ code with class api definitions
-    """
-    includes = []
-    forward_declarations = []
-    declarations = []
-    definitions = []
-
-
 def gather_message_info(package, message_descriptor, nested_types):
     """Given a MessageDescriptor, get required info from it
     @param package string dot delimited
-    @param nested_types dict mapping full type name to nested message info
     @param message_descriptor MessageDescriptor
+    @param nested_types dict mapping full type name to nested message info
+                        (this dict will be modified)
     @returns dict
         package dot delimited string indicating namespace
         name string of message name
         enumerations list of info about inline enumerations
         simple_fields list of info about simple fields
         complex_fields list of info about complex fields
+        nested_types list of string identifying nested types in this message
     """
     enumerations = []
     simple_fields = []
     complex_fields = []
+    inline_nested_names = []
     component_name = message_descriptor.name
 
     # Recursively get info from nested messages
@@ -408,6 +504,7 @@ def gather_message_info(package, message_descriptor, nested_types):
         type_name = ".".join([nested_package, nested_descriptor.name])
         nested_types[type_name] = gather_message_info(
                 nested_package, nested_descriptor, nested_types)
+        inline_nested_names.append(type_name)
 
     # Pull enumerations out of message
     for enum_descriptor in message_descriptor.enum_type:
@@ -462,6 +559,7 @@ def gather_message_info(package, message_descriptor, nested_types):
             "enumerations": enumerations,
             "simple_fields": simple_fields,
             "complex_fields": complex_fields,
+            "nested_types": inline_nested_names,
             }
 
 
@@ -489,13 +587,12 @@ def generate_message_files(dependency, package, message_descriptor):
     # Generate code with the information gathered
     api_header, api_source = generate_api_files(dependency, info["package"],
             info["name"], info["simple_fields"], info["enumerations"],
-            info["complex_fields"])
+            info["complex_fields"], info["nested_types"], nested_types)
 
     storage_header = generate_storage_header(dependency, info["package"],
-            info["name"], info["simple_fields"], info["complex_fields"])
+            info["name"], info["simple_fields"], info["complex_fields"],
+            info["nested_types"])
 
-    # if nested_types:
-    #     sys.exit(42)
     return api_header, api_source, storage_header
 
 
@@ -535,7 +632,6 @@ def generate_code(request, response):
         factory_cc_file = response.file.add()
         factory_cc_file.name = base_filename + ".factory.cc"
         factory_cc_file.content = factory_cc
-
 
 
 if __name__ == '__main__':

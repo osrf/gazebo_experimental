@@ -15,19 +15,19 @@
  *
 */
 
-#ifndef GAZEBO_COMPONENTS_%%component_name%%_HH_
-#define GAZEBO_COMPONENTS_%%component_name%%_HH_
+#ifndef GAZEBO_COMPONENTS_%%class_name%%_HH_
+#define GAZEBO_COMPONENTS_%%class_name%%_HH_
 
 %%includes%%
 #include <ignition/common/System.hh>
 #include "gazebo/ecs/Component.hh"
 
 %%ns_begin%%
-%%ns_indent%%/// \brief forward delcaration
-%%ns_indent%%class %%component_name%%Storage;
+%%ns_indent%%/// \brief forward delcaration for storage
+%%ns_indent%%class %%class_name%%Storage;
 
-%%ns_indent%%/// \brief API for interacting with a %%component_name%% component
-%%ns_indent%%class IGNITION_COMMON_VISIBLE %%component_name%% : public ecs::ComponentAPI
+%%ns_indent%%/// \brief API for interacting with a %%class_name%% component
+%%ns_indent%%class IGNITION_COMMON_VISIBLE %%class_name%% : public ecs::ComponentAPI
 %%ns_indent%%{
 %%ns_indent%%  ////////////////////
 %%ns_indent%%  // Enumerations used by this component
@@ -36,35 +36,41 @@
 %%enumerations%%
 
 %%ns_indent%%  ////////////////////
+%%ns_indent%%  // Class declarations for inline messages
+%%ns_indent%%  ////////////////////
+
+%%inline_declarations%%
+
+%%ns_indent%%  ////////////////////
 %%ns_indent%%  // APIs for accessing component fields
 %%ns_indent%%  ////////////////////
 
 %%api_declarations%%
 
 %%ns_indent%%  ////////////////////
-%%ns_indent%%  // Methods for factory
+%%ns_indent%%  // Constructors + PIMPL
 %%ns_indent%%  ////////////////////
 
 %%ns_indent%%  /// \brief Constructor for component factory
-%%ns_indent%%  public: %%component_name%%(%%component_name%%Storage *_storage) : dataPtr(_storage)
+%%ns_indent%%  public: %%class_name%%(%%class_name%%Storage *_storage) : dataPtr(_storage)
 %%ns_indent%%  {
 %%ns_indent%%    // Nothing to do
 %%ns_indent%%  }
 
 %%ns_indent%%  /// \brief Constructor for users
-%%ns_indent%%  public: %%component_name%%() : dataPtr(nullptr)
+%%ns_indent%%  public: %%class_name%%() : dataPtr(nullptr)
 %%ns_indent%%  {
 %%ns_indent%%  }
 
 %%ns_indent%%  /// \brief private storage pointer
-%%ns_indent%%  private: %%component_name%%Storage *dataPtr;
+%%ns_indent%%  private: %%class_name%%Storage *dataPtr;
 
 %%ns_indent%%  ////////////////////
 %%ns_indent%%  // Inherited Virtual methods
 %%ns_indent%%  ////////////////////
 
 %%ns_indent%%  /// \brief destructor
-%%ns_indent%%  public: virtual ~%%component_name%%()
+%%ns_indent%%  public: virtual ~%%class_name%%()
 %%ns_indent%%  {
 %%ns_indent%%    // Nothing to do
 %%ns_indent%%  }

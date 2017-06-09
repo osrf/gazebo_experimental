@@ -330,6 +330,8 @@ TEST(PIMPLCPP, NestedMessages)
   nm.ImportedNested().SomeInt() = 35;
   EXPECT_EQ(35, nm.ImportedNested().SomeInt());
 
+  // TODO Inline messages
+
   nmFactory->DestructAPI(static_cast<void *>(&nm));
   nmFactory->DestructStorage(static_cast<void *>(storage.get()));
 }

@@ -22,16 +22,21 @@ import "DefaultValues.proto";
 
 message NestedMessage
 {
-  // message InlineNestedType
-  // {
-  //   optional float SomeFloat = 1;
-  //   optional int32 SomeInt = 2;
-  // }
+  message InlineNestedType
+  {
+    optional float SomeFloat = 1;
+    optional int32 SomeInt = 2;
+  }
 
-  // message DoubleNestedType
-  // {
-  //   optional InlineNestedType SecondLevelMessage = 1;
-  // }
+  message DoubleNestedType
+  {
+    message DoubleInlineNestedType
+    {
+      optional float DeepFloat = 1;
+      optional string DeepString = 2;
+    }
+    optional InlineNestedType SecondLevelMessage = 1;
+  }
 
   optional DefaultValues ImportedNested = 1;
   // optional InlineNestedType InlineNested = 2;
