@@ -32,8 +32,10 @@ namespace gazebo
     /// \brief API for starting/stoping timers and publishing results
     class DiagnosticsManager
     {
+      /// \brief Constructor
       public: DiagnosticsManager();
 
+      /// \brief Destructor
       public: ~DiagnosticsManager();
 
       /// \brief Initialize to report diagnostics about a world.
@@ -43,7 +45,7 @@ namespace gazebo
 
       /// \brief called to signal the beginning of a diagnostic update
       /// \param[in] _simTime currrent simulation time
-      public: void UpdateBegin(ignition::common::Time _simTime);
+      public: void UpdateBegin(const ignition::common::Time &_simTime);
 
       /// \brief called to signal the end of a a diagnostic update
       /// \remark This publishes a diagnostics message. Any timers that have
@@ -60,7 +62,7 @@ namespace gazebo
       public: void StopTimer(const std::string &_name);
 
       /// \brief private implementation
-      private: std::shared_ptr<DiagnosticsManagerPrivate> dataPtr;
+      private: std::unique_ptr<DiagnosticsManagerPrivate> dataPtr;
     };
   }
 }

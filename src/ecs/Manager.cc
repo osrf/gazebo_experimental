@@ -46,6 +46,13 @@ struct SystemInfo
 /////////////////////////////////////////////////
 class gazebo::ecs::ManagerPrivate
 {
+  /// \brief Updates the state and systems once
+  public: void UpdateOnce();
+
+  public: bool stop;
+
+  public: std::unique_ptr<std::thread> runThread;
+
   /// \brief Systems that are added to the manager
   public: std::vector<std::unique_ptr<System> > systems;
 
@@ -69,9 +76,6 @@ class gazebo::ecs::ManagerPrivate
 
   /// \brief tool for publishing diagnostic info
   public: util::DiagnosticsManager diagnostics;
-
-  /// \brief Updates the state and systems once
-  public: void UpdateOnce();
 };
 
 /////////////////////////////////////////////////
@@ -108,7 +112,7 @@ void Manager::UpdateOnce()
 }
 
 /////////////////////////////////////////////////
-void Manager::UpdateOnce(double _real_time_factor)
+void Manager::UpdateOnce(double _realTimeFactor)
 {
   this->dataPtr->diagnostics.UpdateBegin(this->dataPtr->simTime);
 
@@ -121,7 +125,7 @@ void Manager::UpdateOnce(double _real_time_factor)
   ignition::common::Time endWallTime = ignition::common::Time::SystemTime();
 
   this->dataPtr->diagnostics.StartTimer("sleep");
-  const ignition::common::Time scalar(_real_time_factor);
+  const ignition::common::Time scalar(_realTimeFactor);
   const ignition::common::Time deltaWall = endWallTime - startWallTime;
   const ignition::common::Time deltaSim = endSimTime - startSimTime;
   const ignition::common::Time expectedDeltaWall = deltaSim / scalar;
@@ -139,7 +143,6 @@ void Manager::UpdateOnce(double _real_time_factor)
 /////////////////////////////////////////////////
 void ManagerPrivate::UpdateOnce()
 {
-
   // Decide at the beginning of every update if sim time is paused or not.
   // Some systems (like rendering a camera for a GUI) need to continue to run
   // even when simulation time is paused, so it's up to each system to check
@@ -205,6 +208,44 @@ bool Manager::LoadSystem(const std::string &_name,
 }
 
 /////////////////////////////////////////////////
+bool Manager::LoadSystems(const std::vector<std::string> &_libs)
+{
+  ignition::common::PluginLoader pluginLoader;
+  ignition::common::SystemPaths sp;
+  sp.SetPluginPathEnv("GAZEBO_PLUGIN_PATH");
+
+  for (auto const &libName : _libs)
+  {
+    std::string pathToLibrary = sp.FindSharedLibrary(libName);
+    std::cout << "Loading Library[" << pathToLibrary << "]" << std::endl;
+    /*std::string pluginName = pluginLoader.LoadLibrary(pathToLibrary);
+    if (pluginName.size())
+    {
+      std::unique_ptr<System> sys =
+        pluginLoader.Instantiate<System>(pluginName);
+      if (!this->LoadSystem(pluginName, std::move(sys)))
+      {
+        ignerr << "Failed to load " << pluginName << " from " << libName
+          << std::endl;
+        return false;
+      }
+      else
+      {
+        igndbg << "Loaded plugin " << pluginName << " from " << libName
+          << std::endl;
+      }
+    }
+    else
+    {
+      ignerr << "Failed to load library " << libName << std::endl;
+      return false;
+    }*/
+  }
+  return true;
+
+}
+
+/////////////////////////////////////////////////
 gazebo::ecs::Entity &Manager::Entity(const EntityId _id) const
 {
   return this->dataPtr->database.Entity(_id);
@@ -249,4 +290,28 @@ int Manager::EndPause()
 bool Manager::Paused() const
 {
   return this->dataPtr->paused;
+}
+
+/////////////////////////////////////////////////
+void Manager::Run()
+{
+  this->dataPtr->runThread.reset(new std::thread(&Manager::RunImpl, this));
+}
+
+/////////////////////////////////////////////////
+void Manager::Stop()
+{
+  this->dataPtr->stop = true;
+  if (this->dataPtr->runThread)
+    this->dataPtr->runThread->join();
+}
+
+/////////////////////////////////////////////////
+void Manager::RunImpl()
+{
+  const double realTimeFactor = 1.0;
+  while (!this->dataPtr->stop)
+  {
+    this->UpdateOnce(realTimeFactor);
+  }
 }

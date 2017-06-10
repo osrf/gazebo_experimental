@@ -72,53 +72,9 @@ void Version()
 }
 
 //////////////////////////////////////////////////
-void Verbose()
-{
-  // This also applies to all upstream libraries using ignition::common::Console
-  ignition::common::Console::SetVerbosity(FLAGS_verbose);
-}
-
-//////////////////////////////////////////////////
 static bool VerbosityValidator(const char */*_flagname*/, int _value)
 {
   return _value >= 0 && _value <= 4;
-}
-
-
-//////////////////////////////////////////////////
-bool LoadSystems(gzecs::Manager &_mgr, std::vector<std::string> _libs)
-{
-  ignition::common::PluginLoader pluginLoader;
-  ignition::common::SystemPaths sp;
-  sp.SetPluginPathEnv("GAZEBO_PLUGIN_PATH");
-
-  for (auto const &libName : _libs)
-  {
-    std::string pathToLibrary = sp.FindSharedLibrary(libName);
-    std::string pluginName = pluginLoader.LoadLibrary(pathToLibrary);
-    if (pluginName.size())
-    {
-      std::unique_ptr<gzecs::System> sys;
-      sys = pluginLoader.Instantiate<gzecs::System>(pluginName);
-      if (!_mgr.LoadSystem(pluginName, std::move(sys)))
-      {
-        ignerr << "Failed to load " << pluginName << " from " << libName
-          << std::endl;
-        return false;
-      }
-      else
-      {
-        igndbg << "Loaded plugin " << pluginName << " from " << libName
-          << std::endl;
-      }
-    }
-    else
-    {
-      ignerr << "Failed to load library " << libName << std::endl;
-      return false;
-    }
-  }
-  return true;
 }
 
 //////////////////////////////////////////////////
@@ -200,16 +156,6 @@ void PlaceholderCreateComponents(gzecs::Manager &_mgr)
 }
 
 //////////////////////////////////////////////////
-void RunECS(gzecs::Manager &_mgr, std::atomic<bool> &stop)
-{
-  const double realTimeFactor = 1.0;
-  while (!stop)
-  {
-    _mgr.UpdateOnce(realTimeFactor);
-  }
-}
-
-//////////////////////////////////////////////////
 int main(int _argc, char **_argv)
 {
   // Register validators
@@ -261,8 +207,11 @@ int main(int _argc, char **_argv)
   // Run Gazebo
   else
   {
+    /*
     // Set verbosity level
-    Verbose();
+    // This also applies to all upstream libraries using
+    // ignition::common::Console
+    ignition::common::Console::SetVerbosity(FLAGS_verbose);
 
     gzecs::Manager manager;
 
@@ -270,19 +219,16 @@ int main(int _argc, char **_argv)
     PlaceholderCreateComponents(manager);
 
     // Load ECS systems
-    if (!LoadSystems(manager, {
-        "gazeboPhysicsSystem",
-        }))
+    if (!manager.LoadSystems({"gazeboPhysicsSystem"}))
     {
       return 1;
     }
 
-    // Initialize app
-    ignition::gui::initApp();
-
     // Run the ECS in another thread
-    std::atomic<bool> stop(false);
-    std::thread ecsThread(RunECS, std::ref(manager), std::ref(stop));
+    manager.Run();
+
+    // Initialize the gui
+    ignition::gui::initApp();
 
     // TODO: load startup plugins and configuration files here before creating
     // the window
@@ -304,9 +250,9 @@ int main(int _argc, char **_argv)
     ignition::gui::stop();
 
     // Stop the ECS
-    stop = true;
+    manager.Stop();
     igndbg << "Waiting for ECS thread" << std::endl;
-    ecsThread.join();
+    */
   }
 
   igndbg << "Shutting down" << std::endl;

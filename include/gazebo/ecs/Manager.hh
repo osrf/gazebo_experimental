@@ -83,6 +83,8 @@ namespace gazebo
       public: bool LoadSystem(const std::string &_name,
                   std::unique_ptr<System> _sys);
 
+      public: bool LoadSystems(const std::vector<std::string> &_libs);
+
       /// \brief Update everything once and return immediately
       public: void UpdateOnce();
 
@@ -98,6 +100,11 @@ namespace gazebo
       /// \brief Returns an entity instance with the given ID
       /// \returns Entity with id set to NO_ENTITY if entity does not exist
       public: gazebo::ecs::Entity &Entity(const EntityId _id) const;
+
+      public: void Run();
+      public: void Stop();
+
+      private: void RunImpl();
 
       private: Manager(const Manager&) = delete;
 

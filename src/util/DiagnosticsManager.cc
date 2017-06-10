@@ -64,15 +64,14 @@ bool DiagnosticsManager::Init(const std::string &_name)
   std::string topicName = "diagnostics";
 
   auto &pub = this->dataPtr->pub;
-  auto &node = this->dataPtr->node;
-  pub = node.Advertise<ignition::msgs::Diagnostics>(topicName);
+  pub = this->dataPtr->node.Advertise<ignition::msgs::Diagnostics>(topicName);
 
   this->dataPtr->initialized = pub;
   return this->dataPtr->initialized;
 }
 
 //////////////////////////////////////////////////
-void DiagnosticsManager::UpdateBegin(ignition::common::Time _simTime)
+void DiagnosticsManager::UpdateBegin(const ignition::common::Time &_simTime)
 {
   if (this->dataPtr->initialized)
   {
