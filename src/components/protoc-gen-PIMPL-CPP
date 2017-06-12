@@ -184,6 +184,7 @@ def generate_api_pieces(package, component_name, simple_fields, enumerations,
         declaration = (declaration.replace("%%field_type%%", field["type"])
                                   .replace("%%field_name%%", field["name"])
                                   .replace("%%ns_indent%%", ns_indent)
+                                  .replace("%%class_name%%", component_name)
                                   .replace("%%api_doxygen%%", api_doxygen))
         api_declarations.append(declaration)
 
@@ -191,7 +192,7 @@ def generate_api_pieces(package, component_name, simple_fields, enumerations,
                                 .replace("%%field_name%%", field["name"])
                                 .replace("%%ns_indent%%", ns_indent)
                                 .replace("%%full_namespace%%", full_namespace)
-                                .replace("%%component_name%%", component_name))
+                                .replace("%%class_name%%", component_name))
         api_definitions.append(definition)
 
         for include in field["include"]:
@@ -212,6 +213,7 @@ def generate_api_pieces(package, component_name, simple_fields, enumerations,
         declaration = (declaration.replace("%%field_type%%", field["type"])
                                   .replace("%%field_name%%", field["name"])
                                   .replace("%%ns_indent%%", ns_indent)
+                                  .replace("%%class_name%%", component_name)
                                   .replace("%%api_doxygen%%", api_doxygen))
         api_declarations.append(declaration)
 
@@ -219,7 +221,7 @@ def generate_api_pieces(package, component_name, simple_fields, enumerations,
                                 .replace("%%field_name%%", field["name"])
                                 .replace("%%ns_indent%%", ns_indent)
                                 .replace("%%full_namespace%%", full_namespace)
-                                .replace("%%component_name%%", component_name))
+                                .replace("%%class_name%%", component_name))
         api_definitions.append(definition)
 
     return {

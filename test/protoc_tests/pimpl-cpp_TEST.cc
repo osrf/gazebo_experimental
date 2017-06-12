@@ -374,17 +374,22 @@ TEST(PIMPLCPP, RepeatedFields)
       static_cast<void *>(&rm), static_cast<void *>(storage.get()));
 
   // Check imported message works correclty
-  rm.Imported().resize(2);
+  rm.Imported().Resize(2);
+  ASSERT_EQ(2, rm.Imported().Size());
   rm.Imported()[0].SomeInt() = 35;
   rm.Imported()[1].SomeInt() = 53;
 
-  rm.InlinedOptional().SomeFloat().resize(2);
+  rm.InlinedOptional().SomeFloat().Resize(2);
+  ASSERT_EQ(2, rm.InlinedOptional().SomeFloat().Size());
   rm.InlinedOptional().SomeFloat()[0] = 5.0f;
   rm.InlinedOptional().SomeFloat()[1] = 26.7f;
 
-  rm.InlinedRepeated().resize(2);
-  rm.InlinedRepeated()[0].SomeFloat().resize(2);
-  rm.InlinedRepeated()[1].SomeFloat().resize(2);
+  rm.InlinedRepeated().Resize(2);
+  ASSERT_EQ(2, rm.InlinedRepeated().Size());
+  rm.InlinedRepeated()[0].SomeFloat().Resize(2);
+  ASSERT_EQ(2, rm.InlinedRepeated()[0].SomeFloat().Size());
+  rm.InlinedRepeated()[1].SomeFloat().Resize(2);
+  ASSERT_EQ(2, rm.InlinedRepeated()[1].SomeFloat().Size());
   rm.InlinedRepeated()[0].SomeFloat()[0] = 19.9f;
   rm.InlinedRepeated()[0].SomeFloat()[1] = 0.9f;
   rm.InlinedRepeated()[1].SomeFloat()[0] = 26.0f;

@@ -1,11 +1,69 @@
 //////////////////////////////////////////////////
-::std::vector<%%field_type%%> &%%full_namespace%%::%%component_name%%::%%field_name%%()
+%%full_namespace%%::%%class_name%%::%%field_name%%Repeated::%%field_name%%Repeated(%%class_name%%Storage *_storage) : dataPtr(_storage)
 {
-  return this->dataPtr->%%field_name%%;
 }
 
 //////////////////////////////////////////////////
-const ::std::vector<%%field_type%%> &%%full_namespace%%::%%component_name%%::%%field_name%%() const
+%%full_namespace%%::%%class_name%%::%%field_name%%Repeated::~%%field_name%%Repeated()
 {
-  return this->dataPtr->%%field_name%%;
+}
+
+//////////////////////////////////////////////////
+void %%full_namespace%%::%%class_name%%::%%field_name%%Repeated::Resize(std::size_t _num)
+{
+  this->dataPtr->%%field_name%%.resize(_num);
+}
+
+//////////////////////////////////////////////////
+void %%full_namespace%%::%%class_name%%::%%field_name%%Repeated::Clear()
+{
+  this->dataPtr->%%field_name%%.clear();
+}
+
+//////////////////////////////////////////////////
+std::size_t %%full_namespace%%::%%class_name%%::%%field_name%%Repeated::Size()
+{
+  return this->dataPtr->%%field_name%%.size();
+}
+
+//////////////////////////////////////////////////
+void %%full_namespace%%::%%class_name%%::%%field_name%%Repeated::Remove(std::size_t _idx)
+{
+  this->dataPtr->%%field_name%%.erase(this->dataPtr->%%field_name%%.begin() + _idx);
+}
+
+//////////////////////////////////////////////////
+%%field_type%% &%%full_namespace%%::%%class_name%%::%%field_name%%Repeated::operator[](std::size_t _idx)
+{
+  return this->dataPtr->%%field_name%%[_idx];
+}
+
+//////////////////////////////////////////////////
+const %%field_type%% &%%full_namespace%%::%%class_name%%::%%field_name%%Repeated::operator[](std::size_t _idx) const
+{
+  return this->dataPtr->%%field_name%%[_idx];
+}
+
+//////////////////////////////////////////////////
+%%field_type%% &%%full_namespace%%::%%class_name%%::%%field_name%%Repeated::At(std::size_t _idx)
+{
+  return this->dataPtr->%%field_name%%.at(_idx);
+}
+
+//////////////////////////////////////////////////
+const %%field_type%% &%%full_namespace%%::%%class_name%%::%%field_name%%Repeated::At(std::size_t _idx) const
+{
+  return this->dataPtr->%%field_name%%.at(_idx);
+}
+
+//////////////////////////////////////////////////
+%%full_namespace%%::%%class_name%%::%%field_name%%Repeated %%full_namespace%%::%%class_name%%::%%field_name%%()
+{
+  return %%full_namespace%%::%%class_name%%::%%field_name%%Repeated(this->dataPtr);
+}
+
+//////////////////////////////////////////////////
+const %%full_namespace%%::%%class_name%%::%%field_name%%Repeated %%full_namespace%%::%%class_name%%::%%field_name%%() const
+{
+  return %%full_namespace%%::%%class_name%%::%%field_name%%Repeated(this->dataPtr);
 }
