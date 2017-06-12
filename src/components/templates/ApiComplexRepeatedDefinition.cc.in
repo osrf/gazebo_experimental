@@ -1,0 +1,17 @@
+//////////////////////////////////////////////////
+::std::vector<%%field_type%%> %%full_namespace%%::%%component_name%%::%%field_name%%()
+{
+  ::std::vector<%%field_type%%> vec;
+  for (auto &storage : this->dataPtr->%%field_name%%)
+    vec.push_back(%%field_type%%(&storage));
+  return vec;
+}
+
+//////////////////////////////////////////////////
+const ::std::vector<%%field_type%%> %%full_namespace%%::%%component_name%%::%%field_name%%() const
+{
+  ::std::vector<%%field_type%%> vec;
+  for (auto &storage : this->dataPtr->%%field_name%%)
+    vec.push_back(%%field_type%%(&storage));
+  return vec;
+}

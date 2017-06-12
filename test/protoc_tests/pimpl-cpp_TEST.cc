@@ -26,9 +26,10 @@
 // Generated header files
 #include "DefaultValues.api.hh"
 #include "EnumType.api.hh"
+#include "RepeatedMessage.api.hh"
+#include "NestedMessage.api.hh"
 #include "SimpleTypes.api.hh"
 #include "SubstitutedTypes.api.hh"
-#include "NestedMessage.api.hh"
 
 
 // Type comparison
@@ -350,6 +351,56 @@ TEST(PIMPLCPP, NestedMessages)
 
   nmFactory->DestructAPI(static_cast<void *>(&nm));
   nmFactory->DestructStorage(static_cast<void *>(storage.get()));
+}
+
+/////////////////////////////////////////////////
+TEST(PIMPLCPP, RepeatedFields)
+{
+  ignition::common::PluginLoader pl;
+  ignition::common::SystemPaths sp;
+  sp.AddPluginPaths("./");
+  std::string pathToLibrary = sp.FindSharedLibrary(
+      "gazeboComponentRepeatedMessage");
+  ASSERT_FALSE(pathToLibrary.empty());
+  std::string pluginName = pl.LoadLibrary(pathToLibrary);
+  ASSERT_EQ("::gazebo::components::test::RepeatedMessageFactory", pluginName);
+
+  auto factory = pl.Instantiate<gazebo::ecs::ComponentFactory>(pluginName);
+  std::unique_ptr<char> storage(new char[factory->StorageSize()]);
+  factory->ConstructStorage(static_cast<void *>(storage.get()));
+
+  gazebo::components::test::RepeatedMessage rm;
+  factory->ConstructAPI(
+      static_cast<void *>(&rm), static_cast<void *>(storage.get()));
+
+  // Check imported message works correclty
+  rm.Imported().resize(2);
+  rm.Imported()[0].SomeInt() = 35;
+  rm.Imported()[1].SomeInt() = 53;
+
+  rm.InlinedOptional().SomeFloat().resize(2);
+  rm.InlinedOptional().SomeFloat()[0] = 5.0f;
+  rm.InlinedOptional().SomeFloat()[1] = 26.7f;
+
+  rm.InlinedRepeated().resize(2);
+  rm.InlinedRepeated()[0].SomeFloat().resize(2);
+  rm.InlinedRepeated()[1].SomeFloat().resize(2);
+  rm.InlinedRepeated()[0].SomeFloat()[0] = 19.9f;
+  rm.InlinedRepeated()[0].SomeFloat()[1] = 0.9f;
+  rm.InlinedRepeated()[1].SomeFloat()[0] = 26.0f;
+  rm.InlinedRepeated()[1].SomeFloat()[1] = 20.17f;
+
+  EXPECT_EQ(35, rm.Imported()[0].SomeInt());
+  EXPECT_EQ(53, rm.Imported()[1].SomeInt());
+  EXPECT_FLOAT_EQ(5.0f, rm.InlinedOptional().SomeFloat()[0]);
+  EXPECT_FLOAT_EQ(26.7f, rm.InlinedOptional().SomeFloat()[1]);
+  EXPECT_FLOAT_EQ(19.9f, rm.InlinedRepeated()[0].SomeFloat()[0]);
+  EXPECT_FLOAT_EQ(0.9f, rm.InlinedRepeated()[0].SomeFloat()[1]);
+  EXPECT_FLOAT_EQ(26.0f, rm.InlinedRepeated()[1].SomeFloat()[0]);
+  EXPECT_FLOAT_EQ(20.17f, rm.InlinedRepeated()[1].SomeFloat()[1]);
+
+  factory->DestructAPI(static_cast<void *>(&rm));
+  factory->DestructStorage(static_cast<void *>(storage.get()));
 }
 
 int main(int argc, char **argv)

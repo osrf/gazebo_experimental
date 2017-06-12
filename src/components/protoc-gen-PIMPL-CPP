@@ -23,17 +23,17 @@ except ImportError:
 known_complex_types = {
         ".gazebo.components.Vector3d": {
             "type": "ignition::math::Vector3d",
-            "include": "ignition/math/Vector3.hh",
+            "include": set(["ignition/math/Vector3.hh"]),
             "default": None,
             },
         ".gazebo.components.Quaterniond": {
             "type": "ignition::math::Quaterniond",
-            "include": "ignition/math/Quaternion.hh",
+            "include": set(["ignition/math/Quaternion.hh"]),
             "default": None,
             },
         ".gazebo.components.Pose3d": {
             "type": "ignition::math::Pose3d",
-            "include": "ignition/math/Pose3.hh",
+            "include": set(["ignition/math/Pose3.hh"]),
             "default": None,
             },
         }
@@ -67,82 +67,33 @@ simple_types_to_cpp = {
         }
 
 
-factory_cc_template = None
-with open(file_path + "/templates/Factory.cc.in", "r") as fin:
-    factory_cc_template = fin.read()
+def get_template(name):
+    """Returns contents of template"""
+    with open(file_path + "/templates/" + name, "r") as fin:
+        return fin.read()
 
-
-fw_decl_hh_template = None
-with open(file_path + "/templates/ForwardDeclaration.hh.in", "r") as fin:
-    fw_decl_hh_template = fin.read()
-
-
-api_hh_template = None
-with open(file_path + "/templates/Api.hh.in", "r") as fin:
-    api_hh_template = fin.read()
-
-
-api_cc_template = None
-with open(file_path + "/templates/Api.cc.in", "r") as fin:
-    api_cc_template = fin.read()
-
-
-class_decl_template = None
-with open(file_path + "/templates/class_decl.hh.in", "r") as fin:
-    class_decl_template = fin.read()
-
-
-class_def_template = None
-with open(file_path + "/templates/class_def.cc.in", "r") as fin:
-    class_def_template = fin.read()
-
-
-storage_hh_template = None
-with open(file_path + "/templates/Storage.hh.in", "r") as fin:
-    storage_hh_template = fin.read()
-
-storage_decl_template = None
-with open(file_path + "/templates/storage_decl.hh.in", "r") as fin:
-    storage_decl_template = fin.read()
-
-declaration_template = None
-with open(file_path + "/templates/ApiDeclaration.hh.in", "r") as fin:
-    declaration_template = fin.read()
-
-
-definition_template = None
-with open(file_path + "/templates/ApiDefinition.cc.in", "r") as fin:
-    definition_template = fin.read()
-
-
-complex_definition_template = None
-with open(file_path + "/templates/ApiComplexDefinition.cc.in", "r") as fin:
-    complex_definition_template = fin.read()
-
-
-field_template = None
-with open(file_path + "/templates/StorageField.cc.in", "r") as fin:
-    field_template = fin.read()
-
-
-field_with_default_template = None
-with open(file_path + "/templates/StorageFieldWithDefault.cc.in", "r") as fin:
-    field_with_default_template = fin.read()
-
-
-include_template = None
-with open(file_path + "/templates/Include.hh.in", "r") as fin:
-    include_template = fin.read()
-
-
-enum_template = None
-with open(file_path + "/templates/Enum.hh.in", "r") as fin:
-    enum_template = fin.read()
-
-
-enum_field_template = None
-with open(file_path + "/templates/EnumField.hh.in", "r") as fin:
-    enum_field_template = fin.read()
+tmpl_factory_cc = get_template("Factory.cc.in")
+tmpl_fw_decl_hh = get_template("ForwardDeclaration.hh.in")
+tmpl_api_hh = get_template("Api.hh.in")
+tmpl_api_cc = get_template("Api.cc.in")
+tmpl_class_decl = get_template("class_decl.hh.in")
+tmpl_class_def = get_template("class_def.cc.in")
+tmpl_storage_hh = get_template("Storage.hh.in")
+tmpl_storage_decl = get_template("storage_decl.hh.in")
+tmpl_declaration = get_template("ApiDeclaration.hh.in")
+tmpl_definition = get_template("ApiDefinition.cc.in")
+tmpl_repeated_declaration = get_template("ApiRepeatedDeclaration.hh.in")
+tmpl_repeated_definition = get_template("ApiRepeatedDefinition.cc.in")
+tmpl_complex_declaration = get_template("ApiComplexDeclaration.hh.in")
+tmpl_complex_definition = get_template("ApiComplexDefinition.cc.in")
+tmpl_complex_repeated_declaration = get_template("ApiComplexRepeatedDeclaration.hh.in")
+tmpl_complex_repeated_definition = get_template("ApiComplexRepeatedDefinition.cc.in")
+tmpl_field = get_template("StorageField.cc.in")
+tmpl_field_repeated = get_template("StorageFieldRepeated.cc.in")
+tmpl_field_with_default = get_template("StorageFieldWithDefault.cc.in")
+tmpl_include = get_template("Include.hh.in")
+tmpl_enum = get_template("Enum.hh.in")
+tmpl_enum_field = get_template("EnumField.hh.in")
 
 
 def generate_enum(indent, enum_dict):
@@ -154,7 +105,7 @@ def generate_enum(indent, enum_dict):
     # Generate code for individual values in enum
     gen_fields = []
     for field in enum_dict["fields"]:
-        gen_field = enum_field_template
+        gen_field = tmpl_enum_field
         gen_field = (gen_field.replace("%%ns_indent%%", indent)
                              .replace("%%field_name%%", field["name"])
                              .replace("%%field_number%%",
@@ -162,7 +113,7 @@ def generate_enum(indent, enum_dict):
         gen_fields.append(gen_field)
     gen_fields = "".join(gen_fields)
     # combine value into a larger enum type
-    gen_enum_hh = enum_template
+    gen_enum_hh = tmpl_enum
     gen_enum_hh = (gen_enum_hh.replace("%%ns_indent%%", indent)
                              .replace("%%enum_name%%", enum_dict["name"])
                              .replace("%%enum_fields%%", gen_fields))
@@ -191,7 +142,7 @@ def generate_namespace(package):
     return (ns_indent, full_namespace, ns_begin, ns_end)
 
 
-def generate_class_pieces(package, component_name, simple_fields, enumerations,
+def generate_api_pieces(package, component_name, simple_fields, enumerations,
         complex_fields):
     """Generates C++ code for pieces of a class
     @param package a dot delimited string
@@ -224,26 +175,27 @@ def generate_class_pieces(package, component_name, simple_fields, enumerations,
                 + r"  /// \brief Get reference to "
                 + field["name"])
 
-        field_type = field["type"] + " &"
+        declaration = tmpl_declaration
+        definition = tmpl_definition
+        if field["repeated"]:
+            declaration = tmpl_repeated_declaration
+            definition = tmpl_repeated_definition
 
-        declaration = declaration_template
-        declaration = (declaration.replace("%%field_type%%", field_type)
+        declaration = (declaration.replace("%%field_type%%", field["type"])
                                   .replace("%%field_name%%", field["name"])
                                   .replace("%%ns_indent%%", ns_indent)
                                   .replace("%%api_doxygen%%", api_doxygen))
         api_declarations.append(declaration)
 
-        definition = definition_template
-        definition = (definition.replace("%%field_type%%", field_type)
+        definition = (definition.replace("%%field_type%%", field["type"])
                                 .replace("%%field_name%%", field["name"])
                                 .replace("%%ns_indent%%", ns_indent)
                                 .replace("%%full_namespace%%", full_namespace)
                                 .replace("%%component_name%%", component_name))
         api_definitions.append(definition)
 
-        if field["include"]:
-            include = include_template
-            include = include.replace("%%include%%", field["include"])
+        for include in field["include"]:
+            include = tmpl_include.replace("%%include%%", include)
             hh_includes.add(include)
 
     # Generate code for complex fields
@@ -251,16 +203,19 @@ def generate_class_pieces(package, component_name, simple_fields, enumerations,
         api_doxygen = (ns_indent
                 + r"  /// \brief Get accessor to "
                 + field["name"])
-        field_type = field["type"] + " "
-        declaration = declaration_template
-        declaration = (declaration.replace("%%field_type%%", field_type)
+        declaration = tmpl_complex_declaration
+        definition = tmpl_complex_definition
+        if field["repeated"]:
+            declaration = tmpl_complex_repeated_declaration
+            definition = tmpl_complex_repeated_definition
+
+        declaration = (declaration.replace("%%field_type%%", field["type"])
                                   .replace("%%field_name%%", field["name"])
                                   .replace("%%ns_indent%%", ns_indent)
                                   .replace("%%api_doxygen%%", api_doxygen))
         api_declarations.append(declaration)
 
-        definition = complex_definition_template
-        definition = (definition.replace("%%field_type%%", field_type)
+        definition = (definition.replace("%%field_type%%", field["type"])
                                 .replace("%%field_name%%", field["name"])
                                 .replace("%%ns_indent%%", ns_indent)
                                 .replace("%%full_namespace%%", full_namespace)
@@ -275,12 +230,12 @@ def generate_class_pieces(package, component_name, simple_fields, enumerations,
             }
 
 
-def generate_class_partial(decl_template, def_template, package, class_name,
+def generate_api_partial(tmpl_decl, tmpl_def, package, class_name,
         simple_fields, enumerations, complex_fields, inline_nested_names,
         nested_types):
-    """Generates part of class declaration
-    @param decl_template class declaration template
-    @param def_template class definition template
+    """Generates part of api class declaration
+    @param tmpl_decl class declaration template
+    @param tmpl_def class definition template
     @param package a dot delimited string
     @param class_name string name of class
     @param simple_fields dict with info about fields in message
@@ -297,7 +252,7 @@ def generate_class_partial(decl_template, def_template, package, class_name,
     (ns_indent, full_namespace,
             ns_begin, ns_end) = generate_namespace(package)
 
-    class_pieces = generate_class_pieces(package, class_name,
+    class_pieces = generate_api_pieces(package, class_name,
             simple_fields, enumerations, complex_fields)
 
     inline_decl = []
@@ -308,8 +263,8 @@ def generate_class_partial(decl_template, def_template, package, class_name,
         # Recursively generate nested messages
         nested_info = nested_types[nested_name]
         nested_package = ".".join(nested_name.split(".")[:-1])
-        nested_partial = generate_class_partial(class_decl_template,
-                class_def_template, nested_package, nested_info["name"],
+        nested_partial = generate_api_partial(tmpl_class_decl,
+                tmpl_class_def, nested_package, nested_info["name"],
                 nested_info["simple_fields"], nested_info["enumerations"],
                 nested_info["complex_fields"], nested_info["nested_types"],
                 nested_types)
@@ -324,14 +279,14 @@ def generate_class_partial(decl_template, def_template, package, class_name,
     enum_types = "\n".join(class_pieces["enum_types"])
 
     # Put all content together
-    hh_content = decl_template
+    hh_content = tmpl_decl
     hh_content = (hh_content.replace("%%class_name%%", class_name)
                             .replace("%%ns_indent%%", ns_indent)
                             .replace("%%api_declarations%%", api_declarations)
                             .replace("%%inline_declarations%%", inline_decl)
                             .replace("%%enumerations%%", enum_types))
 
-    cc_content = def_template
+    cc_content = tmpl_def
     cc_content = (cc_content.replace("%%class_name%%", class_name)
                             .replace("%%ns_indent%%", ns_indent)
                             .replace("%%full_namespace%%", full_namespace)
@@ -369,11 +324,11 @@ def generate_api_files(dependency, package, component_name, simple_fields,
         #discard ".proto"
         pieces = dep.split(".")[:-1]
         base_include = "/".join(pieces)
-        hh_include = include_template.replace("%%include%%",
+        hh_include = tmpl_include.replace("%%include%%",
                 base_include + ".api.hh")
         hh_includes.add(hh_include)
 
-    partial_cpp = generate_class_partial(api_hh_template, api_cc_template,
+    partial_cpp = generate_api_partial(tmpl_api_hh, tmpl_api_cc,
             package, component_name, simple_fields, enumerations,
             complex_fields, inline_nested_names, nested_types);
     hh_includes.update(partial_cpp["hh_includes"])
@@ -419,7 +374,7 @@ def generate_storage_class(template, package, class_name, simple_fields,
         # Recursively generate code for nested storage
         nested_info = nested_types[nested_name]
         nested_package = ".".join(nested_name.split(".")[:-1])
-        nested_partial = generate_storage_class(storage_decl_template,
+        nested_partial = generate_storage_class(tmpl_storage_decl,
                 nested_package, nested_info["name"],
                 nested_info["simple_fields"], nested_info["complex_fields"],
                 nested_info["nested_types"], nested_types)
@@ -429,9 +384,11 @@ def generate_storage_class(template, package, class_name, simple_fields,
     storage_fields = []
     for field in simple_fields:
         field_doxygen = ns_indent + r"  /// \brief holds " + field["name"]
-        storage_field = field_template
-        if field["default"]:
-            storage_field = field_with_default_template
+        storage_field = tmpl_field
+        if field["repeated"]:
+            storage_field = tmpl_field_repeated
+        elif field["default"]:
+            storage_field = tmpl_field_with_default
             storage_field = storage_field.replace(
                     "%%field_default%%", field["default"])
         storage_field = (storage_field.replace("%%field_doxygen%%", field_doxygen)
@@ -442,7 +399,9 @@ def generate_storage_class(template, package, class_name, simple_fields,
 
     for field in complex_fields:
         field_doxygen = ns_indent + r"  /// \brief holds " + field["name"]
-        storage_field = field_template
+        storage_field = tmpl_field
+        if field["repeated"]:
+            storage_field = tmpl_field_repeated
         field_type = field["type"] + "Storage"
         storage_field = (storage_field.replace("%%field_doxygen%%", field_doxygen)
                                       .replace("%%field_type%%", field_type)
@@ -480,7 +439,7 @@ def generate_storage_header(dependency, package, component_name, simple_fields,
             + r"/// \brief Generated storage class for component "
             + component_name)
 
-    partial_class = generate_storage_class(storage_hh_template, package,
+    partial_class = generate_storage_class(tmpl_storage_hh, package,
             component_name, simple_fields, complex_fields, nested_names,
             nested_types)
 
@@ -489,7 +448,7 @@ def generate_storage_header(dependency, package, component_name, simple_fields,
         #discard ".proto"
         pieces = dep.split(".")[:-1]
         base_include = "/".join(pieces)
-        include = include_template.replace("%%include%%",
+        include = tmpl_include.replace("%%include%%",
                 base_include + ".storage.hh")
         includes.add(include)
     includes = "".join(includes)
@@ -513,7 +472,7 @@ def generate_factory_cc(package, component_name):
     factory_doxygen = (ns_indent
             + r"/// \brief Generated Factory class for component "
             + component_name)
-    cc_content = factory_cc_template
+    cc_content = tmpl_factory_cc
     cc_content = (cc_content.replace("%%component_name%%", component_name)
                             .replace("%%full_namespace%%", full_namespace)
                             .replace("%%ns_begin%%", ns_begin)
@@ -567,31 +526,30 @@ def gather_message_info(package, message_descriptor, nested_types):
 
     # Pull info about fields from the message
     for field_descriptor in message_descriptor.field:
+        field = {}
+        field["name"] = field_descriptor.name
+        field["include"] = set()
+        field["repeated"] = False
+        if FieldDescriptor.LABEL_REPEATED == field_descriptor.label:
+            field["repeated"] = True
+            field["include"].add("vector")
+
         if field_descriptor.type == FieldDescriptor.TYPE_MESSAGE:
             # Complex/Nested type
             if field_descriptor.type_name in known_complex_types:
                 # Swap complex type for a simple type
-                field = copy.deepcopy(
-                    known_complex_types[field_descriptor.type_name])
-                field["name"] = field_descriptor.name
+                field.update(copy.deepcopy(
+                    known_complex_types[field_descriptor.type_name]))
                 simple_fields.append(field)
             else:
-                field = {}
                 field["type"] = field_descriptor.type_name.replace(".", "::")
-                field["name"] = field_descriptor.name
                 complex_fields.append(field)
         elif FieldDescriptor.TYPE_ENUM == field_descriptor.type:
-            field = {}
-            field["include"] = None
-            field["name"] = field_descriptor.name
             field["type"] = field_descriptor.type_name.replace(".", "::")
             field["default"] = "static_cast<" + field["type"] + ">(0)"
             simple_fields.append(field)
         else:
             # Simple type
-            field = {}
-            field["include"] = None
-            field["name"] = field_descriptor.name
             field["type"] = simple_types_to_cpp[field_descriptor.type]
             default = field_descriptor.default_value
             if ( FieldDescriptor.TYPE_STRING == field_descriptor.type or
@@ -600,6 +558,7 @@ def gather_message_info(package, message_descriptor, nested_types):
             else:
                 field["default"] = default
             simple_fields.append(field)
+
 
     return {"package": package,
             "name": component_name,

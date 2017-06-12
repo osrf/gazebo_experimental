@@ -1,11 +1,11 @@
 //////////////////////////////////////////////////
-%%field_type%%%%full_namespace%%::%%component_name%%::%%field_name%%()
+%%field_type%% %%full_namespace%%::%%component_name%%::%%field_name%%()
 {
   return %%field_type%%(&(this->dataPtr->%%field_name%%));
 }
 
 //////////////////////////////////////////////////
-const %%field_type%%%%full_namespace%%::%%component_name%%::%%field_name%%() const
+const %%field_type%% %%full_namespace%%::%%component_name%%::%%field_name%%() const
 {
   return %%field_type%%(&(this->dataPtr->%%field_name%%));
 }

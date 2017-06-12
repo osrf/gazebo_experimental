@@ -2,6 +2,7 @@ set(protoc_tests
   DefaultValues.proto
   EnumType.proto
   NestedMessage.proto
+  RepeatedMessage.proto
   SimpleTypes.proto
   SubstitutedTypes.proto
 )

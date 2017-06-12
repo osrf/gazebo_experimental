@@ -1,11 +1,11 @@
 //////////////////////////////////////////////////
-%%field_type%% &%%full_namespace%%::%%component_name%%::%%field_name%%()
+::std::vector<%%field_type%%> &%%full_namespace%%::%%component_name%%::%%field_name%%()
 {
   return this->dataPtr->%%field_name%%;
 }
 
 //////////////////////////////////////////////////
-const %%field_type%% &%%full_namespace%%::%%component_name%%::%%field_name%%() const
+const ::std::vector<%%field_type%%> &%%full_namespace%%::%%component_name%%::%%field_name%%() const
 {
   return this->dataPtr->%%field_name%%;
 }
