@@ -28,6 +28,7 @@
 #include "EnumType.api.hh"
 #include "RepeatedMessage.api.hh"
 #include "NestedMessage.api.hh"
+#include "OneofMessage.api.hh"
 #include "SimpleTypes.api.hh"
 #include "SubstitutedTypes.api.hh"
 
@@ -405,6 +406,34 @@ TEST(PIMPLCPP, RepeatedFields)
   EXPECT_FLOAT_EQ(20.17f, rm.InlinedRepeated()[1].SomeFloat()[1]);
 
   factory->DestructAPI(static_cast<void *>(&rm));
+  factory->DestructStorage(static_cast<void *>(storage.get()));
+}
+
+
+/////////////////////////////////////////////////
+TEST(PIMPLCPP, OneofMessage)
+{
+  ignition::common::PluginLoader pl;
+  ignition::common::SystemPaths sp;
+  sp.AddPluginPaths("./");
+  std::string pathToLibrary = sp.FindSharedLibrary(
+      "gazeboComponentOneofMessage");
+  ASSERT_FALSE(pathToLibrary.empty());
+  std::string pluginName = pl.LoadLibrary(pathToLibrary);
+  ASSERT_EQ("::gazebo::components::test::OneofMessageFactory", pluginName);
+
+  auto factory = pl.Instantiate<gazebo::ecs::ComponentFactory>(pluginName);
+  std::unique_ptr<char> storage(new char[factory->StorageSize()]);
+  factory->ConstructStorage(static_cast<void *>(storage.get()));
+
+  gazebo::components::test::OneofMessage comp;
+  factory->ConstructAPI(
+      static_cast<void *>(&comp), static_cast<void *>(storage.get()));
+
+  // Check imported message works correclty
+  // comp.SomeUnion() TODO
+
+  factory->DestructAPI(static_cast<void *>(&comp));
   factory->DestructStorage(static_cast<void *>(storage.get()));
 }
 

@@ -9,8 +9,6 @@ file_path = os.path.dirname(os.path.realpath(__file__))
 try:
     from google.protobuf.compiler import plugin_pb2 as plugin
     from google.protobuf.descriptor import FieldDescriptor
-    from google.protobuf.descriptor_pb2 import DescriptorProto
-    from google.protobuf.descriptor_pb2 import EnumDescriptorProto
 except ImportError:
     sys.stderr.write("""\n\nNeed python protobuf libraries: 
         Do `pip install protobuf` or `apt install python-protobuf`
@@ -300,7 +298,8 @@ def generate_api_partial(tmpl_decl, tmpl_def, package, class_name,
 
 
 def generate_api_files(dependency, package, component_name, simple_fields,
-        enumerations, complex_fields, inline_nested_names, nested_types):
+        enumerations, complex_fields, inline_nested_names, nested_types,
+        oneofs):
     """Generates header and source file for API
     @param dependency iterable of strings of protofiles
     @param package a dot delimited string
@@ -310,6 +309,7 @@ def generate_api_files(dependency, package, component_name, simple_fields,
     @param complex_fields list with info about fields that are messages
     @param inline_nested_names list of names defined in top-level message
     @param nested_types dict of types that are defined inline
+    @param oneofs list of dictionaries with info about oneofs
     @returns tuple
         string with header file
         string with source file
@@ -422,7 +422,7 @@ def generate_storage_class(template, package, class_name, simple_fields,
 
 
 def generate_storage_header(dependency, package, component_name, simple_fields,
-        complex_fields, nested_names, nested_types):
+        complex_fields, nested_names, nested_types, oneofs):
     """Generates header for storage class
     @param dependency iterable of strings of protofiles
     @param package a dot delimited string
@@ -431,6 +431,7 @@ def generate_storage_header(dependency, package, component_name, simple_fields,
     @param complex_fields list with info about fields that are messages
     @param inline_nested_names list of names defined in top-level message
     @param nested_types dict of types that are defined inline
+    @param oneofs list of dictionaries with info about oneofs
     @returns string with header file
     """
     # generate c++ namespace from protobuf package
@@ -496,11 +497,13 @@ def gather_message_info(package, message_descriptor, nested_types):
         simple_fields list of info about simple fields
         complex_fields list of info about complex fields
         nested_types list of string identifying nested types in this message
+        oneofs list of info about oneof's in this message
     """
     enumerations = []
     simple_fields = []
     complex_fields = []
     inline_nested_names = []
+    oneofs = []
     component_name = message_descriptor.name
 
     # Recursively get info from nested messages
@@ -525,15 +528,27 @@ def gather_message_info(package, message_descriptor, nested_types):
             enum["fields"].append(field)
         enumerations.append(enum)
 
+    # Pull info about Oneof's from message
+    for oneof_descriptor in message_descriptor.oneof_decl:
+        oneof = {}
+        oneof["name"] = oneof_descriptor.name
+        oneof["fields"] = []
+        oneofs.append(oneof)
+
     # Pull info about fields from the message
     for field_descriptor in message_descriptor.field:
         field = {}
         field["name"] = field_descriptor.name
         field["include"] = set()
+        field["oneof"] = None
         field["repeated"] = False
         if FieldDescriptor.LABEL_REPEATED == field_descriptor.label:
             field["repeated"] = True
             field["include"].add("vector")
+
+        if field_descriptor.HasField("oneof_index"):
+            field["oneof"] = field_descriptor.oneof_index
+            oneofs[field["oneof"]]["fields"].append(field)
 
         if field_descriptor.type == FieldDescriptor.TYPE_MESSAGE:
             # Complex/Nested type
@@ -567,6 +582,7 @@ def gather_message_info(package, message_descriptor, nested_types):
             "simple_fields": simple_fields,
             "complex_fields": complex_fields,
             "nested_types": inline_nested_names,
+            "oneofs": oneofs,
             }
 
 
@@ -590,11 +606,12 @@ def generate_message_files(dependency, package, message_descriptor):
     # Generate code with the information gathered
     api_header, api_source = generate_api_files(dependency, info["package"],
             info["name"], info["simple_fields"], info["enumerations"],
-            info["complex_fields"], info["nested_types"], nested_types)
+            info["complex_fields"], info["nested_types"], nested_types,
+            info["oneofs"])
 
     storage_header = generate_storage_header(dependency, info["package"],
             info["name"], info["simple_fields"], info["complex_fields"],
-            info["nested_types"], nested_types)
+            info["nested_types"], nested_types, info["oneofs"])
 
     return api_header, api_source, storage_header
 
