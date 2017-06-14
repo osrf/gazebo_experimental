@@ -73,21 +73,20 @@ def get_template(name):
         return fin.read()
 
 tmpl_factory_cc = get_template("Factory.cc.in")
-tmpl_fw_decl_hh = get_template("ForwardDeclaration.hh.in")
 tmpl_api_hh = get_template("Api.hh.in")
 tmpl_api_cc = get_template("Api.cc.in")
-tmpl_class_decl = get_template("class_decl.hh.in")
-tmpl_class_def = get_template("class_def.cc.in")
+tmpl_class_decl = get_template("ApiNestedClassDecl.hh.in")
+tmpl_class_def = get_template("ApiNestedClassDef.cc.in")
 tmpl_storage_hh = get_template("Storage.hh.in")
-tmpl_storage_decl = get_template("storage_decl.hh.in")
-tmpl_declaration = get_template("ApiDeclaration.hh.in")
-tmpl_definition = get_template("ApiDefinition.cc.in")
-tmpl_repeated_declaration = get_template("ApiRepeatedDeclaration.hh.in")
-tmpl_repeated_definition = get_template("ApiRepeatedDefinition.cc.in")
-tmpl_complex_declaration = get_template("ApiComplexDeclaration.hh.in")
-tmpl_complex_definition = get_template("ApiComplexDefinition.cc.in")
-tmpl_complex_repeated_declaration = get_template("ApiComplexRepeatedDeclaration.hh.in")
-tmpl_complex_repeated_definition = get_template("ApiComplexRepeatedDefinition.cc.in")
+tmpl_storage_decl = get_template("StorageClassDecl.hh.in")
+tmpl_declaration = get_template("ApiDecl.hh.in")
+tmpl_definition = get_template("ApiDef.cc.in")
+tmpl_repeated_decl = get_template("ApiRepeatedDecl.hh.in")
+tmpl_repeated_def = get_template("ApiRepeatedDef.cc.in")
+tmpl_complex_decl = get_template("ApiComplexDecl.hh.in")
+tmpl_complex_def = get_template("ApiComplexDef.cc.in")
+tmpl_complex_repeated_decl = get_template("ApiComplexRepeatedDecl.hh.in")
+tmpl_complex_repeated_def = get_template("ApiComplexRepeatedDef.cc.in")
 tmpl_field = get_template("StorageField.cc.in")
 tmpl_field_repeated = get_template("StorageFieldRepeated.cc.in")
 tmpl_field_with_default = get_template("StorageFieldWithDefault.cc.in")
@@ -178,8 +177,8 @@ def generate_api_pieces(package, component_name, simple_fields, enumerations,
         declaration = tmpl_declaration
         definition = tmpl_definition
         if field["repeated"]:
-            declaration = tmpl_repeated_declaration
-            definition = tmpl_repeated_definition
+            declaration = tmpl_repeated_decl
+            definition = tmpl_repeated_def
 
         declaration = (declaration.replace("%%field_type%%", field["type"])
                                   .replace("%%field_name%%", field["name"])
@@ -204,11 +203,11 @@ def generate_api_pieces(package, component_name, simple_fields, enumerations,
         api_doxygen = (ns_indent
                 + r"  /// \brief Get accessor to "
                 + field["name"])
-        declaration = tmpl_complex_declaration
-        definition = tmpl_complex_definition
+        declaration = tmpl_complex_decl
+        definition = tmpl_complex_def
         if field["repeated"]:
-            declaration = tmpl_complex_repeated_declaration
-            definition = tmpl_complex_repeated_definition
+            declaration = tmpl_complex_repeated_decl
+            definition = tmpl_complex_repeated_def
 
         declaration = (declaration.replace("%%field_type%%", field["type"])
                                   .replace("%%field_name%%", field["name"])

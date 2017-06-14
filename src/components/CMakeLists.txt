@@ -12,18 +12,26 @@ set(component_files
 set(generator_files
   protoc-gen-PIMPL-CPP
   templates/Api.cc.in
+  templates/ApiComplexDecl.hh.in
+  templates/ApiComplexDef.cc.in
+  templates/ApiComplexRepeatedDecl.hh.in
+  templates/ApiComplexRepeatedDef.cc.in
+  templates/ApiDecl.hh.in
+  templates/ApiDef.cc.in
   templates/Api.hh.in
-  templates/ApiDeclaration.hh.in
-  templates/ApiDefinition.cc.in
-  templates/ApiComplexDefinition.cc.in
-  templates/Enum.hh.in
+  templates/ApiNestedClassDecl.hh.in
+  templates/ApiNestedClassDef.cc.in
+  templates/ApiRepeatedDecl.hh.in
+  templates/ApiRepeatedDef.cc.in
   templates/EnumField.hh.in
+  templates/Enum.hh.in
   templates/Factory.cc.in
-  templates/ForwardDeclaration.hh.in
   templates/Include.hh.in
-  templates/Storage.hh.in
+  templates/StorageClassDecl.hh.in
   templates/StorageField.cc.in
+  templates/StorageFieldRepeated.cc.in
   templates/StorageFieldWithDefault.cc.in
+  templates/Storage.hh.in
 )
 
 
