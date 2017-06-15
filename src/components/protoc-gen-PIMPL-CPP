@@ -139,18 +139,15 @@ def generate_namespace(package):
     return (ns_indent, full_namespace, ns_begin, ns_end)
 
 
-def generate_api_pieces(package, component_name, simple_fields, enumerations,
-        complex_fields):
+def generate_api_pieces(package, component_name, simple_fields, complex_fields):
     """Generates C++ code for pieces of a class
     @param package a dot delimited string
     @param component_name string name of component
     @param simple_fields dict with info about fields in message
-    @enumerations dict with info about inline enumerations
     @param complex_fields list with info about fields that are messages
     @returns dict
         api_definitions list with C++ api defintions
         api_declarations list with C++ api declarations
-        enum_types list with C++ enum declarations
         hh_includes set with C++ includes
     """
     # generate c++ namespace from protobuf package
@@ -159,12 +156,7 @@ def generate_api_pieces(package, component_name, simple_fields, enumerations,
 
     api_definitions = []
     api_declarations = []
-    enum_types = []
     hh_includes = set()
-
-    # Generate code for enum types
-    for enum in enumerations:
-        enum_types.append(generate_enum(ns_indent, enum))
 
     # Generate code for simple fields
     for field in simple_fields:
@@ -224,7 +216,6 @@ def generate_api_pieces(package, component_name, simple_fields, enumerations,
     return {
             "api_definitions": api_definitions,
             "api_declarations": api_declarations,
-            "enum_types": enum_types,
             "hh_includes": hh_includes,
             }
 
@@ -251,8 +242,14 @@ def generate_api_partial(tmpl_decl, tmpl_def, package, class_name,
     (ns_indent, full_namespace,
             ns_begin, ns_end) = generate_namespace(package)
 
+    # Generate code for enum types
+    enum_types = []
+    for enum in enumerations:
+        enum_types.append(generate_enum(ns_indent, enum))
+
+    # Generate code for APIs
     class_pieces = generate_api_pieces(package, class_name,
-            simple_fields, enumerations, complex_fields)
+            simple_fields, complex_fields)
 
     inline_decl = []
     inline_def = []
@@ -275,7 +272,7 @@ def generate_api_partial(tmpl_decl, tmpl_def, package, class_name,
     api_declarations = "\n".join(class_pieces["api_declarations"])
     inline_decl = "\n".join(inline_decl)
     inline_def = "\n".join(inline_def)
-    enum_types = "\n".join(class_pieces["enum_types"])
+    enum_types = "\n".join(enum_types)
 
     # Put all content together
     hh_content = tmpl_decl
@@ -532,11 +529,13 @@ def gather_message_info(package, message_descriptor, nested_types):
     for oneof_descriptor in message_descriptor.oneof_decl:
         oneof = {}
         oneof["name"] = oneof_descriptor.name
-        oneof["fields"] = []
+        oneof["simple_fields"] = []
+        oneof["complex_fields"] = []
         oneofs.append(oneof)
 
     # Pull info about fields from the message
     for field_descriptor in message_descriptor.field:
+        bucket = simple_fields
         field = {}
         field["name"] = field_descriptor.name
         field["include"] = set()
@@ -546,24 +545,18 @@ def gather_message_info(package, message_descriptor, nested_types):
             field["repeated"] = True
             field["include"].add("vector")
 
-        if field_descriptor.HasField("oneof_index"):
-            field["oneof"] = field_descriptor.oneof_index
-            oneofs[field["oneof"]]["fields"].append(field)
-
         if field_descriptor.type == FieldDescriptor.TYPE_MESSAGE:
             # Complex/Nested type
             if field_descriptor.type_name in known_complex_types:
                 # Swap complex type for a simple type
                 field.update(copy.deepcopy(
                     known_complex_types[field_descriptor.type_name]))
-                simple_fields.append(field)
             else:
                 field["type"] = field_descriptor.type_name.replace(".", "::")
-                complex_fields.append(field)
+                bucket = complex_fields
         elif FieldDescriptor.TYPE_ENUM == field_descriptor.type:
             field["type"] = field_descriptor.type_name.replace(".", "::")
             field["default"] = "static_cast<" + field["type"] + ">(0)"
-            simple_fields.append(field)
         else:
             # Simple type
             field["type"] = simple_types_to_cpp[field_descriptor.type]
@@ -573,7 +566,14 @@ def gather_message_info(package, message_descriptor, nested_types):
                 field["default"] = '"' + default + '"'
             else:
                 field["default"] = default
-            simple_fields.append(field)
+
+        if field_descriptor.HasField("oneof_index"):
+            field["oneof"] = field_descriptor.oneof_index
+            if simple_fields == bucket:
+                bucket = oneofs[field["oneof"]]["simple_fields"]
+            else:
+                bucket = oneofs[field["oneof"]]["complex_fields"]
+        bucket.append(field)
 
 
     return {"package": package,
