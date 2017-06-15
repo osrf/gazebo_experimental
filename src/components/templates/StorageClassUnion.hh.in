@@ -1,0 +1,87 @@
+%%inline_storage%%
+
+%%storage_doxygen%%
+/// \remarks this class is private, it may change without notice
+class %%full_namespace%%::%%class_name%%Storage
+{
+  private: enum enum_%%class_name%%Storage : uint32_t
+  {
+    %%class_name%%Storage_NONE = 0,
+%%enum_fields%%  };
+
+
+    /// \brief Constructor, do nothing
+    public: %%class_name%%Storage()
+    {
+    }
+
+    /// \brief Copy constructor, copy type that is set
+    public: %%class_name%%Storage(const %%class_name%%Storage &_other)
+    {
+      // Take their type
+      this->%%class_name%%Storage_current_type = _other.%%class_name%%Storage_current_type;
+      if (this->%%class_name%%Storage_current_type == %%class_name%%Storage_NONE)
+      {
+        return;
+      }
+%%ucopy%%
+    }
+
+    /// \brief Destructs one thing using templates
+    private: template <typename T>
+             void DestroyOneThing(T &_thing)
+    {
+      _thing.~T();
+    }
+
+    /// \breif Destructs the thing in the union that's currently set
+    private: void DestructSetThing()
+    {
+      if (this->%%class_name%%Storage_current_type == %%class_name%%Storage_NONE)
+      {
+        return;
+      }
+%%udestruct%%
+      this->%%class_name%%Storage_current_type = %%class_name%%Storage_NONE;
+    }
+
+    /// \brief Destructor, destruct the type that's set
+    public: ~%%class_name%%Storage()
+    {
+      this->DestructSetThing();
+    }
+
+  private: union %%class_name%%StorageUnion
+  {
+    /// \brief Constructor, do nothing
+    public: %%class_name%%StorageUnion()
+    {
+    }
+
+    /// \brief Copy constructor, do nothing
+    public: %%class_name%%StorageUnion(const %%class_name%%StorageUnion &)
+    {
+    }
+
+    /// \brief Destructor, do nothing
+    public: ~%%class_name%%StorageUnion()
+    {
+    }
+
+%%storage_fields%%
+    /// \brief API class may interact with this union
+    friend %%full_namespace%%::%%class_name%%;
+
+    /// \brief Storage class may interact with this union
+    friend %%full_namespace%%::%%class_name%%Storage;
+  };
+
+  /// \brief implicitly defined enum that powers the HasX() APIs
+  private: enum_%%class_name%%Storage %%class_name%%Storage_current_type = %%class_name%%Storage_NONE;
+
+  /// \brief Instance of union for %%class_name%%
+  private: %%class_name%%StorageUnion %%class_name%%Storage_union;
+
+  /// \brief Only the API class may interact with this storage
+  friend %%full_namespace%%::%%class_name%%;
+};

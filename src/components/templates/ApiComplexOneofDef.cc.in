@@ -1,0 +1,25 @@
+//////////////////////////////////////////////////
+%%field_type%% %%full_namespace%%::%%class_name%%::%%field_name%%()
+{
+  if (this->dataPtr->%%class_name%%Storage_current_type != %%full_namespace%%::%%class_name%%Storage::enumval_%%class_name%%_%%field_name%%)
+  {
+    // Destruct what's currenlty set
+    this->dataPtr->DestructSetThing();
+    // Construct thing using placement new operator
+    new (&(this->dataPtr->%%class_name%%Storage_union.%%field_name%%)) decltype(this->dataPtr->%%class_name%%Storage_union.%%field_name%%);
+    this->dataPtr->%%class_name%%Storage_current_type = %%full_namespace%%::%%class_name%%Storage::enumval_%%class_name%%_%%field_name%%;
+  }
+  return %%field_type%%(&(this->dataPtr->%%class_name%%Storage_union.%%field_name%%));
+}
+
+//////////////////////////////////////////////////
+const %%field_type%% %%full_namespace%%::%%class_name%%::%%field_name%%() const
+{
+  return %%field_type%%(&(this->dataPtr->%%class_name%%Storage_union.%%field_name%%));
+}
+
+//////////////////////////////////////////////////
+const bool %%full_namespace%%::%%class_name%%::Has%%field_name%%() const
+{
+  return this->dataPtr->%%class_name%%Storage_current_type == %%full_namespace%%::%%class_name%%Storage::enumval_%%class_name%%_%%field_name%%;
+}

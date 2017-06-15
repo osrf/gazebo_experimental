@@ -14,6 +14,8 @@ set(generator_files
   templates/Api.cc.in
   templates/ApiComplexDecl.hh.in
   templates/ApiComplexDef.cc.in
+  templates/ApiComplexOneofDecl.hh.in
+  templates/ApiComplexOneofDef.cc.in
   templates/ApiComplexRepeatedDecl.hh.in
   templates/ApiComplexRepeatedDef.cc.in
   templates/ApiDecl.hh.in
@@ -21,6 +23,8 @@ set(generator_files
   templates/Api.hh.in
   templates/ApiNestedClassDecl.hh.in
   templates/ApiNestedClassDef.cc.in
+  templates/ApiOneofDecl.hh.in
+  templates/ApiOneofDef.cc.in
   templates/ApiRepeatedDecl.hh.in
   templates/ApiRepeatedDef.cc.in
   templates/EnumField.hh.in
@@ -28,10 +32,14 @@ set(generator_files
   templates/Factory.cc.in
   templates/Include.hh.in
   templates/StorageClassDecl.hh.in
+  templates/StorageClassUnion.hh.in
   templates/StorageField.cc.in
   templates/StorageFieldRepeated.cc.in
+  templates/StorageFieldUnion.hh.in
   templates/StorageFieldWithDefault.cc.in
   templates/Storage.hh.in
+  templates/UnionFieldCopy.hh.in
+  templates/UnionFieldDestruct.hh.in
 )
 
 

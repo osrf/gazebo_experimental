@@ -1,0 +1,18 @@
+%%ns_indent%%  private: enum enum_%%oneof_name%% : uint32_t
+%%ns_indent%%  {
+%%ns_indent%%    %%oneof_name%%_NONE = 0,
+%%enum_fields%%%%ns_indent%%  };
+
+%%ns_indent%%  private: union %%full_namespace%%::%%oneof_name%%Storage
+%%ns_indent%%  {
+%%ns_indent%%    %%oneof_fields%%
+%%ns_indent%%    /// \brief Only the API class may interact with this storage
+%%ns_indent%%    friend %%full_namespace%%::%%oneof_name%%;
+%%ns_indent%%  };
+
+%%ns_indent%%  /// \brief implicitly defined enum that powers the HasX() APIs
+%%ns_indent%%  private: enum_%%oneof_name%% %%oneof_name%%_current_type = %%oneof_name%%_NONE;
+
+%%ns_indent%%  /// \brief Instance of union for %%oneof_name%%
+%%ns_indent%%  private: %%oneof_name%%Storage %%oneof_name%%_union;
+

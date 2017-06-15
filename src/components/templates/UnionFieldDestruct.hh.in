@@ -1,0 +1,6 @@
+      else if (this->%%class_name%%Storage_current_type
+          == %%full_namespace%%::%%class_name%%Storage::enumval_%%class_name%%_%%field_name%%)
+      {
+        this->DestroyOneThing(this->%%class_name%%Storage_union.%%field_name%%);
+      }
+

@@ -1,11 +1,11 @@
 %%ns_indent%%/// \brief forward delcaration for storage
 %%ns_indent%%public: class %%class_name%%Storage;
 
-%%ns_indent%%/// \brief API for interacting with a %%class_name%% component
+%%ns_indent%%/// \brief API for interacting with a %%class_name%% class
 %%ns_indent%%public: class IGNITION_COMMON_VISIBLE %%class_name%%
 %%ns_indent%%{
 %%ns_indent%%  ////////////////////
-%%ns_indent%%  // Enumerations used by this component
+%%ns_indent%%  // Enumerations used by this class
 %%ns_indent%%  ////////////////////
 
 %%enumerations%%
@@ -16,7 +16,7 @@
 %%inline_declarations%%
 
 %%ns_indent%%  ////////////////////
-%%ns_indent%%  // APIs for accessing component fields
+%%ns_indent%%  // APIs for accessing class fields
 %%ns_indent%%  ////////////////////
 
 %%api_declarations%%
@@ -25,7 +25,7 @@
 %%ns_indent%%  // Constructors + PIMPL
 %%ns_indent%%  ////////////////////
 
-%%ns_indent%%  /// \brief Constructor for component factory
+%%ns_indent%%  /// \brief Constructor for class factory
 %%ns_indent%%  public: %%class_name%%(%%class_name%%Storage *_storage) : dataPtr(_storage)
 %%ns_indent%%  {
 %%ns_indent%%    // Nothing to do

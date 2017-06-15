@@ -63,7 +63,7 @@ TEST(PIMPLCPP, SimpleHaveRightTypes)
   ASSERT_EQ("::gazebo::components::test::SimpleTypesFactory", pluginName);
 
   auto stFactory = pl.Instantiate<gazebo::ecs::ComponentFactory>(pluginName);
-  std::unique_ptr<char> storage(new char[stFactory->StorageSize()]);
+  std::unique_ptr<char[]> storage(new char[stFactory->StorageSize()]);
   stFactory->ConstructStorage(static_cast<void *>(storage.get()));
 
   gazebo::components::test::SimpleTypes st;
@@ -135,7 +135,7 @@ TEST(PIMPLCPP, SimpleTypesModifyable)
   ASSERT_EQ("::gazebo::components::test::SimpleTypesFactory", pluginName);
 
   auto stFactory = pl.Instantiate<gazebo::ecs::ComponentFactory>(pluginName);
-  std::unique_ptr<char> storage(new char[stFactory->StorageSize()]);
+  std::unique_ptr<char[]> storage(new char[stFactory->StorageSize()]);
   stFactory->ConstructStorage(static_cast<void *>(storage.get()));
 
   gazebo::components::test::SimpleTypes st;
@@ -191,7 +191,7 @@ TEST(PIMPLCPP, MathTypesAreSubstituted)
   ASSERT_EQ("::gazebo::components::test::SubstitutedTypesFactory", pluginName);
 
   auto stFactory = pl.Instantiate<gazebo::ecs::ComponentFactory>(pluginName);
-  std::unique_ptr<char> storage(new char[stFactory->StorageSize()]);
+  std::unique_ptr<char[]> storage(new char[stFactory->StorageSize()]);
   stFactory->ConstructStorage(static_cast<void *>(storage.get()));
 
   gazebo::components::test::SubstitutedTypes st;
@@ -227,7 +227,7 @@ TEST(PIMPLCPP, MathTypesModifyable)
   ASSERT_EQ("::gazebo::components::test::SubstitutedTypesFactory", pluginName);
 
   auto stFactory = pl.Instantiate<gazebo::ecs::ComponentFactory>(pluginName);
-  std::unique_ptr<char> storage(new char[stFactory->StorageSize()]);
+  std::unique_ptr<char[]> storage(new char[stFactory->StorageSize()]);
   stFactory->ConstructStorage(static_cast<void *>(storage.get()));
 
   gazebo::components::test::SubstitutedTypes st;
@@ -261,7 +261,7 @@ TEST(PIMPLCPP, EnumTypesModifyable)
   ASSERT_EQ("::gazebo::components::test::EnumTypeFactory", pluginName);
 
   auto etFactory = pl.Instantiate<gazebo::ecs::ComponentFactory>(pluginName);
-  std::unique_ptr<char> storage(new char[etFactory->StorageSize()]);
+  std::unique_ptr<char[]> storage(new char[etFactory->StorageSize()]);
   etFactory->ConstructStorage(static_cast<void *>(storage.get()));
 
   gazebo::components::test::EnumType et;
@@ -290,7 +290,7 @@ TEST(PIMPLCPP, DefaultValues)
   ASSERT_EQ("::gazebo::components::test::DefaultValuesFactory", pluginName);
 
   auto dvFactory = pl.Instantiate<gazebo::ecs::ComponentFactory>(pluginName);
-  std::unique_ptr<char> storage(new char[dvFactory->StorageSize()]);
+  std::unique_ptr<char[]> storage(new char[dvFactory->StorageSize()]);
   dvFactory->ConstructStorage(static_cast<void *>(storage.get()));
 
   gazebo::components::test::DefaultValues dv;
@@ -320,7 +320,7 @@ TEST(PIMPLCPP, NestedMessages)
   ASSERT_EQ("::gazebo::components::test::NestedMessageFactory", pluginName);
 
   auto nmFactory = pl.Instantiate<gazebo::ecs::ComponentFactory>(pluginName);
-  std::unique_ptr<char> storage(new char[nmFactory->StorageSize()]);
+  std::unique_ptr<char[]> storage(new char[nmFactory->StorageSize()]);
   nmFactory->ConstructStorage(static_cast<void *>(storage.get()));
 
   gazebo::components::test::NestedMessage nm;
@@ -367,7 +367,7 @@ TEST(PIMPLCPP, RepeatedFields)
   ASSERT_EQ("::gazebo::components::test::RepeatedMessageFactory", pluginName);
 
   auto factory = pl.Instantiate<gazebo::ecs::ComponentFactory>(pluginName);
-  std::unique_ptr<char> storage(new char[factory->StorageSize()]);
+  std::unique_ptr<char[]> storage(new char[factory->StorageSize()]);
   factory->ConstructStorage(static_cast<void *>(storage.get()));
 
   gazebo::components::test::RepeatedMessage rm;
@@ -423,15 +423,58 @@ TEST(PIMPLCPP, OneofMessage)
   ASSERT_EQ("::gazebo::components::test::OneofMessageFactory", pluginName);
 
   auto factory = pl.Instantiate<gazebo::ecs::ComponentFactory>(pluginName);
-  std::unique_ptr<char> storage(new char[factory->StorageSize()]);
+  std::unique_ptr<char[]> storage(new char[factory->StorageSize()]);
   factory->ConstructStorage(static_cast<void *>(storage.get()));
 
   gazebo::components::test::OneofMessage comp;
   factory->ConstructAPI(
       static_cast<void *>(&comp), static_cast<void *>(storage.get()));
 
-  // Check imported message works correclty
-  // comp.SomeUnion() TODO
+  // Initially no member is set
+  EXPECT_FALSE(comp.SomeUnion().HasImported());
+  EXPECT_FALSE(comp.SomeUnion().HasInlined());
+  EXPECT_FALSE(comp.SomeUnion().HasSubstituted());
+  EXPECT_FALSE(comp.SomeOtherUnion().HasSomeInt());
+  EXPECT_FALSE(comp.SomeOtherUnion().HasSomeFloat());
+
+  // default values are set initially
+  EXPECT_EQ(26, comp.SomeUnion().Imported().SomeInt());
+  EXPECT_EQ(std::string("Hello World!"), comp.SomeUnion().Imported().SomeString());
+  EXPECT_EQ(std::string("1234abc"), comp.SomeUnion().Imported().SomeBytes());
+  EXPECT_FALSE(comp.SomeUnion().Imported().SomeBool());
+
+  //Accessing a member causes it to be set
+  comp.SomeUnion().Imported();
+  EXPECT_TRUE(comp.SomeUnion().HasImported());
+  comp.SomeUnion().Substituted();
+  EXPECT_TRUE(comp.SomeUnion().HasSubstituted());
+  comp.SomeUnion().Inlined();
+  EXPECT_TRUE(comp.SomeUnion().HasInlined());
+  comp.SomeOtherUnion().SomeInt();
+  EXPECT_TRUE(comp.SomeOtherUnion().HasSomeInt());
+  comp.SomeOtherUnion().SomeFloat();
+  EXPECT_TRUE(comp.SomeOtherUnion().HasSomeFloat());
+
+  {
+    // Type/values should be copied if using the copy constructor
+    std::unique_ptr<char[]> storage2(new char[factory->StorageSize()]);
+    factory->ConstructStorage(static_cast<void *>(storage2.get()));
+
+    comp.SomeOtherUnion().SomeFloat() = -54.6f;
+
+    factory->DeepCopyStorage(
+      static_cast<void *>(storage.get()), static_cast<void *>(storage2.get()));
+
+    gazebo::components::test::OneofMessage comp2;
+    factory->ConstructAPI(
+        static_cast<void *>(&comp2), static_cast<void *>(storage2.get()));
+
+    EXPECT_TRUE(comp2.SomeOtherUnion().HasSomeFloat());
+    EXPECT_FLOAT_EQ(-54.6f, comp2.SomeOtherUnion().SomeFloat());
+
+    factory->DestructAPI(static_cast<void *>(&comp2));
+    factory->DestructStorage(static_cast<void *>(storage2.get()));
+  }
 
   factory->DestructAPI(static_cast<void *>(&comp));
   factory->DestructStorage(static_cast<void *>(storage.get()));
