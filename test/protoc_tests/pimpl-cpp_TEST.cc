@@ -52,25 +52,76 @@ TypesAreSame(T& t, U& u)
     return false;
 }
 
+//////////////////////////////////////////////////
+/// \brief Class to take care of boiler plate for loading component
+template <typename COMP>
+class ComponentLoader
+{
+  public: std::unique_ptr<gazebo::ecs::ComponentFactory> factory;
+
+  protected: std::vector<std::unique_ptr<char[]> > storages;
+
+  protected: std::vector<COMP> apis;
+
+  public: ComponentLoader()
+  {
+  }
+
+  public: bool LoadComponent(std::string _compName)
+  {
+    std::string libName = "gazeboComponent" + _compName;
+    std::string factoryName = "::gazebo::components::test::"
+                              + _compName
+                              + "Factory";
+    ignition::common::PluginLoader pl;
+    ignition::common::SystemPaths sp;
+    sp.AddPluginPaths("./");
+    std::string pathToLibrary = sp.FindSharedLibrary(libName);
+    if (pathToLibrary.empty())
+    {
+      return false;
+    }
+    std::string pluginName = pl.LoadLibrary(pathToLibrary);
+    if (factoryName != pluginName)
+    {
+      return false;
+    }
+    this->factory = pl.Instantiate<gazebo::ecs::ComponentFactory>(pluginName);
+    return true;
+  }
+
+  public: COMP Instance()
+  {
+    
+    std::unique_ptr<char[]> storage(new char[this->factory->StorageSize()]);
+    this->factory->ConstructStorage(static_cast<void *>(storage.get()));
+
+    COMP apiInst;
+    this->factory->ConstructAPI(
+      static_cast<void *>(&apiInst), static_cast<void *>(storage.get()));
+
+    this->apis.push_back(apiInst);
+    this->storages.push_back(std::move(storage));
+
+    return apiInst;
+  }
+
+  public: ~ComponentLoader()
+  {
+    for (auto &storage : this->storages)
+    {
+      this->factory->DestructStorage(static_cast<void *>(storage.get()));
+    }
+  }
+};
+
+
 /////////////////////////////////////////////////
 TEST(PIMPLCPP, SimpleHaveRightTypes)
 {
-  ignition::common::PluginLoader pl;
-  ignition::common::SystemPaths sp;
-  sp.AddPluginPaths("./");
-  std::string pathToLibrary = sp.FindSharedLibrary(
-      "gazeboComponentSimpleTypes");
-  ASSERT_FALSE(pathToLibrary.empty());
-  std::string pluginName = pl.LoadLibrary(pathToLibrary);
-  ASSERT_EQ("::gazebo::components::test::SimpleTypesFactory", pluginName);
-
-  auto stFactory = pl.Instantiate<gazebo::ecs::ComponentFactory>(pluginName);
-  std::unique_ptr<char[]> storage(new char[stFactory->StorageSize()]);
-  stFactory->ConstructStorage(static_cast<void *>(storage.get()));
-
-  gazebo::components::test::SimpleTypes st;
-  stFactory->ConstructAPI(
-      static_cast<void *>(&st), static_cast<void *>(storage.get()));
+  ComponentLoader<gazebo::components::test::SimpleTypes> cl;
+  ASSERT_TRUE(cl.LoadComponent("SimpleTypes"));
+  auto st = cl.Instance();
 
   double DoubleField;
   float FloatField;
@@ -119,30 +170,14 @@ TEST(PIMPLCPP, SimpleHaveRightTypes)
   EXPECT_TRUE(TypesAreSame(BoolField, uutBoolField));
   EXPECT_TRUE(TypesAreSame(StringField, uutStringField));
   EXPECT_TRUE(TypesAreSame(BytesField, uutBytesField));
-
-  stFactory->DestructAPI(static_cast<void *>(&st));
-  stFactory->DestructStorage(static_cast<void *>(storage.get()));
 }
 
 /////////////////////////////////////////////////
 TEST(PIMPLCPP, SimpleTypesModifyable)
 {
-  ignition::common::PluginLoader pl;
-  ignition::common::SystemPaths sp;
-  sp.AddPluginPaths("./");
-  std::string pathToLibrary = sp.FindSharedLibrary(
-      "gazeboComponentSimpleTypes");
-  ASSERT_FALSE(pathToLibrary.empty());
-  std::string pluginName = pl.LoadLibrary(pathToLibrary);
-  ASSERT_EQ("::gazebo::components::test::SimpleTypesFactory", pluginName);
-
-  auto stFactory = pl.Instantiate<gazebo::ecs::ComponentFactory>(pluginName);
-  std::unique_ptr<char[]> storage(new char[stFactory->StorageSize()]);
-  stFactory->ConstructStorage(static_cast<void *>(storage.get()));
-
-  gazebo::components::test::SimpleTypes st;
-  stFactory->ConstructAPI(
-      static_cast<void *>(&st), static_cast<void *>(storage.get()));
+  ComponentLoader<gazebo::components::test::SimpleTypes> cl;
+  ASSERT_TRUE(cl.LoadComponent("SimpleTypes"));
+  auto st = cl.Instance();
 
   st.DoubleField() = 5.0;
   st.FloatField() = 4.0f;
@@ -175,30 +210,14 @@ TEST(PIMPLCPP, SimpleTypesModifyable)
   EXPECT_EQ(true, st.BoolField());
   EXPECT_EQ(std::string("Hello world"), st.StringField());
   EXPECT_EQ(std::string("100001111011"), st.BytesField());
-
-  stFactory->DestructAPI(static_cast<void *>(&st));
-  stFactory->DestructStorage(static_cast<void *>(storage.get()));
 }
 
 /////////////////////////////////////////////////
 TEST(PIMPLCPP, MathTypesAreSubstituted)
 {
-  ignition::common::PluginLoader pl;
-  ignition::common::SystemPaths sp;
-  sp.AddPluginPaths("./");
-  std::string pathToLibrary = sp.FindSharedLibrary(
-      "gazeboComponentSubstitutedTypes");
-  ASSERT_FALSE(pathToLibrary.empty());
-  std::string pluginName = pl.LoadLibrary(pathToLibrary);
-  ASSERT_EQ("::gazebo::components::test::SubstitutedTypesFactory", pluginName);
-
-  auto stFactory = pl.Instantiate<gazebo::ecs::ComponentFactory>(pluginName);
-  std::unique_ptr<char[]> storage(new char[stFactory->StorageSize()]);
-  stFactory->ConstructStorage(static_cast<void *>(storage.get()));
-
-  gazebo::components::test::SubstitutedTypes st;
-  stFactory->ConstructAPI(
-      static_cast<void *>(&st), static_cast<void *>(storage.get()));
+  ComponentLoader<gazebo::components::test::SubstitutedTypes> cl;
+  ASSERT_TRUE(cl.LoadComponent("SubstitutedTypes"));
+  auto st = cl.Instance();
 
   ignition::math::Vector3d VectorField;
   ignition::math::Quaterniond QuaternionField;
@@ -211,30 +230,14 @@ TEST(PIMPLCPP, MathTypesAreSubstituted)
   EXPECT_TRUE(TypesAreSame(VectorField, uutVectorField));
   EXPECT_TRUE(TypesAreSame(QuaternionField, uutQuaternionField));
   EXPECT_TRUE(TypesAreSame(PoseField, uutPoseField));
-
-  stFactory->DestructAPI(static_cast<void *>(&st));
-  stFactory->DestructStorage(static_cast<void *>(storage.get()));
 }
 
 /////////////////////////////////////////////////
 TEST(PIMPLCPP, MathTypesModifyable)
 {
-  ignition::common::PluginLoader pl;
-  ignition::common::SystemPaths sp;
-  sp.AddPluginPaths("./");
-  std::string pathToLibrary = sp.FindSharedLibrary(
-      "gazeboComponentSubstitutedTypes");
-  ASSERT_FALSE(pathToLibrary.empty());
-  std::string pluginName = pl.LoadLibrary(pathToLibrary);
-  ASSERT_EQ("::gazebo::components::test::SubstitutedTypesFactory", pluginName);
-
-  auto stFactory = pl.Instantiate<gazebo::ecs::ComponentFactory>(pluginName);
-  std::unique_ptr<char[]> storage(new char[stFactory->StorageSize()]);
-  stFactory->ConstructStorage(static_cast<void *>(storage.get()));
-
-  gazebo::components::test::SubstitutedTypes st;
-  stFactory->ConstructAPI(
-      static_cast<void *>(&st), static_cast<void *>(storage.get()));
+  ComponentLoader<gazebo::components::test::SubstitutedTypes> cl;
+  ASSERT_TRUE(cl.LoadComponent("SubstitutedTypes"));
+  auto st = cl.Instance();
 
   st.Vector().X(5);
   st.Quaternion().Y(6);
@@ -245,89 +248,41 @@ TEST(PIMPLCPP, MathTypesModifyable)
   EXPECT_DOUBLE_EQ(6, st.Quaternion().Y());
   EXPECT_DOUBLE_EQ(7, st.Pose().Pos().Z());
   EXPECT_DOUBLE_EQ(8, st.Pose().Rot().W());
-
-  stFactory->DestructAPI(static_cast<void *>(&st));
-  stFactory->DestructStorage(static_cast<void *>(storage.get()));
 }
 
 /////////////////////////////////////////////////
 TEST(PIMPLCPP, EnumTypesModifyable)
 {
-  ignition::common::PluginLoader pl;
-  ignition::common::SystemPaths sp;
-  sp.AddPluginPaths("./");
-  std::string pathToLibrary = sp.FindSharedLibrary(
-      "gazeboComponentEnumType");
-  ASSERT_FALSE(pathToLibrary.empty());
-  std::string pluginName = pl.LoadLibrary(pathToLibrary);
-  ASSERT_EQ("::gazebo::components::test::EnumTypeFactory", pluginName);
-
-  auto etFactory = pl.Instantiate<gazebo::ecs::ComponentFactory>(pluginName);
-  std::unique_ptr<char[]> storage(new char[etFactory->StorageSize()]);
-  etFactory->ConstructStorage(static_cast<void *>(storage.get()));
-
-  gazebo::components::test::EnumType et;
-  etFactory->ConstructAPI(
-      static_cast<void *>(&et), static_cast<void *>(storage.get()));
+  ComponentLoader<gazebo::components::test::EnumType> cl;
+  ASSERT_TRUE(cl.LoadComponent("EnumType"));
+  auto et = cl.Instance();
 
   // default is always zero
   EXPECT_EQ(gazebo::components::test::EnumType::TURTLE, et.SomeEnum());
   et.SomeEnum() = gazebo::components::test::EnumType::COW;
   EXPECT_EQ(gazebo::components::test::EnumType::COW, et.SomeEnum());
-
-  etFactory->DestructAPI(static_cast<void *>(&et));
-  etFactory->DestructStorage(static_cast<void *>(storage.get()));
 }
 
 /////////////////////////////////////////////////
 TEST(PIMPLCPP, DefaultValues)
 {
-  ignition::common::PluginLoader pl;
-  ignition::common::SystemPaths sp;
-  sp.AddPluginPaths("./");
-  std::string pathToLibrary = sp.FindSharedLibrary(
-      "gazeboComponentDefaultValues");
-  ASSERT_FALSE(pathToLibrary.empty());
-  std::string pluginName = pl.LoadLibrary(pathToLibrary);
-  ASSERT_EQ("::gazebo::components::test::DefaultValuesFactory", pluginName);
-
-  auto dvFactory = pl.Instantiate<gazebo::ecs::ComponentFactory>(pluginName);
-  std::unique_ptr<char[]> storage(new char[dvFactory->StorageSize()]);
-  dvFactory->ConstructStorage(static_cast<void *>(storage.get()));
-
-  gazebo::components::test::DefaultValues dv;
-  dvFactory->ConstructAPI(
-      static_cast<void *>(&dv), static_cast<void *>(storage.get()));
+  ComponentLoader<gazebo::components::test::DefaultValues> cl;
+  ASSERT_TRUE(cl.LoadComponent("DefaultValues"));
+  auto dv = cl.Instance();
 
   EXPECT_EQ(26, dv.SomeInt());
   EXPECT_EQ(std::string("Hello World!"), dv.SomeString());
   EXPECT_EQ(std::string("1234abc"), dv.SomeBytes());
   // default enum is always zero
   EXPECT_FALSE(dv.SomeBool());
-
-  dvFactory->DestructAPI(static_cast<void *>(&dv));
-  dvFactory->DestructStorage(static_cast<void *>(storage.get()));
 }
 
 /////////////////////////////////////////////////
 TEST(PIMPLCPP, NestedMessages)
 {
-  ignition::common::PluginLoader pl;
-  ignition::common::SystemPaths sp;
-  sp.AddPluginPaths("./");
-  std::string pathToLibrary = sp.FindSharedLibrary(
-      "gazeboComponentNestedMessage");
-  ASSERT_FALSE(pathToLibrary.empty());
-  std::string pluginName = pl.LoadLibrary(pathToLibrary);
-  ASSERT_EQ("::gazebo::components::test::NestedMessageFactory", pluginName);
-
-  auto nmFactory = pl.Instantiate<gazebo::ecs::ComponentFactory>(pluginName);
-  std::unique_ptr<char[]> storage(new char[nmFactory->StorageSize()]);
-  nmFactory->ConstructStorage(static_cast<void *>(storage.get()));
-
-  gazebo::components::test::NestedMessage nm;
-  nmFactory->ConstructAPI(
-      static_cast<void *>(&nm), static_cast<void *>(storage.get()));
+  ComponentLoader<gazebo::components::test::NestedMessage> cl;
+  ASSERT_TRUE(cl.LoadComponent("NestedMessage"));
+  auto nm = cl.Instance();
 
   // Check imported message works correclty
   nm.Imported().SomeInt() = 35;
@@ -351,30 +306,14 @@ TEST(PIMPLCPP, NestedMessages)
   EXPECT_EQ(-12345, nm.DoubleInlined().SecondLevelMessage().SomeInt());
   EXPECT_FLOAT_EQ(-7711.0f, nm.DoubleInlined().ThirdLevelMessage().DeepFloat());
   EXPECT_EQ(std::string("Hello World!"), nm.DoubleInlined().ThirdLevelMessage().DeepString());
-
-  nmFactory->DestructAPI(static_cast<void *>(&nm));
-  nmFactory->DestructStorage(static_cast<void *>(storage.get()));
 }
 
 /////////////////////////////////////////////////
 TEST(PIMPLCPP, RepeatedFields)
 {
-  ignition::common::PluginLoader pl;
-  ignition::common::SystemPaths sp;
-  sp.AddPluginPaths("./");
-  std::string pathToLibrary = sp.FindSharedLibrary(
-      "gazeboComponentRepeatedMessage");
-  ASSERT_FALSE(pathToLibrary.empty());
-  std::string pluginName = pl.LoadLibrary(pathToLibrary);
-  ASSERT_EQ("::gazebo::components::test::RepeatedMessageFactory", pluginName);
-
-  auto factory = pl.Instantiate<gazebo::ecs::ComponentFactory>(pluginName);
-  std::unique_ptr<char[]> storage(new char[factory->StorageSize()]);
-  factory->ConstructStorage(static_cast<void *>(storage.get()));
-
-  gazebo::components::test::RepeatedMessage rm;
-  factory->ConstructAPI(
-      static_cast<void *>(&rm), static_cast<void *>(storage.get()));
+  ComponentLoader<gazebo::components::test::RepeatedMessage> cl;
+  ASSERT_TRUE(cl.LoadComponent("RepeatedMessage"));
+  auto rm = cl.Instance();
 
   // Check imported message works correclty
   rm.Imported().Resize(2);
@@ -406,30 +345,14 @@ TEST(PIMPLCPP, RepeatedFields)
   EXPECT_FLOAT_EQ(0.9f, rm.InlinedRepeated()[0].SomeFloat()[1]);
   EXPECT_FLOAT_EQ(26.0f, rm.InlinedRepeated()[1].SomeFloat()[0]);
   EXPECT_FLOAT_EQ(20.17f, rm.InlinedRepeated()[1].SomeFloat()[1]);
-
-  factory->DestructAPI(static_cast<void *>(&rm));
-  factory->DestructStorage(static_cast<void *>(storage.get()));
 }
 
 /////////////////////////////////////////////////
 TEST(PIMPLCPP, OneofMessage)
 {
-  ignition::common::PluginLoader pl;
-  ignition::common::SystemPaths sp;
-  sp.AddPluginPaths("./");
-  std::string pathToLibrary = sp.FindSharedLibrary(
-      "gazeboComponentOneofMessage");
-  ASSERT_FALSE(pathToLibrary.empty());
-  std::string pluginName = pl.LoadLibrary(pathToLibrary);
-  ASSERT_EQ("::gazebo::components::test::OneofMessageFactory", pluginName);
-
-  auto factory = pl.Instantiate<gazebo::ecs::ComponentFactory>(pluginName);
-  std::unique_ptr<char[]> storage(new char[factory->StorageSize()]);
-  factory->ConstructStorage(static_cast<void *>(storage.get()));
-
-  gazebo::components::test::OneofMessage comp;
-  factory->ConstructAPI(
-      static_cast<void *>(&comp), static_cast<void *>(storage.get()));
+  ComponentLoader<gazebo::components::test::OneofMessage> cl;
+  ASSERT_TRUE(cl.LoadComponent("OneofMessage"));
+  auto comp = cl.Instance();
 
   // Initially no member is set
   EXPECT_FALSE(comp.SomeUnion().HasImported());
@@ -455,9 +378,6 @@ TEST(PIMPLCPP, OneofMessage)
   EXPECT_TRUE(comp.SomeOtherUnion().HasSomeInt());
   comp.SomeOtherUnion().SomeFloat();
   EXPECT_TRUE(comp.SomeOtherUnion().HasSomeFloat());
-
-  factory->DestructAPI(static_cast<void *>(&comp));
-  factory->DestructStorage(static_cast<void *>(storage.get()));
 }
 
 /////////////////////////////////////////////////
@@ -505,22 +425,9 @@ TEST(PIMPLCPP, OneofDeepCopy)
 /////////////////////////////////////////////////
 TEST(PIMPLCPP, NestedOneof)
 {
-  ignition::common::PluginLoader pl;
-  ignition::common::SystemPaths sp;
-  sp.AddPluginPaths("./");
-  std::string pathToLibrary = sp.FindSharedLibrary(
-      "gazeboComponentNestedOneof");
-  ASSERT_FALSE(pathToLibrary.empty());
-  std::string pluginName = pl.LoadLibrary(pathToLibrary);
-  ASSERT_EQ("::gazebo::components::test::NestedOneofFactory", pluginName);
-
-  auto factory = pl.Instantiate<gazebo::ecs::ComponentFactory>(pluginName);
-  std::unique_ptr<char[]> storage(new char[factory->StorageSize()]);
-  factory->ConstructStorage(static_cast<void *>(storage.get()));
-
-  gazebo::components::test::NestedOneof comp;
-  factory->ConstructAPI(
-      static_cast<void *>(&comp), static_cast<void *>(storage.get()));
+  ComponentLoader<gazebo::components::test::NestedOneof> cl;
+  ASSERT_TRUE(cl.LoadComponent("NestedOneof"));
+  auto comp = cl.Instance();
 
   // First level oneof
   comp.Inlined().SomeUnion().SomeInt() = 1234;
@@ -539,37 +446,18 @@ TEST(PIMPLCPP, NestedOneof)
   comp.SomeUnion().OneofInlined().SomeUnion().SomeFloat() = -762.4f;
   EXPECT_TRUE(comp.SomeUnion().OneofInlined().SomeUnion().HasSomeFloat());
   EXPECT_FLOAT_EQ(-762.4f, comp.SomeUnion().OneofInlined().SomeUnion().SomeFloat());
-
-  factory->DestructAPI(static_cast<void *>(&comp));
-  factory->DestructStorage(static_cast<void *>(storage.get()));
 }
 
 /////////////////////////////////////////////////
 TEST(PIMPLCPP, EmptyNested)
 {
-  ignition::common::PluginLoader pl;
-  ignition::common::SystemPaths sp;
-  sp.AddPluginPaths("./");
-  std::string pathToLibrary = sp.FindSharedLibrary(
-      "gazeboComponentEmptyNested");
-  ASSERT_FALSE(pathToLibrary.empty());
-  std::string pluginName = pl.LoadLibrary(pathToLibrary);
-  ASSERT_EQ("::gazebo::components::test::EmptyNestedFactory", pluginName);
-
-  auto factory = pl.Instantiate<gazebo::ecs::ComponentFactory>(pluginName);
-  std::unique_ptr<char[]> storage(new char[factory->StorageSize()]);
-  factory->ConstructStorage(static_cast<void *>(storage.get()));
-
-  gazebo::components::test::EmptyNested comp;
-  factory->ConstructAPI(
-      static_cast<void *>(&comp), static_cast<void *>(storage.get()));
+  ComponentLoader<gazebo::components::test::EmptyNested> cl;
+  ASSERT_TRUE(cl.LoadComponent("EmptyNested"));
+  auto comp = cl.Instance();
 
   comp.Msg().SomeInt() = 747576;
 
   EXPECT_EQ(747576, comp.Msg().SomeInt());
-
-  factory->DestructAPI(static_cast<void *>(&comp));
-  factory->DestructStorage(static_cast<void *>(storage.get()));
 }
 
 int main(int argc, char **argv)
