@@ -28,6 +28,7 @@
 #include "EnumType.api.hh"
 #include "RepeatedMessage.api.hh"
 #include "NestedMessage.api.hh"
+#include "NestedOneof.api.hh"
 #include "OneofMessage.api.hh"
 #include "SimpleTypes.api.hh"
 #include "SubstitutedTypes.api.hh"
@@ -409,7 +410,6 @@ TEST(PIMPLCPP, RepeatedFields)
   factory->DestructStorage(static_cast<void *>(storage.get()));
 }
 
-
 /////////////////////////////////////////////////
 TEST(PIMPLCPP, OneofMessage)
 {
@@ -501,6 +501,47 @@ TEST(PIMPLCPP, OneofDeepCopy)
   factory->DestructStorage(static_cast<void *>(storage.get()));
 }
 
+/////////////////////////////////////////////////
+TEST(PIMPLCPP, NestedOneof)
+{
+  ignition::common::PluginLoader pl;
+  ignition::common::SystemPaths sp;
+  sp.AddPluginPaths("./");
+  std::string pathToLibrary = sp.FindSharedLibrary(
+      "gazeboComponentNestedOneof");
+  ASSERT_FALSE(pathToLibrary.empty());
+  std::string pluginName = pl.LoadLibrary(pathToLibrary);
+  ASSERT_EQ("::gazebo::components::test::NestedOneofFactory", pluginName);
+
+  auto factory = pl.Instantiate<gazebo::ecs::ComponentFactory>(pluginName);
+  std::unique_ptr<char[]> storage(new char[factory->StorageSize()]);
+  factory->ConstructStorage(static_cast<void *>(storage.get()));
+
+  gazebo::components::test::NestedOneof comp;
+  factory->ConstructAPI(
+      static_cast<void *>(&comp), static_cast<void *>(storage.get()));
+
+  // First level oneof
+  comp.Inlined().SomeUnion().SomeInt() = 1234;
+  EXPECT_TRUE(comp.Inlined().SomeUnion().HasSomeInt());
+  EXPECT_EQ(1234, comp.Inlined().SomeUnion().SomeInt());
+
+  comp.Inlined().SomeUnion().SomeFloat() = -762.4f;
+  EXPECT_TRUE(comp.Inlined().SomeUnion().HasSomeFloat());
+  EXPECT_FLOAT_EQ(-762.4f, comp.Inlined().SomeUnion().SomeFloat());
+
+  // Oneof containing nested message containing oneof
+  comp.SomeUnion().OneofInlined().SomeUnion().SomeInt() = 1234;
+  EXPECT_TRUE(comp.SomeUnion().OneofInlined().SomeUnion().HasSomeInt());
+  EXPECT_EQ(1234, comp.SomeUnion().OneofInlined().SomeUnion().SomeInt());
+
+  comp.SomeUnion().OneofInlined().SomeUnion().SomeFloat() = -762.4f;
+  EXPECT_TRUE(comp.SomeUnion().OneofInlined().SomeUnion().HasSomeFloat());
+  EXPECT_FLOAT_EQ(-762.4f, comp.SomeUnion().OneofInlined().SomeUnion().SomeFloat());
+
+  factory->DestructAPI(static_cast<void *>(&comp));
+  factory->DestructStorage(static_cast<void *>(storage.get()));
+}
 int main(int argc, char **argv)
 {
   ::testing::InitGoogleTest(&argc, argv);
