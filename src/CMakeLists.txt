@@ -18,25 +18,10 @@ target_link_libraries(gazebo
   ${Qt5Widgets_LIBRARIES}
 )
 
-add_executable(gazebo2 gazebo_newcomp.cc)
-target_link_libraries(gazebo2
-  GazeboECS
-  ${gflags_LIBRARIES}
-  ${IGNITION-COMMON_LIBRARIES}
-  ${IGNITION-GUI_LIBRARIES}
-  ${Qt5Core_LIBRARIES}
-  ${Qt5Widgets_LIBRARIES}
-  gazeboNewPoseComponent
-)
-
 if (UNIX)
   target_link_libraries(gazebo
-    pthread
-    )
-  target_link_libraries(gazebo2
     pthread
     )
 endif()
 
 gz_install_executable(gazebo)
-gz_install_executable(gazebo2)

@@ -5,8 +5,8 @@ include_directories(
   )
 
 set(component_files
-  gazebo/components/NewPose.proto
-  gazebo/components/NewGeometry.proto
+  # gazebo/components/Pose.proto
+  # gazebo/components/Geometry.proto
 )
 
 set(generator_files
