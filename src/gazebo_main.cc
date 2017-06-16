@@ -26,11 +26,6 @@
 #include <ignition/common/PluginLoader.hh>
 #include <ignition/common/SystemPaths.hh>
 #include <ignition/math/Rand.hh>
-#include "gazebo/components/Inertial.hh"
-#include "gazebo/components/Geometry.hh"
-#include "gazebo/components/PhysicsProperties.hh"
-#include "gazebo/components/WorldPose.hh"
-#include "gazebo/components/WorldVelocity.hh"
 #include "gazebo/ecs/ComponentFactory.hh"
 #include "gazebo/ecs/Manager.hh"
 
@@ -96,7 +91,7 @@ bool LoadSystems(gzecs::Manager &_mgr, std::vector<std::string> _libs)
   {
     std::string pathToLibrary = sp.FindSharedLibrary(libName);
     std::string pluginName = pluginLoader.LoadLibrary(pathToLibrary);
-    if (pluginName.size())
+    if (!pluginName.empty())
     {
       std::unique_ptr<gzecs::System> sys;
       sys = pluginLoader.Instantiate<gzecs::System>(pluginName);
@@ -122,81 +117,138 @@ bool LoadSystems(gzecs::Manager &_mgr, std::vector<std::string> _libs)
 }
 
 //////////////////////////////////////////////////
-void PlaceholderCreateComponents(gzecs::Manager &_mgr)
+bool LoadComponentizers(gzecs::Manager &_mgr, std::vector<std::string> _libs)
 {
-  // Componentizer should register components
-  gzecs::ComponentFactory::Register<gazebo::components::Inertial>(
-      "gazebo::components::Inertial");
-  gzecs::ComponentFactory::Register<gazebo::components::Geometry>(
-      "gazebo::components::Geometry");
-  gzecs::ComponentFactory::Register<gazebo::components::PhysicsProperties>(
-      "gazebo::components::PhysicsProperties");
-  gzecs::ComponentFactory::Register<gazebo::components::WorldPose>(
-      "gazebo::components::WorldPose");
-  gzecs::ComponentFactory::Register<gazebo::components::WorldVelocity>(
-      "gazebo::components::WorldVelocity");
+  ignition::common::PluginLoader pluginLoader;
+  ignition::common::SystemPaths sp;
+  sp.SetPluginPathEnv("GAZEBO_PLUGIN_PATH");
 
-  // Placeholder create components. The componentizer should do this
-  // Create 25 sphere entities
-  for (int i = 0; i < 25; i++)
+  for (auto const &libName : _libs)
   {
-    // Create the entity
-    gzecs::EntityId e = _mgr.CreateEntity();
-    gzecs::Entity &entity = _mgr.Entity(e);
-
-    // Inertial component
-    auto inertial = entity.AddComponent<gazebo::components::Inertial>();
-    if (inertial)
+    std::string pathToLibrary = sp.FindSharedLibrary(libName);
+    std::string pluginName = pluginLoader.LoadLibrary(pathToLibrary);
+    if (pluginName.size())
     {
-      inertial->mass = ignition::math::Rand::DblUniform(0.1, 5.0);
+      std::unique_ptr<gzecs::Componentizer> cz;
+      cz = pluginLoader.Instantiate<gzecs::Componentizer>(pluginName);
+      if (!_mgr.LoadComponentizer(std::move(cz)))
+      {
+        ignerr << "Failed to load " << pluginName << " from " << libName
+          << std::endl;
+        return false;
+      }
+      else
+      {
+        igndbg << "Loaded plugin " << pluginName << " from " << libName
+          << std::endl;
+      }
     }
     else
     {
-      std::cerr << "Failed to add inertial component to entity [" << e << "]"
-                << std::endl;
-    }
-
-    // Geometry component
-    auto geom = entity.AddComponent<gazebo::components::Geometry>();
-    if (geom)
-    {
-      geom->type = gazebo::components::Geometry::SPHERE;
-      geom->sphere.radius = ignition::math::Rand::DblUniform(0.1, 0.5);
-    }
-    else
-    {
-      std::cerr << "Failed to add geom component to entity [" << e << "]"
-                << std::endl;
-    }
-
-    // World pose
-    auto pose = entity.AddComponent<gazebo::components::WorldPose>();
-    if (pose)
-    {
-      pose->position.X(ignition::math::Rand::DblUniform(-4.0, 4.0));
-      pose->position.Y(ignition::math::Rand::DblUniform(-4.0, 4.0));
-      pose->position.Z(ignition::math::Rand::DblUniform(-4.0, 4.0));
-    }
-    else
-    {
-      std::cerr << "Failed to add world pose component to entity [" << e << "]"
-                << std::endl;
-    }
-
-    // World velocity
-    auto vel = entity.AddComponent<gazebo::components::WorldVelocity>();
-    if (vel)
-    {
-      vel->linear.X(ignition::math::Rand::DblUniform(-1.0, 1.0));
-      vel->linear.Y(ignition::math::Rand::DblUniform(-1.0, 1.0));
-      vel->linear.Z(ignition::math::Rand::DblUniform(-1.0, 1.0));
-    }
-    else
-    {
-      std::cerr << "Failed to add world velocity component to entity ["
-                << e << "]" << std::endl;
+      ignerr << "Failed to load library " << libName << std::endl;
+      return false;
     }
   }
+  return true;
+}
+
+//////////////////////////////////////////////////
+std::string PlaceholderLoadWorld()
+{
+  return std::string(
+      "<?xml version='1.0'?>"
+      "<sdf version='1.6'>"
+      " <world name='default'>"
+      "   <physics type='ode'>"
+      "     <max_step_size>0.001</max_step_size>"
+      "     <real_time_factor>1</real_time_factor>"
+      "     <real_time_update_rate>1000</real_time_update_rate>"
+      "   </physics>"
+      "   <model name='some_model'>"
+      "     <link name='some_link'>"
+      "       <pose>0 0 0 0 0 0</pose>"
+      "       <collision name='some_collision'>"
+      "         <geometry>"
+      "           <box>"
+      "             <size>1 2 3</size>"
+      "           </box>"
+      "         </geometry>"
+      "       </collision>"
+      "       <collision name='some_other_collision'>"
+      "         <pose>1 0 0 0 0 0</pose>"
+      "         <geometry>"
+      "           <box>"
+      "             <size>1 2 3</size>"
+      "           </box>"
+      "         </geometry>"
+      "       </collision>"
+      "       <visual name='some_visual'>"
+      "         <geometry>"
+      "           <box>"
+      "             <size>1 2 3</size>"
+      "           </box>"
+      "         </geometry>"
+      "       </visual>"
+      "       <visual name='some_other_visual'>"
+      "         <pose>1 0 0 0 0 0</pose>"
+      "         <geometry>"
+      "           <box>"
+      "             <size>1 2 3</size>"
+      "           </box>"
+      "         </geometry>"
+      "       </visual>"
+      "       <inertial>"
+      "         <mass>5.0</mass>"
+      "         <inertia>"
+      "           <ixx>1.0</ixx>"
+      "           <ixy>2.0</ixy>"
+      "           <ixz>3.0</ixz>"
+      "           <iyy>0</iyy>"
+      "           <iyz>0</iyz>"
+      "           <izz>0</izz>"
+      "         </inertia>"
+      "       </inertial>"
+      "     </link>"
+      "     <link name='some_link_2'>"
+      "       <pose>1.5 0 1 0 0 0</pose>"
+      "       <collision name='some_collision_2'>"
+      "         <geometry>"
+      "           <sphere>"
+      "             <radius>0.5</radius>"
+      "           </sphere>"
+      "         </geometry>"
+      "       </collision>"
+      "       <visual name='some_visual'>"
+      "         <geometry>"
+      "           <sphere>"
+      "             <radius>0.5</radius>"
+      "           </sphere>"
+      "         </geometry>"
+      "       </visual>"
+      "     </link>"
+      "     <link name='some_link_3'>"
+      "       <pose>3 0 2 0 0 0</pose>"
+      "       <collision name='some_collision_3'>"
+      "         <geometry>"
+      "           <cylinder>"
+      "             <radius>0.5</radius>"
+      "             <length>1.0</length>"
+      "           </cylinder>"
+      "         </geometry>"
+      "       </collision>"
+      "       <visual name='some_visual'>"
+      "         <geometry>"
+      "           <cylinder>"
+      "             <radius>0.5</radius>"
+      "             <length>1.0</length>"
+      "           </cylinder>"
+      "         </geometry>"
+      "       </visual>"
+      "     </link>"
+      "   </model>"
+      " </world>"
+      "</sdf>"
+    );
 }
 
 //////////////////////////////////////////////////
@@ -266,8 +318,19 @@ int main(int _argc, char **_argv)
 
     gzecs::Manager manager;
 
-    // TODO componentizer
-    PlaceholderCreateComponents(manager);
+    if (!LoadComponentizers(manager, {
+          "gazeboCZName",
+          "gazeboCZGeometry",
+          "gazeboCZMaterial",
+          "gazeboCZPose",
+          "gazeboCZCollidable",
+          "gazeboCZInertial",
+          "gazeboCZPhysicsConfig",
+          "gazeboCZWorldVelocity",
+          }))
+    {
+      return 2;
+    }
 
     // Load ECS systems
     if (!LoadSystems(manager, {
@@ -276,6 +339,9 @@ int main(int _argc, char **_argv)
     {
       return 1;
     }
+
+    // Load the world
+    manager.LoadWorld(PlaceholderLoadWorld());
 
     // Initialize app
     ignition::gui::initApp();

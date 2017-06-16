@@ -67,6 +67,24 @@ class TestHookSystem : public gzecs::System
 };
 
 /////////////////////////////////////////////////
+class TestHookComponentizer : public gzecs::Componentizer
+{
+  /// \brief String that's set on update
+  public: std::string sentinel;
+
+  public: virtual void Init()
+    {
+      this->sentinel = "Init Ran";
+    }
+
+  public: virtual void FromSDF(gzecs::Manager &_mgr, sdf::Element &_elem,
+              const std::unordered_map<sdf::Element*, gzecs::EntityId> &_ids)
+     {
+       this->sentinel = "FromSDF Ran";
+     }
+};
+
+/////////////////////////////////////////////////
 TEST(Manager, CreateEntity)
 {
   gzecs::Manager mgr;
@@ -104,6 +122,20 @@ TEST(Manager, LoadSystem)
   EXPECT_EQ(std::string("Init Ran"), raw->sentinel);
   mgr.UpdateOnce();
   EXPECT_EQ(std::string("Update Ran"), raw->sentinel);
+}
+
+/////////////////////////////////////////////////
+TEST(Manager, LoadComponentizer)
+{
+  gzecs::Manager mgr;
+  TestHookComponentizer *raw = new TestHookComponentizer;
+  std::unique_ptr<gzecs::Componentizer> cz(
+      dynamic_cast<gzecs::Componentizer*>(raw));
+  mgr.LoadComponentizer(std::move(cz));
+  EXPECT_EQ(std::string("Init Ran"), raw->sentinel);
+
+  mgr.LoadWorld("<sdf version='1.6'><world name='default'></world></sdf>");
+  EXPECT_EQ(std::string("FromSDF Ran"), raw->sentinel);
 }
 
 /////////////////////////////////////////////////

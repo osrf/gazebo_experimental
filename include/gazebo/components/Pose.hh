@@ -15,28 +15,31 @@
  *
 */
 
-#ifndef GAZEBO_COMPONENTS_INERTIA_HH_
-#define GAZEBO_COMPONENTS_INERTIA_HH_
+#ifndef GAZEBO_COMPONENTS_POSE_HH_
+#define GAZEBO_COMPONENTS_POSE_HH_
 
-#include <ignition/math/Matrix3.hh>
+#include <ignition/math/Pose3.hh>
 
 namespace gazebo
 {
   namespace components
   {
-    /// \brief Describes the inertial properties of an entity.
-    struct Inertial
+    /// \brief Pose of an object
+    struct Pose
     {
-      /// \brief Mass in kilograms
-      double mass = 1.0;
+      /// \brief What frame is this pose defined in
+      /// \remarks "" is invalid
+      /// \remarks "/" means it's defined in the world frame
+      std::string parentFrame = "/";
 
-      /// \brief inertial matrix
-      ignition::math::Matrix3d inertia = {1, 0, 0,
-                                          0, 1, 0,
-                                          0, 0, 1};
+      /// \brief Name of the frame cooresponding to this pose
+      /// \remarks "" means this does not define a frame
+      std::string definesFrame = "";
+
+      /// \brief pose in parent frame
+      ignition::math::Pose3d pose;
     };
   }
 }
 
 #endif
-

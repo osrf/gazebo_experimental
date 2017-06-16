@@ -15,28 +15,28 @@
  *
 */
 
-#ifndef GAZEBO_COMPONENTS_INERTIA_HH_
-#define GAZEBO_COMPONENTS_INERTIA_HH_
+#ifndef GAZEBO_COMPONENTS_COLLIDABLE_HH_
+#define GAZEBO_COMPONENTS_COLLIDABLE_HH_
 
-#include <ignition/math/Matrix3.hh>
+#include <gazebo/ecs/Entity.hh>
 
 namespace gazebo
 {
   namespace components
   {
-    /// \brief Describes the inertial properties of an entity.
-    struct Inertial
+    /// \brief Signals this is part of a collision group
+    struct Collidable
     {
-      /// \brief Mass in kilograms
-      double mass = 1.0;
+      /// \brief A grouping entity iff multiple geometry form one rigid body
+      /// \description this entity is where group properties will be. These
+      ///     include Inertial and WorldVelocity properties. If the group
+      ///     is set to NO_ENTITY than the properties are on the same entity
+      ///     as this component.
+      ecs::EntityId groupId = ecs::NO_ENTITY;
 
-      /// \brief inertial matrix
-      ignition::math::Matrix3d inertia = {1, 0, 0,
-                                          0, 1, 0,
-                                          0, 0, 1};
+      // TODO surface properties needed by physics system should go here
     };
   }
 }
 
 #endif
-

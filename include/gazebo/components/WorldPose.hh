@@ -26,6 +26,7 @@ namespace gazebo
   namespace components
   {
     /// \brief Pose of an object
+    /// \deprecated use Pose.hh instead
     ///
     /// This is special in that is always in world frame. For transforming
     /// poses between different frames the pose graph should be used

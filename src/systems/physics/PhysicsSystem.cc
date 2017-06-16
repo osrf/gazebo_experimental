@@ -20,8 +20,8 @@
 
 #include "gazebo/components/Inertial.hh"
 #include "gazebo/components/Geometry.hh"
-#include "gazebo/components/PhysicsProperties.hh"
-#include "gazebo/components/WorldPose.hh"
+#include "gazebo/components/PhysicsConfig.hh"
+#include "gazebo/components/Pose.hh"
 #include "gazebo/components/WorldVelocity.hh"
 #include "gazebo/ecs/Manager.hh"
 #include "gazebo/ecs/EntityQuery.hh"
@@ -37,9 +37,9 @@ void PhysicsSystem::Init(ecs::QueryRegistrar &_registrar)
 {
   // Query for global/configuration info
   ecs::EntityQuery configQuery;
-  if (!configQuery.AddComponent("gazebo::components::PhysicsProperties"))
+  if (!configQuery.AddComponent("gazebo::components::PhysicsConfig"))
   {
-    std::cerr << "Undefined component[gazebo::components::PhysicsProperties]\n";
+    std::cerr << "Undefined component[gazebo::components::PhysicsConfig]\n";
   }
   else
   {
@@ -51,8 +51,8 @@ void PhysicsSystem::Init(ecs::QueryRegistrar &_registrar)
   ecs::EntityQuery query;
   if (!query.AddComponent("gazebo::components::Geometry"))
     std::cerr << "Undefined component[gazebo::components::Geometry]\n";
-  if (!query.AddComponent("gazebo::components::WorldPose"))
-    std::cerr << "Undefined component[gazebo::components::WorldPose]\n";
+  if (!query.AddComponent("gazebo::components::Pose"))
+    std::cerr << "Undefined component[gazebo::components::Pose]\n";
   // TODO require component with contact or surface properies
 
   // Note that we add only the required components. This system will also make
@@ -72,10 +72,10 @@ void PhysicsSystem::UpdateConfig(const ecs::EntityQuery &_result)
   {
     // only consider the first entity
     auto &entity = mgr.Entity(*entityIds.begin());
-    auto difference = entity.IsDifferent<components::PhysicsProperties>();
+    auto difference = entity.IsDifferent<components::PhysicsConfig>();
     if (difference == ecs::WAS_CREATED || difference == ecs::WAS_MODIFIED)
     {
-      auto const *geom = entity.Component<components::PhysicsProperties>();
+      auto const *geom = entity.Component<components::PhysicsConfig>();
       this->maxStepSize = geom->maxStepSize;
     }
   }
