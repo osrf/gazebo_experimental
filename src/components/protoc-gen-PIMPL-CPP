@@ -9,9 +9,8 @@ try:
     from google.protobuf.compiler import plugin_pb2 as plugin
     from google.protobuf.descriptor import FieldDescriptor
 except ImportError:
-    sys.stderr.write("""\n\nNeed python protobuf libraries: 
-        Do `pip install protobuf` or `apt install python-protobuf`
-        
+    sys.stderr.write("""\n\nNeed python protobuf libraries:
+        Do `pip install protobuf` or `apt install python-protobuf`\n
         """)
     raise
 
@@ -111,17 +110,18 @@ def generate_enum(tmpl_enum, indent, enum_dict):
     gen_fields = []
     for field in enum_dict["fields"]:
         gen_field = tmpl_enum_field
-        gen_field = (gen_field.replace("%%ns_indent%%", indent)
-                             .replace("%%field_name%%", field["name"])
-                             .replace("%%field_number%%",
-                                      str(field["number"])))
+        gen_field = (
+                gen_field.replace("%%ns_indent%%", indent)
+                .replace("%%field_name%%", field["name"])
+                .replace("%%field_number%%", str(field["number"])))
         gen_fields.append(gen_field)
     gen_fields = "".join(gen_fields)
     # combine value into a larger enum type
     gen_enum_hh = tmpl_enum
-    gen_enum_hh = (gen_enum_hh.replace("%%ns_indent%%", indent)
-                             .replace("%%enum_name%%", enum_dict["name"])
-                             .replace("%%enum_fields%%", gen_fields))
+    gen_enum_hh = (
+            gen_enum_hh.replace("%%ns_indent%%", indent)
+            .replace("%%enum_name%%", enum_dict["name"])
+            .replace("%%enum_fields%%", gen_fields))
     return gen_enum_hh
 
 
@@ -160,7 +160,7 @@ def generate_apis(package, component_name, simple_fields, complex_fields):
     """
     # generate c++ namespace from protobuf package
     (ns_indent, full_namespace,
-            ns_begin, ns_end) = generate_namespace(package)
+     ns_begin, ns_end) = generate_namespace(package)
 
     api_definitions = []
     api_declarations = []
@@ -168,9 +168,10 @@ def generate_apis(package, component_name, simple_fields, complex_fields):
 
     # Generate code for simple fields
     for field in simple_fields:
-        api_doxygen = (ns_indent
-                + r"  /// \brief Get reference to "
-                + field["name"])
+        api_doxygen = (
+                ns_indent +
+                r"  /// \brief Get reference to " +
+                field["name"])
 
         declaration = tmpl_declaration
         definition = tmpl_definition
@@ -201,9 +202,9 @@ def generate_apis(package, component_name, simple_fields, complex_fields):
 
     # Generate code for complex fields
     for field in complex_fields:
-        api_doxygen = (ns_indent
-                + r"  /// \brief Get accessor to "
-                + field["name"])
+        api_doxygen = (
+                ns_indent + r"  /// \brief Get accessor to " +
+                field["name"])
         declaration = tmpl_complex_decl
         definition = tmpl_complex_def
         if field["repeated"]:
@@ -234,9 +235,9 @@ def generate_apis(package, component_name, simple_fields, complex_fields):
             }
 
 
-def generate_api_partial(tmpl_decl, tmpl_def, package, class_name,
-        simple_fields, enumerations, complex_fields, inline_nested_names,
-        nested_types, oneofs):
+def generate_api_partial(
+        tmpl_decl, tmpl_def, package, class_name, simple_fields, enumerations,
+        complex_fields, inline_nested_names, nested_types, oneofs):
     """Generates part of api class declaration
     @param tmpl_decl class declaration template
     @param tmpl_def class definition template
@@ -255,7 +256,7 @@ def generate_api_partial(tmpl_decl, tmpl_def, package, class_name,
     """
     # generate c++ namespace from protobuf package
     (ns_indent, full_namespace,
-            ns_begin, ns_end) = generate_namespace(package)
+     ns_begin, ns_end) = generate_namespace(package)
 
     # Generate code for enum types
     enum_types = []
@@ -263,8 +264,8 @@ def generate_api_partial(tmpl_decl, tmpl_def, package, class_name,
         enum_types.append(generate_enum(tmpl_enum, ns_indent, enum))
 
     # Generate code for APIs
-    class_pieces = generate_apis(package, class_name,
-            simple_fields, complex_fields)
+    class_pieces = generate_apis(package, class_name, simple_fields,
+                                 complex_fields)
 
     inline_decl = []
     inline_def = []
@@ -274,31 +275,32 @@ def generate_api_partial(tmpl_decl, tmpl_def, package, class_name,
         # Recursively generate nested messages
         nested_info = nested_types[nested_name]
         nested_package = ".".join(nested_name.split(".")[:-1])
-        nested_partial = generate_api_partial(tmpl_class_decl,
-                tmpl_class_def, nested_package, nested_info["name"],
-                nested_info["simple_fields"], nested_info["enumerations"],
-                nested_info["complex_fields"], nested_info["nested_types"],
-                nested_types, nested_info["oneofs"])
+        nested_partial = generate_api_partial(
+                tmpl_class_decl, tmpl_class_def, nested_package,
+                nested_info["name"], nested_info["simple_fields"],
+                nested_info["enumerations"], nested_info["complex_fields"],
+                nested_info["nested_types"], nested_types,
+                nested_info["oneofs"])
         hh_includes.update(nested_partial["hh_includes"])
         inline_decl.append(nested_partial["class_decl"])
         inline_def.append(nested_partial["class_def"])
 
     # Generate code for oneofs
     for oneof in oneofs:
-        oneof_pkg = ".".join([package, class_name])
         (oneof_ns_indent, oneof_ns, oneof_ns_begin,
-                oneof_ns_end) = generate_namespace(oneof["package"])
-        oneof_pieces = generate_apis(oneof["package"], oneof["api_name"],
-            oneof["simple_fields"], oneof["complex_fields"])
+         oneof_ns_end) = generate_namespace(oneof["package"])
+        oneof_pieces = generate_apis(
+                oneof["package"], oneof["api_name"], oneof["simple_fields"],
+                oneof["complex_fields"])
         hh_includes.update(oneof_pieces["hh_includes"])
         oneof_api_decl = "\n".join(oneof_pieces["api_declarations"])
         oneof_api_def = "\n".join(oneof_pieces["api_definitions"])
         oneof_decl = tmpl_class_decl
         oneof_decl = (oneof_decl.replace("%%class_name%%", oneof["api_name"])
-                                .replace("%%ns_indent%%", oneof_ns_indent)
-                                .replace("%%api_declarations%%", oneof_api_decl)
-                                .replace("%%inline_declarations%%", "")
-                                .replace("%%enumerations%%", ""))
+                      .replace("%%ns_indent%%", oneof_ns_indent)
+                      .replace("%%api_declarations%%", oneof_api_decl)
+                      .replace("%%inline_declarations%%", "")
+                      .replace("%%enumerations%%", ""))
         oneof_def = tmpl_class_def
         oneof_def = (oneof_def.replace("%%class_name%%", oneof["api_name"])
                               .replace("%%ns_indent%%", oneof_ns_indent)
@@ -307,7 +309,6 @@ def generate_api_partial(tmpl_decl, tmpl_def, package, class_name,
                               .replace("%%api_definitions%%", oneof_api_def))
         inline_decl.append(oneof_decl)
         inline_def.append(oneof_def)
-
 
     api_definitions = "\n".join(class_pieces["api_definitions"])
     api_declarations = "\n".join(class_pieces["api_declarations"])
@@ -336,8 +337,8 @@ def generate_api_partial(tmpl_decl, tmpl_def, package, class_name,
 
 
 def generate_api_files(dependency, package, component_name, simple_fields,
-        enumerations, complex_fields, inline_nested_names, nested_types,
-        oneofs):
+                       enumerations, complex_fields, inline_nested_names,
+                       nested_types, oneofs):
     """Generates header and source file for API
     @param dependency iterable of strings of protofiles
     @param package a dot delimited string
@@ -354,22 +355,22 @@ def generate_api_files(dependency, package, component_name, simple_fields,
     """
     # generate c++ namespace from protobuf package
     (ns_indent, full_namespace,
-            ns_begin, ns_end) = generate_namespace(package)
+     ns_begin, ns_end) = generate_namespace(package)
 
     hh_includes = set()
 
     # Includes for dependencies
     for dep in dependency:
-        #discard ".proto"
+        # discard ".proto"
         pieces = dep.split(".")[:-1]
-        base_include = "/".join(pieces)
-        hh_include = tmpl_include.replace("%%include%%",
-                base_include + ".api.hh")
+        include = "/".join(pieces) + ".api.hh"
+        hh_include = tmpl_include.replace("%%include%%", include)
         hh_includes.add(hh_include)
 
-    partial_cpp = generate_api_partial(tmpl_api_hh, tmpl_api_cc,
-            package, component_name, simple_fields, enumerations,
-            complex_fields, inline_nested_names, nested_types, oneofs);
+    partial_cpp = generate_api_partial(
+            tmpl_api_hh, tmpl_api_cc, package, component_name, simple_fields,
+            enumerations, complex_fields, inline_nested_names, nested_types,
+            oneofs)
     hh_includes.update(partial_cpp["hh_includes"])
 
     hh_includes = "".join(hh_includes)
@@ -390,7 +391,7 @@ def generate_api_files(dependency, package, component_name, simple_fields,
 
 
 def generate_storage_class(template, package, class_name, simple_fields,
-        complex_fields, nested_names, nested_types, oneofs):
+                           complex_fields, nested_names, nested_types, oneofs):
     """Generates storage class for a nested definition
     @param template c++ template to use
     @param package a dot delimited string
@@ -404,18 +405,18 @@ def generate_storage_class(template, package, class_name, simple_fields,
     """
     # generate c++ namespace from protobuf package
     (ns_indent, full_namespace,
-            ns_begin, ns_end) = generate_namespace(package)
-    storage_doxygen = (ns_indent
-            + r"/// \brief Generated storage class for component "
-            + class_name)
+     ns_begin, ns_end) = generate_namespace(package)
+    storage_doxygen = (ns_indent +
+                       r"/// \brief Generated storage class for component " +
+                       class_name)
 
     inline_storage = []
     for nested_name in nested_names:
         # Recursively generate code for nested storage
         nested_info = nested_types[nested_name]
         nested_package = ".".join(nested_name.split(".")[:-1])
-        nested_partial = generate_storage_class(tmpl_storage_decl,
-                nested_package, nested_info["name"],
+        nested_partial = generate_storage_class(
+                tmpl_storage_decl, nested_package, nested_info["name"],
                 nested_info["simple_fields"], nested_info["complex_fields"],
                 nested_info["nested_types"], nested_types,
                 nested_info["oneofs"])
@@ -425,21 +426,21 @@ def generate_storage_class(template, package, class_name, simple_fields,
     for oneof in oneofs:
         # Special storage class for oneof types
         (oneof_ns_indent, oneof_ns, oneof_ns_begin,
-                oneof_ns_end) = generate_namespace(oneof["package"])
-        oneof_partial = generate_storage_class(tmpl_storage_union_decl,
-                oneof["package"], oneof["api_name"], oneof["simple_fields"],
-                oneof["complex_fields"], [], [], [])
+         oneof_ns_end) = generate_namespace(oneof["package"])
+        oneof_partial = generate_storage_class(
+                tmpl_storage_union_decl, oneof["package"], oneof["api_name"],
+                oneof["simple_fields"], oneof["complex_fields"], [], [], [])
 
         # Generate implicit enum
         oneof_enum = {"fields": [], "name": oneof["api_name"]}
-        num = 10;
+        num = 10
         for field in oneof["simple_fields"] + oneof["complex_fields"]:
             name = "".join(["enumval_", oneof["api_name"], "_", field["name"]])
             oneof_enum["fields"].append(
                     {"name": name, "number": num})
             num += 1
         oneof_partial = generate_enum(oneof_partial,
-                oneof_ns_indent, oneof_enum)
+                                      oneof_ns_indent, oneof_enum)
 
         # Generate constructors/destructor
         copiers = []
@@ -451,7 +452,6 @@ def generate_storage_class(template, package, class_name, simple_fields,
                             .replace("%%field_name%%", field["name"]))
             copiers.append(copier)
             destr = tmpl_union_field_destruct
-            field_class = field["type"].split("::")[-1]
             destr = (destr.replace("%%class_name%%", oneof["api_name"])
                           .replace("%%full_namespace%%", oneof_ns)
                           .replace("%%field_name%%", field["name"]))
@@ -475,10 +475,11 @@ def generate_storage_class(template, package, class_name, simple_fields,
             storage_field = tmpl_field_with_default
             storage_field = storage_field.replace(
                     "%%field_default%%", field["default"])
-        storage_field = (storage_field.replace("%%field_doxygen%%", field_doxygen)
-                                      .replace("%%field_type%%", field["type"])
-                                      .replace("%%field_name%%", field["name"])
-                                      .replace("%%ns_indent%%", ns_indent))
+        storage_field = (
+                storage_field.replace("%%field_doxygen%%", field_doxygen)
+                .replace("%%field_type%%", field["type"])
+                .replace("%%field_name%%", field["name"])
+                .replace("%%ns_indent%%", ns_indent))
         storage_fields.append(storage_field)
 
     for field in complex_fields:
@@ -487,25 +488,27 @@ def generate_storage_class(template, package, class_name, simple_fields,
         if field["repeated"]:
             storage_field = tmpl_field_repeated
         field_type = field["type"] + "Storage"
-        storage_field = (storage_field.replace("%%field_doxygen%%", field_doxygen)
-                                      .replace("%%field_type%%", field_type)
-                                      .replace("%%field_name%%", field["name"])
-                                      .replace("%%ns_indent%%", ns_indent))
+        storage_field = (
+                storage_field.replace("%%field_doxygen%%", field_doxygen)
+                .replace("%%field_type%%", field_type)
+                .replace("%%field_name%%", field["name"])
+                .replace("%%ns_indent%%", ns_indent))
         storage_fields.append(storage_field)
 
     storage_fields = "\n".join(storage_fields)
     hh_content = template
     hh_content = (hh_content.replace("%%class_name%%", class_name)
-                            .replace("%%full_namespace%%", full_namespace)
-                            .replace("%%ns_indent%%", ns_indent)
-                            .replace("%%inline_storage%%", inline_storage)
-                            .replace("%%storage_doxygen%%", storage_doxygen)
-                            .replace("%%storage_fields%%", storage_fields))
+                  .replace("%%full_namespace%%", full_namespace)
+                  .replace("%%ns_indent%%", ns_indent)
+                  .replace("%%inline_storage%%", inline_storage)
+                  .replace("%%storage_doxygen%%", storage_doxygen)
+                  .replace("%%storage_fields%%", storage_fields))
     return hh_content
 
 
 def generate_storage_header(dependency, package, component_name, simple_fields,
-        complex_fields, nested_names, nested_types, oneofs):
+                            complex_fields, nested_names, nested_types,
+                            oneofs):
     """Generates header for storage class
     @param dependency iterable of strings of protofiles
     @param package a dot delimited string
@@ -519,30 +522,26 @@ def generate_storage_header(dependency, package, component_name, simple_fields,
     """
     # generate c++ namespace from protobuf package
     (ns_indent, full_namespace,
-            ns_begin, ns_end) = generate_namespace(package)
-    storage_doxygen = (ns_indent
-            + r"/// \brief Generated storage class for component "
-            + component_name)
+     ns_begin, ns_end) = generate_namespace(package)
 
-    partial_class = generate_storage_class(tmpl_storage_hh, package,
-            component_name, simple_fields, complex_fields, nested_names,
-            nested_types, oneofs)
+    partial_class = generate_storage_class(
+            tmpl_storage_hh, package, component_name, simple_fields,
+            complex_fields, nested_names, nested_types, oneofs)
 
     includes = set()
     for dep in dependency:
-        #discard ".proto"
+        # discard ".proto"
         pieces = dep.split(".")[:-1]
-        base_include = "/".join(pieces)
-        include = tmpl_include.replace("%%include%%",
-                base_include + ".storage.hh")
+        include = "/".join(pieces) + ".storage.hh"
+        include = tmpl_include.replace("%%include%%", include)
         includes.add(include)
     includes = "".join(includes)
 
     hh_content = partial_class
     hh_content = (hh_content.replace("%%ns_begin%%", ns_begin)
-                            .replace("%%ns_end%%", ns_end)
-                            .replace("%%ns_indent%%", ns_indent)
-                            .replace("%%includes%%", includes))
+                  .replace("%%ns_end%%", ns_end)
+                  .replace("%%ns_indent%%", ns_indent)
+                  .replace("%%includes%%", includes))
     return hh_content
 
 
@@ -553,17 +552,17 @@ def generate_factory_cc(package, component_name):
     @returns string content of factory .cc file
     """
     (ns_indent, full_namespace,
-            ns_begin, ns_end) = generate_namespace(package)
-    factory_doxygen = (ns_indent
-            + r"/// \brief Generated Factory class for component "
-            + component_name)
+     ns_begin, ns_end) = generate_namespace(package)
+    factory_doxygen = (ns_indent +
+                       r"/// \brief Generated Factory class for component " +
+                       component_name)
     cc_content = tmpl_factory_cc
     cc_content = (cc_content.replace("%%component_name%%", component_name)
-                            .replace("%%full_namespace%%", full_namespace)
-                            .replace("%%ns_begin%%", ns_begin)
-                            .replace("%%ns_end%%", ns_end)
-                            .replace("%%ns_indent%%", ns_indent)
-                            .replace("%%factory_doxygen%%", factory_doxygen))
+                  .replace("%%full_namespace%%", full_namespace)
+                  .replace("%%ns_begin%%", ns_begin)
+                  .replace("%%ns_end%%", ns_end)
+                  .replace("%%ns_indent%%", ns_indent)
+                  .replace("%%factory_doxygen%%", factory_doxygen))
     return cc_content
 
 
@@ -664,8 +663,8 @@ def gather_message_info(package, message_descriptor, nested_types):
             # Simple type
             field["type"] = simple_types_to_cpp[field_descriptor.type]
             default = field_descriptor.default_value
-            if ( FieldDescriptor.TYPE_STRING == field_descriptor.type or
-                    FieldDescriptor.TYPE_BYTES == field_descriptor.type ):
+            if (FieldDescriptor.TYPE_STRING == field_descriptor.type or
+                    FieldDescriptor.TYPE_BYTES == field_descriptor.type):
                 field["default"] = '"' + default + '"'
             else:
                 field["default"] = default
@@ -677,7 +676,6 @@ def gather_message_info(package, message_descriptor, nested_types):
             else:
                 bucket = oneofs[field["oneof"]]["complex_fields"]
         bucket.append(field)
-
 
     return {"package": package,
             "name": component_name,
@@ -707,14 +705,15 @@ def generate_message_files(dependency, package, message_descriptor):
     dependency = [dep for dep in dependency if dep not in ignore_dependencies]
 
     # Generate code with the information gathered
-    api_header, api_source = generate_api_files(dependency, info["package"],
-            info["name"], info["simple_fields"], info["enumerations"],
+    api_header, api_source = generate_api_files(
+            dependency, info["package"], info["name"], info["simple_fields"],
+            info["enumerations"], info["complex_fields"], info["nested_types"],
+            nested_types, info["oneofs"])
+
+    storage_header = generate_storage_header(
+            dependency, info["package"], info["name"], info["simple_fields"],
             info["complex_fields"], info["nested_types"], nested_types,
             info["oneofs"])
-
-    storage_header = generate_storage_header(dependency, info["package"],
-            info["name"], info["simple_fields"], info["complex_fields"],
-            info["nested_types"], nested_types, info["oneofs"])
 
     return api_header, api_source, storage_header
 
