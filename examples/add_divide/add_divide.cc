@@ -42,7 +42,7 @@ int main(int argc, char **argv)
       "gazebo::components::Fraction");
 
   // First way to load a system: not using a plugin. Useful for testing
-  manager.LoadSystem<gazebo::systems::DivideAndPrintResult>();
+  manager.LoadSystem<gazebo::systems::DivideAndPrintResult>("DivideAndPrint");
 
   // Second way to load a system: using a plugin.
   ignition::common::SystemPaths sp;
@@ -54,7 +54,7 @@ int main(int argc, char **argv)
   {
     std::unique_ptr<gazebo::ecs::System> sys;
     sys = pm.Instantiate<gazebo::ecs::System>(pluginName);
-    if (!manager.LoadSystem(std::move(sys)))
+    if (!manager.LoadSystem(pluginName, std::move(sys)))
     {
       std::cerr << "Failed to load plugin from library" << std::endl;
     }
@@ -106,7 +106,7 @@ int main(int argc, char **argv)
   }
 
   // Run all the systems once.
-  manager.UpdateSystems();
+  manager.UpdateOnce();
 
   return 0;
 }

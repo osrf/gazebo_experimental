@@ -18,6 +18,9 @@
 #ifndef GAZEBO_COMPONENTS_GEOMETRY_HH_
 #define GAZEBO_COMPONENTS_GEOMETRY_HH_
 
+#include <new>
+#include <ignition/math.hh>
+
 namespace gazebo
 {
   namespace components
@@ -25,20 +28,6 @@ namespace gazebo
     /// \brief A geometry
     struct Geometry
     {
-      /// \brief Possible geometry types
-      enum Type
-      {
-        /// \brief Unknown geometry
-        UNKNOWN = 0,
-        /// \brief Sphere geometry
-        SPHERE = 1,
-        /// \brief Cube geometry
-        CUBE = 2,
-      };
-
-      /// \brief the shape of this component
-      Type type = UNKNOWN;
-
       /// \brief Sphere properties
       struct SphereProperties
       {
@@ -46,19 +35,79 @@ namespace gazebo
         double radius;
       };
 
-      /// \brief Cube properties
-      struct CubeProperties
+      /// \brief Rectangular box properties
+      struct BoxProperties
       {
         /// \brief Side length in meters
-        double side;
+        ignition::math::Vector3d size;
       };
+
+      /// \brief Cylinder properties
+      struct CylinderProperties
+      {
+        /// \brief radius in meters
+        double radius;
+        /// \brief height in meters
+        double length;
+      };
+
+      /// \brief Possible geometry types
+      enum Type
+      {
+        UNKNOWN = 0,
+        SPHERE = 1,
+        BOX = 2,
+        CYLINDER = 3,
+      };
+
+      /// \brief constructor
+      Geometry() : type(UNKNOWN)
+      {
+      }
+
+      /// \brief copy constructor
+      Geometry(const Geometry &_other)
+      {
+        // Unions make things hard :(
+        // Use placement new to invoke the right copy constructor
+        switch (_other.type)
+        {
+          case SPHERE:
+            new (&sphere) SphereProperties(_other.sphere);
+          case BOX:
+            new (&box) BoxProperties(_other.box);
+          case CYLINDER:
+            new (&cylinder) CylinderProperties(_other.cylinder);
+          default:
+            break;
+        }
+      }
+
+      /// \brief destructor
+      ~Geometry()
+      {
+        switch (this->type)
+        {
+          case SPHERE:
+            sphere.~SphereProperties();
+          case BOX:
+            box.~BoxProperties();
+          case CYLINDER:
+            cylinder.~CylinderProperties();
+          default:
+            break;
+        }
+      }
+
+      /// \brief the shape of this component
+      Type type;
 
       /// \brief Only one set of geometry properties can be defined at a time.
       union
       {
-        /// \brief Sphere geometries will have sphere properties
         SphereProperties sphere;
-        CubeProperties cube;
+        BoxProperties box;
+        CylinderProperties cylinder;
       };
     };
   }

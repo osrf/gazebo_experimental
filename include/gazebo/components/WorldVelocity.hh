@@ -30,7 +30,7 @@ namespace gazebo
     {
       /// \brief Linear velocity (m/s)
       ignition::math::Vector3<double> linear = {0, 0, 0};
-      /// \brief Angular velocity (rad/s)
+      /// \brief Angular velocity (rad/s when converted to Euler angles)
       ignition::math::Quaternion<double> angular = {1, 0, 0, 0};
     };
   }

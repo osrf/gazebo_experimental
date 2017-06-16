@@ -67,6 +67,24 @@ class TestHookSystem : public gzecs::System
 };
 
 /////////////////////////////////////////////////
+class TestHookComponentizer : public gzecs::Componentizer
+{
+  /// \brief String that's set on update
+  public: std::string sentinel;
+
+  public: virtual void Init()
+    {
+      this->sentinel = "Init Ran";
+    }
+
+  public: virtual void FromSDF(gzecs::Manager &_mgr, sdf::Element &_elem,
+              const std::unordered_map<sdf::Element*, gzecs::EntityId> &_ids)
+     {
+       this->sentinel = "FromSDF Ran";
+     }
+};
+
+/////////////////////////////////////////////////
 TEST(Manager, CreateEntity)
 {
   gzecs::Manager mgr;
@@ -88,9 +106,9 @@ TEST(Manager, DeleteEntity)
 {
   gzecs::Manager mgr;
   gzecs::EntityId id = mgr.CreateEntity();
-  mgr.UpdateSystems();
+  mgr.UpdateOnce();
   mgr.DeleteEntity(id);
-  mgr.UpdateSystems();
+  mgr.UpdateOnce();
   EXPECT_EQ(gzecs::NO_ENTITY, mgr.Entity(id).Id());
 }
 
@@ -100,10 +118,24 @@ TEST(Manager, LoadSystem)
   gzecs::Manager mgr;
   TestHookSystem *raw = new TestHookSystem;
   std::unique_ptr<gzecs::System> sys(dynamic_cast<gzecs::System*>(raw));
-  mgr.LoadSystem(std::move(sys));
+  mgr.LoadSystem("Test system", std::move(sys));
   EXPECT_EQ(std::string("Init Ran"), raw->sentinel);
-  mgr.UpdateSystems();
+  mgr.UpdateOnce();
   EXPECT_EQ(std::string("Update Ran"), raw->sentinel);
+}
+
+/////////////////////////////////////////////////
+TEST(Manager, LoadComponentizer)
+{
+  gzecs::Manager mgr;
+  TestHookComponentizer *raw = new TestHookComponentizer;
+  std::unique_ptr<gzecs::Componentizer> cz(
+      dynamic_cast<gzecs::Componentizer*>(raw));
+  mgr.LoadComponentizer(std::move(cz));
+  EXPECT_EQ(std::string("Init Ran"), raw->sentinel);
+
+  mgr.LoadWorld("<sdf version='1.6'><world name='default'></world></sdf>");
+  EXPECT_EQ(std::string("FromSDF Ran"), raw->sentinel);
 }
 
 /////////////////////////////////////////////////
@@ -131,7 +163,7 @@ TEST(Manager, InitiallyNotPaused)
 {
   gzecs::Manager mgr;
   EXPECT_FALSE(mgr.Paused());
-  mgr.UpdateSystems();
+  mgr.UpdateOnce();
   EXPECT_FALSE(mgr.Paused());
 }
 
@@ -140,10 +172,10 @@ TEST(Manager, PauseUnpause)
 {
   gzecs::Manager mgr;
   mgr.BeginPause();
-  mgr.UpdateSystems();
+  mgr.UpdateOnce();
   EXPECT_TRUE(mgr.Paused());
   mgr.EndPause();
-  mgr.UpdateSystems();
+  mgr.UpdateOnce();
   EXPECT_FALSE(mgr.Paused());
 }
 
@@ -163,7 +195,7 @@ TEST(Manager, SetTimeNotPaused)
   ignition::common::Time simTime(1234, 5678);
   EXPECT_TRUE(mgr.SimulationTime(simTime));
 
-  mgr.UpdateSystems();
+  mgr.UpdateOnce();
   simTime = mgr.SimulationTime();
   EXPECT_EQ(1234, simTime.sec);
   EXPECT_EQ(5678, simTime.nsec);
@@ -180,7 +212,7 @@ TEST(Manager, SetTimeNextUpdate)
   EXPECT_EQ(0, simTime.sec);
   EXPECT_EQ(0, simTime.nsec);
 
-  mgr.UpdateSystems();
+  mgr.UpdateOnce();
   simTime = mgr.SimulationTime();
   EXPECT_EQ(1234, simTime.sec);
   EXPECT_EQ(5678, simTime.nsec);
@@ -191,12 +223,12 @@ TEST(Manager, SetTimePaused)
 {
   gzecs::Manager mgr;
   mgr.BeginPause();
-  mgr.UpdateSystems();
+  mgr.UpdateOnce();
 
   ignition::common::Time simTime(1234, 5678);
   EXPECT_FALSE(mgr.SimulationTime(simTime));
 
-  mgr.UpdateSystems();
+  mgr.UpdateOnce();
   simTime = mgr.SimulationTime();
   EXPECT_EQ(0, simTime.sec);
   EXPECT_EQ(0, simTime.nsec);

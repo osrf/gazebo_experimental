@@ -49,8 +49,11 @@ namespace gazebo
       /// \brief Destructs component without freeing memory
       public: std::function<void (void*)> destructor;
 
-      /// \brief Copies component from one memory location to another
-      public: std::function<void (void const *, void*)> copier;
+      /// \brief Deep copies component from one memory location to another
+      public: std::function<void (void const *, void*)> deepCopier;
+
+      /// \brief shallow copies component from one memory location to another
+      public: std::function<void (void const *, void*)> shallowCopier;
 
       /// \brief Size of an instantiated component in bytes
       public: std::size_t size;
@@ -79,17 +82,25 @@ namespace gazebo
                 // Store size so space can be allocated elsewhere
                 info.size = sizeof(T);
 
-                info.copier = [](void const *_from, void *_to)
+                info.shallowCopier = [](void const *_from, void *_to)
                 {
                   // Copy component from one location to another
-                  // Making a lambda for this allows the compiler to unroll
-                  // the loop completely, which probably makes no difference
-                  // because components will probably be small (< 32 bytes)
+                  // info.size is enough info to do this operation, but making
+                  // a lambda for this allows the compiler to unroll the loop
+                  // completely
                   for (int i = 0; i < sizeof(T); ++i)
                   {
                     static_cast<char*>(_to)[i] =
                       static_cast<char const*>(_from)[i];
                   }
+                };
+
+                info.deepCopier = [](void const *_from, void *_to)
+                {
+                  // Copy component from one location to another using its copy
+                  // constructor.
+                  const T *src = static_cast<const T *>(_from);
+                  new (_to) T(static_cast<const T &>(*src));
                 };
                 return info;
               }
