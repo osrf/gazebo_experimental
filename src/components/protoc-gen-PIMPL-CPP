@@ -137,6 +137,11 @@ known_complex_types = {
             "include": set(["ignition/math/Pose3.hh"]),
             "default": None,
             },
+        ".gazebo.components.Matrix3d": {
+            "type": "ignition::math::Matrix3d",
+            "include": set(["ignition/math/Matrix3.hh"]),
+            "default": None,
+            },
         }
 
 

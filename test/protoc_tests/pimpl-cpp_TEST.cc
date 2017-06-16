@@ -222,14 +222,17 @@ TEST(PIMPLCPP, MathTypesAreSubstituted)
   ignition::math::Vector3d VectorField;
   ignition::math::Quaterniond QuaternionField;
   ignition::math::Pose3d PoseField;
+  ignition::math::Matrix3d MatrixField;
 
   auto uutVectorField = st.Vector();
   auto uutQuaternionField = st.Quaternion();
   auto uutPoseField = st.Pose();
+  auto uutMatrixField = st.Transform();
 
   EXPECT_TRUE(TypesAreSame(VectorField, uutVectorField));
   EXPECT_TRUE(TypesAreSame(QuaternionField, uutQuaternionField));
   EXPECT_TRUE(TypesAreSame(PoseField, uutPoseField));
+  EXPECT_TRUE(TypesAreSame(MatrixField, uutMatrixField));
 }
 
 /////////////////////////////////////////////////

@@ -16,18 +16,19 @@
 */
 syntax = "proto2";
 
-package gazebo.components.test;
+package gazebo.components;
 
-import "gazebo/components/Vector3d.proto";
-import "gazebo/components/Quaterniond.proto";
-import "gazebo/components/Pose3d.proto";
-import "gazebo/components/Matrix3d.proto";
 
-message SubstitutedTypes
+message Matrix3d
 {
-  optional Vector3d Vector = 1;
-  optional Quaterniond Quaternion = 2;
-  optional Pose3d Pose = 3;
-  optional Matrix3d Transform = 4;
-}
+  message Row
+  {
+    optional double c1 = 1;
+    optional double c2 = 2;
+    optional double c3 = 3;
+  }
 
+  optional Row Row1 = 1;
+  optional Row Row2 = 2;
+  optional Row Row3 = 3;
+}
