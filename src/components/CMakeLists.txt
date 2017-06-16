@@ -12,6 +12,7 @@ set(component_files
   gazebo/components/Name.proto
   gazebo/components/PhysicsConfig.proto
   gazebo/components/Pose.proto
+  gazebo/components/WorldVelocity.proto
 )
 
 set(generator_files
