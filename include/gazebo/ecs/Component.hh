@@ -83,8 +83,8 @@ namespace gazebo
       public: virtual const char *ComponentName() const
       {
         // Make dummy storage and API to get component name
-        char dummyStorage[this->StorageSize()];
-        char dummyAPI[this->APISize()];
+        char *dummyStorage = new char[this->StorageSize()];
+        char *dummyAPI = new char[this->APISize()];
         void *vStor = static_cast<void*>(dummyStorage);
         void *vAPI = static_cast<void*>(dummyAPI);
         this->ConstructStorage(vStor);
@@ -92,6 +92,8 @@ namespace gazebo
         const char *name = static_cast<ComponentAPI*>(vAPI)->ComponentName();
         this->DestructAPI(vAPI);
         this->DestructStorage(vStor);
+        delete [] dummyAPI;
+        delete [] dummyStorage;
         return name;
       }
 
@@ -99,8 +101,8 @@ namespace gazebo
       public: virtual const char *ComponentType(ecs::ComponentType _type)
       {
         // Make dummy storage and API to set component type
-        char dummyStorage[this->StorageSize()];
-        char dummyAPI[this->APISize()];
+        char *dummyStorage = new char[this->StorageSize()];
+        char *dummyAPI = new char[this->APISize()];
         void *vStor = static_cast<void*>(dummyStorage);
         void *vAPI = static_cast<void*>(dummyAPI);
         this->ConstructStorage(vStor);
@@ -108,6 +110,8 @@ namespace gazebo
         static_cast<ComponentAPI*>(vAPI)->ComponentType(_type);
         this->DestructAPI(vAPI);
         this->DestructStorage(vStor);
+        delete [] dummyAPI;
+        delete [] dummyStorage;
       }
 
       /// \brief Returns the size in bytes needed to store this component
@@ -117,7 +121,8 @@ namespace gazebo
       public: virtual std::size_t APISize() const = 0;
 
       /// \brief Instantiates API class in place with storage
-      public: virtual void ConstructAPI(void *_location, void *_storage) const = 0;
+      public: virtual void ConstructAPI(void *_location,
+                  void *_storage) const = 0;
 
       /// \brief Destructs API class in place
       public: virtual void DestructAPI(void *_location) const = 0;
@@ -185,7 +190,7 @@ namespace gazebo
       public: virtual void ConstructStorage(void *_location) const override
       {
         // placement new operator so this doesn't allocate memory
-        new (_location) STORAGE();
+        new(_location) STORAGE();
       }
 
       public: virtual void DestructStorage(void *_location) const override
@@ -211,7 +216,7 @@ namespace gazebo
       {
         // Copy component using its copy constructor and placement new.
         const STORAGE *src = static_cast<const STORAGE *>(_from);
-        new (_to) STORAGE(static_cast<const STORAGE &>(*src));
+        new(_to) STORAGE(static_cast<const STORAGE &>(*src));
       }
     };
   }
