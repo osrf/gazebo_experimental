@@ -455,26 +455,47 @@ TEST(PIMPLCPP, OneofMessage)
   comp.SomeOtherUnion().SomeFloat();
   EXPECT_TRUE(comp.SomeOtherUnion().HasSomeFloat());
 
-  {
-    // Type/values should be copied if using the copy constructor
-    std::unique_ptr<char[]> storage2(new char[factory->StorageSize()]);
-    factory->ConstructStorage(static_cast<void *>(storage2.get()));
+  factory->DestructAPI(static_cast<void *>(&comp));
+  factory->DestructStorage(static_cast<void *>(storage.get()));
+}
 
-    comp.SomeOtherUnion().SomeFloat() = -54.6f;
+/////////////////////////////////////////////////
+TEST(PIMPLCPP, OneofDeepCopy)
+{
+  ignition::common::PluginLoader pl;
+  ignition::common::SystemPaths sp;
+  sp.AddPluginPaths("./");
+  std::string pathToLibrary = sp.FindSharedLibrary(
+      "gazeboComponentOneofMessage");
+  ASSERT_FALSE(pathToLibrary.empty());
+  std::string pluginName = pl.LoadLibrary(pathToLibrary);
+  ASSERT_EQ("::gazebo::components::test::OneofMessageFactory", pluginName);
 
-    factory->DeepCopyStorage(
-      static_cast<void *>(storage.get()), static_cast<void *>(storage2.get()));
+  auto factory = pl.Instantiate<gazebo::ecs::ComponentFactory>(pluginName);
+  std::unique_ptr<char[]> storage(new char[factory->StorageSize()]);
+  factory->ConstructStorage(static_cast<void *>(storage.get()));
 
-    gazebo::components::test::OneofMessage comp2;
-    factory->ConstructAPI(
-        static_cast<void *>(&comp2), static_cast<void *>(storage2.get()));
+  gazebo::components::test::OneofMessage comp;
+  factory->ConstructAPI(
+      static_cast<void *>(&comp), static_cast<void *>(storage.get()));
 
-    EXPECT_TRUE(comp2.SomeOtherUnion().HasSomeFloat());
-    EXPECT_FLOAT_EQ(-54.6f, comp2.SomeOtherUnion().SomeFloat());
+  std::unique_ptr<char[]> storage2(new char[factory->StorageSize()]);
+  factory->ConstructStorage(static_cast<void *>(storage2.get()));
 
-    factory->DestructAPI(static_cast<void *>(&comp2));
-    factory->DestructStorage(static_cast<void *>(storage2.get()));
-  }
+  comp.SomeOtherUnion().SomeFloat() = -54.6f;
+
+  factory->DeepCopyStorage(
+    static_cast<void *>(storage.get()), static_cast<void *>(storage2.get()));
+
+  gazebo::components::test::OneofMessage comp2;
+  factory->ConstructAPI(
+      static_cast<void *>(&comp2), static_cast<void *>(storage2.get()));
+
+  EXPECT_TRUE(comp2.SomeOtherUnion().HasSomeFloat());
+  EXPECT_FLOAT_EQ(-54.6f, comp2.SomeOtherUnion().SomeFloat());
+
+  factory->DestructAPI(static_cast<void *>(&comp2));
+  factory->DestructStorage(static_cast<void *>(storage2.get()));
 
   factory->DestructAPI(static_cast<void *>(&comp));
   factory->DestructStorage(static_cast<void *>(storage.get()));
