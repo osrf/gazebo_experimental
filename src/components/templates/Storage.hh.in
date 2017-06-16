@@ -25,20 +25,14 @@
 
 %%includes%%
 
-////////////////////
-// Nested message storage definitions
-////////////////////
 %%inline_storage%%
 
-%%ns_begin%%
-%%storage_doxygen%%
-%%ns_indent%%/// \remarks this class is private, it may change without notice
-%%ns_indent%%class %%class_name%%Storage
-%%ns_indent%%{
+/// \remarks this class is private, it may change without notice
+class %%full_namespace%%::%%class_name%%Storage
+{
 %%storage_fields%%
-%%ns_indent%%  /// \brief Only the API class may interact with this storage
-%%ns_indent%%  friend %%full_namespace%%::%%class_name%%;
-%%ns_indent%%};
-%%ns_end%%
+  /// \brief Only the API class may interact with this storage
+  friend %%full_namespace%%::%%class_name%%;
+};
 
 #endif

@@ -40,9 +40,7 @@
 %%ns_indent%%    public: const %%field_type%% At(std::size_t _idx) const;
 %%ns_indent%%  };
 
-%%api_doxygen%%
 %%ns_indent%%  public: %%field_name%%Repeated %%field_name%%();
 
-%%api_doxygen%%
 %%ns_indent%%  /// \remarks read-ony API for const components
 %%ns_indent%%  public: const %%field_name%%Repeated %%field_name%%() const;

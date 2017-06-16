@@ -1,6 +1,5 @@
 %%inline_storage%%
 
-%%storage_doxygen%%
 /// \remarks this class is private, it may change without notice
 class %%full_namespace%%::%%class_name%%Storage
 {

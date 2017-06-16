@@ -22,7 +22,6 @@
 #include "%%component_name%%.storage.hh"
 
 %%ns_begin%%
-%%factory_doxygen%%
 %%ns_indent%%class IGNITION_COMMON_VISIBLE %%component_name%%Factory :
 %%ns_indent%%  public ::gazebo::ecs::ComponentFactoryHelper<%%component_name%%, %%component_name%%Storage>
 %%ns_indent%%{

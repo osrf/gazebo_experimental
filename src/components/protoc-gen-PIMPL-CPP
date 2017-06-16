@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import copy
 import os
 import sys
 
@@ -10,9 +9,115 @@ try:
     from google.protobuf.descriptor import FieldDescriptor
 except ImportError:
     sys.stderr.write("""\n\nNeed python protobuf libraries:
-        Do `pip install protobuf` or `apt install python-protobuf`\n
-        """)
+        Do `pip install protobuf` or `apt install python-protobuf`\n\n""")
     raise
+
+
+class Message(object):
+    """
+    Represents a protobuf message
+    """
+    def __init__(self):
+        self.package = None
+        self.name = None
+        self.fields = []
+        self.oneofs = []
+        self.nested_enum = []
+        self.nested_msgs = {}
+
+
+class Oneof(object):
+    """
+    Oneof is a union of fields
+    within an object
+    """
+    def __init__(self):
+        self.package = None
+        self.name = None
+        self.fields = []
+
+    def ApiName(self):
+        return self.name + "API"
+
+
+class Field(object):
+    """
+    Represents a field in a message
+    """
+    def __init__(self):
+        self.name = None
+        self.type = None
+        self.default = None
+        self.includes = set()
+        self.oneof_index = None
+        self.is_substituted = False
+        self.is_repeated = False
+        self.is_complex = False
+
+    @classmethod
+    def FromDescriptor(cls, field_descriptor):
+        field = cls()
+        field.name = field_descriptor.name
+        if FieldDescriptor.LABEL_REPEATED == field_descriptor.label:
+            field.is_repeated = True
+            field.includes.add("vector")
+
+        if field_descriptor.type == FieldDescriptor.TYPE_MESSAGE:
+            # Complex/Nested type
+            if field_descriptor.type_name in known_complex_types:
+                # Substitute field for a known ignition type
+                known_type = known_complex_types[field_descriptor.type_name]
+                field.type = known_type["type"]
+                field.includes.update(known_type["include"])
+                field.is_substituted = True
+            else:
+                field.type = field_descriptor.type_name.replace(".", "::")
+                field.is_complex = True
+        elif FieldDescriptor.TYPE_ENUM == field_descriptor.type:
+            field.type = field_descriptor.type_name.replace(".", "::")
+            field.default = "static_cast<" + field.type + ">(0)"
+        else:
+            # Simple type
+            field.type = simple_types_to_cpp[field_descriptor.type]
+            if field_descriptor.HasField("default_value"):
+                field.default = field_descriptor.default_value
+                if (FieldDescriptor.TYPE_STRING == field_descriptor.type or
+                        FieldDescriptor.TYPE_BYTES == field_descriptor.type):
+                    field.default = '"' + field.default + '"'
+
+        if field_descriptor.HasField("oneof_index"):
+            field.oneof_index = field_descriptor.oneof_index
+        return field
+
+
+class Enum(object):
+    """
+    Represents an enumeration
+    """
+    def __init__(self):
+        self.type = "uint32_t"
+        self.includes = set(["cstdint"])
+        self.fields = []
+
+    @classmethod
+    def FromDescriptor(cls, enum_descriptor):
+        enum = cls()
+        enum.name = enum_descriptor.name
+        for value_descriptor in enum_descriptor.value:
+            field = EnumField()
+            field.name = value_descriptor.name
+            field.number = value_descriptor.number
+            enum.fields.append(field)
+        return enum
+
+
+class EnumField(object):
+    """
+    Represents one field in an enumeration
+    """
+    def __init__(self):
+        self.name = None
+        self.number = None
 
 
 # nested types that can be swapped for simple types
@@ -69,6 +174,15 @@ def get_template(name):
     with open(file_path + "/templates/" + name, "r") as fin:
         return fin.read()
 
+
+def populate_template(template, **kwargs):
+    """Uses keyword arugments to do template substitutions"""
+    populated = template
+    for key, value in kwargs.items():
+        populated = populated.replace("%%{key}%%".format(key=key), str(value))
+    return populated
+
+
 tmpl_factory_cc = get_template("Factory.cc.in")
 tmpl_api_hh = get_template("Api.hh.in")
 tmpl_api_cc = get_template("Api.cc.in")
@@ -99,29 +213,25 @@ tmpl_union_field_copy = get_template("UnionFieldCopy.hh.in")
 tmpl_union_field_destruct = get_template("UnionFieldDestruct.hh.in")
 
 
-def generate_enum(tmpl_enum, indent, enum_dict):
+def generate_enum(tmpl_enum, indent, enum):
     """Generate a single enum given a dict of values
     @param tmpl_enum template to put enum fields in
     @param indent is whitespace to indent the enum
-    @param enum_dict is a dictionary with info about the num
+    @param enum instance of Enum
     @returns a string with the generted C++ code
     """
     # Generate code for individual values in enum
     gen_fields = []
-    for field in enum_dict["fields"]:
-        gen_field = tmpl_enum_field
-        gen_field = (
-                gen_field.replace("%%ns_indent%%", indent)
-                .replace("%%field_name%%", field["name"])
-                .replace("%%field_number%%", str(field["number"])))
-        gen_fields.append(gen_field)
+    for field in enum.fields:
+        gen_fields.append(populate_template(tmpl_enum_field, ns_indent=indent,
+                                            field_name=field.name,
+                                            field_number=field.number))
     gen_fields = "".join(gen_fields)
     # combine value into a larger enum type
     gen_enum_hh = tmpl_enum
-    gen_enum_hh = (
-            gen_enum_hh.replace("%%ns_indent%%", indent)
-            .replace("%%enum_name%%", enum_dict["name"])
-            .replace("%%enum_fields%%", gen_fields))
+    gen_enum_hh = populate_template(tmpl_enum, ns_indent=indent,
+                                    enum_name=enum.name,
+                                    enum_fields=gen_fields)
     return gen_enum_hh
 
 
@@ -147,12 +257,11 @@ def generate_namespace(package):
     return (ns_indent, full_namespace, ns_begin, ns_end)
 
 
-def generate_apis(package, component_name, simple_fields, complex_fields):
+def generate_apis(package, class_name, fields):
     """Generates C++ code for pieces of a class
     @param package a dot delimited string
-    @param component_name string name of component
-    @param simple_fields dict with info about fields in message
-    @param complex_fields list with info about fields that are messages
+    @param class_name string name of class
+    @param fields list of instances of Field
     @returns dict
         api_definitions list with C++ api defintions
         api_declarations list with C++ api declarations
@@ -167,88 +276,53 @@ def generate_apis(package, component_name, simple_fields, complex_fields):
     hh_includes = set()
 
     # Generate code for simple fields
-    for field in simple_fields:
-        api_doxygen = (
-                ns_indent +
-                r"  /// \brief Get reference to " +
-                field["name"])
+    for field in fields:
+        declaration = None
+        definition = None
 
-        declaration = tmpl_declaration
-        definition = tmpl_definition
-        if field["repeated"]:
-            declaration = tmpl_repeated_decl
-            definition = tmpl_repeated_def
-        elif field["oneof"] is not None:
-            declaration = tmpl_oneof_decl
-            definition = tmpl_oneof_def
+        if field.is_complex:
+            if field.is_repeated:
+                declaration = tmpl_complex_repeated_decl
+                definition = tmpl_complex_repeated_def
+            elif field.oneof_index is not None:
+                declaration = tmpl_complex_oneof_decl
+                definition = tmpl_complex_oneof_def
+            else:
+                declaration = tmpl_complex_decl
+                definition = tmpl_complex_def
+        else:
+            if field.is_repeated:
+                declaration = tmpl_repeated_decl
+                definition = tmpl_repeated_def
+            elif field.oneof_index is not None:
+                declaration = tmpl_oneof_decl
+                definition = tmpl_oneof_def
+            else:
+                declaration = tmpl_declaration
+                definition = tmpl_definition
 
-        declaration = (declaration.replace("%%field_type%%", field["type"])
-                                  .replace("%%field_name%%", field["name"])
-                                  .replace("%%ns_indent%%", ns_indent)
-                                  .replace("%%class_name%%", component_name)
-                                  .replace("%%api_doxygen%%", api_doxygen))
-        api_declarations.append(declaration)
+        api_declarations.append(populate_template(
+                declaration, field_type=field.type, field_name=field.name,
+                ns_indent=ns_indent, class_name=class_name))
 
-        definition = (definition.replace("%%field_type%%", field["type"])
-                                .replace("%%field_name%%", field["name"])
-                                .replace("%%ns_indent%%", ns_indent)
-                                .replace("%%full_namespace%%", full_namespace)
-                                .replace("%%class_name%%", component_name))
-        api_definitions.append(definition)
+        api_definitions.append(populate_template(
+                definition, field_type=field.type, field_name=field.name,
+                ns_indent=ns_indent, full_namespace=full_namespace,
+                class_name=class_name))
 
-        for include in field["include"]:
-            include = tmpl_include.replace("%%include%%", include)
-            hh_includes.add(include)
+        for include in field.includes:
+            hh_includes.add(populate_template(tmpl_include, include=include))
 
-    # Generate code for complex fields
-    for field in complex_fields:
-        api_doxygen = (
-                ns_indent + r"  /// \brief Get accessor to " +
-                field["name"])
-        declaration = tmpl_complex_decl
-        definition = tmpl_complex_def
-        if field["repeated"]:
-            declaration = tmpl_complex_repeated_decl
-            definition = tmpl_complex_repeated_def
-        elif field["oneof"] is not None:
-            declaration = tmpl_complex_oneof_decl
-            definition = tmpl_complex_oneof_def
-
-        declaration = (declaration.replace("%%field_type%%", field["type"])
-                                  .replace("%%field_name%%", field["name"])
-                                  .replace("%%ns_indent%%", ns_indent)
-                                  .replace("%%class_name%%", component_name)
-                                  .replace("%%api_doxygen%%", api_doxygen))
-        api_declarations.append(declaration)
-
-        definition = (definition.replace("%%field_type%%", field["type"])
-                                .replace("%%field_name%%", field["name"])
-                                .replace("%%ns_indent%%", ns_indent)
-                                .replace("%%full_namespace%%", full_namespace)
-                                .replace("%%class_name%%", component_name))
-        api_definitions.append(definition)
-
-    return {
-            "api_definitions": api_definitions,
+    return {"api_definitions": api_definitions,
             "api_declarations": api_declarations,
-            "hh_includes": hh_includes,
-            }
+            "hh_includes": hh_includes}
 
 
-def generate_api_partial(
-        tmpl_decl, tmpl_def, package, class_name, simple_fields, enumerations,
-        complex_fields, inline_nested_names, nested_types, oneofs):
-    """Generates part of api class declaration
+def generate_api_partial(tmpl_decl, tmpl_def, msg):
+    """Generates C++ code for API class for a given message
     @param tmpl_decl class declaration template
     @param tmpl_def class definition template
-    @param package a dot delimited string
-    @param class_name string name of class
-    @param simple_fields dict with info about fields in message
-    @enumerations dict with info about inline enumerations
-    @param complex_fields list with info about fields that are messages
-    @param inline_nested_names list of names defined in top-level message
-    @param nested_types dict of types that are defined inline
-    @param oneofs list of info about oneof's defined in message
+    @param msg Message instance
     @returns dict
         hh_includes set of headers that need to be included
         class_decl string C++ code with class declaration
@@ -256,57 +330,48 @@ def generate_api_partial(
     """
     # generate c++ namespace from protobuf package
     (ns_indent, full_namespace,
-     ns_begin, ns_end) = generate_namespace(package)
+     ns_begin, ns_end) = generate_namespace(msg.package)
 
     # Generate code for enum types
     enum_types = []
-    for enum in enumerations:
+    for enum in msg.nested_enum:
         enum_types.append(generate_enum(tmpl_enum, ns_indent, enum))
 
     # Generate code for APIs
-    class_pieces = generate_apis(package, class_name, simple_fields,
-                                 complex_fields)
+    class_pieces = generate_apis(msg.package, msg.name, msg.fields)
 
     inline_decl = []
     inline_def = []
     hh_includes = class_pieces["hh_includes"]
 
-    for nested_name in inline_nested_names:
+    for nested_name, nested_msg in msg.nested_msgs.items():
         # Recursively generate nested messages
-        nested_info = nested_types[nested_name]
-        nested_package = ".".join(nested_name.split(".")[:-1])
         nested_partial = generate_api_partial(
-                tmpl_class_decl, tmpl_class_def, nested_package,
-                nested_info["name"], nested_info["simple_fields"],
-                nested_info["enumerations"], nested_info["complex_fields"],
-                nested_info["nested_types"], nested_types,
-                nested_info["oneofs"])
+                tmpl_class_decl, tmpl_class_def, nested_msg)
         hh_includes.update(nested_partial["hh_includes"])
         inline_decl.append(nested_partial["class_decl"])
         inline_def.append(nested_partial["class_def"])
 
     # Generate code for oneofs
-    for oneof in oneofs:
+    for oneof in msg.oneofs:
         (oneof_ns_indent, oneof_ns, oneof_ns_begin,
-         oneof_ns_end) = generate_namespace(oneof["package"])
-        oneof_pieces = generate_apis(
-                oneof["package"], oneof["api_name"], oneof["simple_fields"],
-                oneof["complex_fields"])
+         oneof_ns_end) = generate_namespace(oneof.package)
+        oneof_pieces = generate_apis(oneof.package, oneof.ApiName(),
+                                     oneof.fields)
         hh_includes.update(oneof_pieces["hh_includes"])
         oneof_api_decl = "\n".join(oneof_pieces["api_declarations"])
         oneof_api_def = "\n".join(oneof_pieces["api_definitions"])
-        oneof_decl = tmpl_class_decl
-        oneof_decl = (oneof_decl.replace("%%class_name%%", oneof["api_name"])
-                      .replace("%%ns_indent%%", oneof_ns_indent)
-                      .replace("%%api_declarations%%", oneof_api_decl)
-                      .replace("%%inline_declarations%%", "")
-                      .replace("%%enumerations%%", ""))
-        oneof_def = tmpl_class_def
-        oneof_def = (oneof_def.replace("%%class_name%%", oneof["api_name"])
-                              .replace("%%ns_indent%%", oneof_ns_indent)
-                              .replace("%%full_namespace%%", oneof_ns)
-                              .replace("%%inline_definitions%%", "")
-                              .replace("%%api_definitions%%", oneof_api_def))
+
+        oneof_decl = populate_template(
+                tmpl_class_decl, class_name=oneof.ApiName(),
+                ns_indent=oneof_ns_indent, api_declarations=oneof_api_decl,
+                inline_declarations="", enumerations="")
+
+        oneof_def = populate_template(
+                tmpl_class_def, class_name=oneof.ApiName(),
+                ns_indent=oneof_ns_indent, api_definitions=oneof_api_def,
+                inline_definitions="")
+
         inline_decl.append(oneof_decl)
         inline_def.append(oneof_def)
 
@@ -317,232 +382,177 @@ def generate_api_partial(
     enum_types = "\n".join(enum_types)
 
     # Put all content together
-    hh_content = tmpl_decl
-    hh_content = (hh_content.replace("%%class_name%%", class_name)
-                            .replace("%%ns_indent%%", ns_indent)
-                            .replace("%%api_declarations%%", api_declarations)
-                            .replace("%%inline_declarations%%", inline_decl)
-                            .replace("%%enumerations%%", enum_types))
+    hh_content = populate_template(
+            tmpl_decl, class_name=msg.name, inline_declarations=inline_decl,
+            api_declarations=api_declarations, ns_indent=ns_indent,
+            enumerations=enum_types)
 
-    cc_content = tmpl_def
-    cc_content = (cc_content.replace("%%class_name%%", class_name)
-                            .replace("%%ns_indent%%", ns_indent)
-                            .replace("%%full_namespace%%", full_namespace)
-                            .replace("%%inline_definitions%%", inline_def)
-                            .replace("%%api_definitions%%", api_definitions))
-    return {
-            "hh_includes": hh_includes,
+    cc_content = populate_template(
+            tmpl_def, class_name=msg.name, api_definitions=api_definitions,
+            full_namespace=full_namespace, ns_indent=ns_indent,
+            inline_definitions=inline_def)
+
+    return {"hh_includes": hh_includes,
             "class_decl": hh_content,
             "class_def": cc_content}
 
 
-def generate_api_files(dependency, package, component_name, simple_fields,
-                       enumerations, complex_fields, inline_nested_names,
-                       nested_types, oneofs):
+def generate_api_files(dependency, msg):
     """Generates header and source file for API
     @param dependency iterable of strings of protofiles
-    @param package a dot delimited string
-    @param component_name string name of component
-    @param simple_fields dict with info about fields in message
-    @enumerations dict with info about inline enumerations
-    @param complex_fields list with info about fields that are messages
-    @param inline_nested_names list of names defined in top-level message
-    @param nested_types dict of types that are defined inline
-    @param oneofs list of dictionaries with info about oneofs
+    @param msg Message() instance for protobuf
     @returns tuple
         string with header file
         string with source file
     """
     # generate c++ namespace from protobuf package
     (ns_indent, full_namespace,
-     ns_begin, ns_end) = generate_namespace(package)
+     ns_begin, ns_end) = generate_namespace(msg.package)
 
     hh_includes = set()
 
-    # Includes for dependencies
+    # Includes for .proto file level dependencies
     for dep in dependency:
         # discard ".proto"
         pieces = dep.split(".")[:-1]
         include = "/".join(pieces) + ".api.hh"
-        hh_include = tmpl_include.replace("%%include%%", include)
-        hh_includes.add(hh_include)
+        hh_includes.add(populate_template(tmpl_include, include=include))
 
-    partial_cpp = generate_api_partial(
-            tmpl_api_hh, tmpl_api_cc, package, component_name, simple_fields,
-            enumerations, complex_fields, inline_nested_names, nested_types,
-            oneofs)
+    partial_cpp = generate_api_partial(tmpl_api_hh, tmpl_api_cc, msg)
     hh_includes.update(partial_cpp["hh_includes"])
-
     hh_includes = "".join(hh_includes)
 
     # Put all content together
-    hh_content = partial_cpp["class_decl"]
-    hh_content = (hh_content.replace("%%full_namespace%%", full_namespace)
-                            .replace("%%ns_begin%%", ns_begin)
-                            .replace("%%ns_end%%", ns_end)
-                            .replace("%%includes%%", hh_includes))
+    hh_content = populate_template(partial_cpp["class_decl"],
+                                   full_namespace=full_namespace,
+                                   ns_begin=ns_begin, ns_end=ns_end,
+                                   includes=hh_includes)
 
-    cc_content = partial_cpp["class_def"]
-    cc_content = (cc_content.replace("%%component_name%%", component_name)
-                            .replace("%%full_namespace%%", full_namespace)
-                            .replace("%%ns_begin%%", ns_begin)
-                            .replace("%%ns_end%%", ns_end))
+    cc_content = populate_template(partial_cpp["class_def"],
+                                   component_name=msg.name,
+                                   full_namespace=full_namespace,
+                                   ns_begin=ns_begin, ns_end=ns_end)
     return hh_content, cc_content
 
 
-def generate_storage_class(template, package, class_name, simple_fields,
-                           complex_fields, nested_names, nested_types, oneofs):
+def generate_storage_fields(class_name, fields):
+    """Generates code for storage fields
+    @param class_name name of storage class fields are in
+    @fields list of instances of Field
+    returns string of generated fields
+    """
+    storage_fields = []
+    for field in fields:
+        tmpl = None
+        if field.is_repeated:
+            tmpl = tmpl_field_repeated
+        elif field.default is not None:
+            tmpl = tmpl_field_with_default
+        else:
+            tmpl = tmpl_field
+
+        field_type = field.type
+        if field.is_complex:
+            field_type = field.type + "Storage"
+
+        storage_fields.append(populate_template(
+            tmpl, field_default=field.default, field_type=field_type,
+            field_name=field.name))
+    return "\n".join(storage_fields)
+
+
+def generate_storage_oneof(oneof):
+    """Generates a storage class for a oneof
+    @param oneof instance of Oneof
+    returns string of generated storage class
+    """
+    # Special storage class for oneof types
+    (oneof_ns_indent, oneof_ns, oneof_ns_begin,
+     oneof_ns_end) = generate_namespace(oneof.package)
+    oneof_fields = generate_storage_fields(oneof.ApiName(), oneof.fields)
+
+    # Generate constructors/destructor
+    copiers = []
+    destructors = []
+    for field in oneof.fields:
+        copiers.append(populate_template(
+                tmpl_union_field_copy, class_name=oneof.ApiName(),
+                full_namespace=oneof_ns, field_name=field.name))
+        destructors.append(populate_template(
+                tmpl_union_field_destruct, class_name=oneof.ApiName(),
+                full_namespace=oneof_ns, field_name=field.name))
+    copiers = "\n".join(copiers)
+    destructors = "\n".join(destructors)
+
+    # Gen most of the code
+    oneof_partial = populate_template(
+            tmpl_storage_union_decl, udestruct=destructors, ucopy=copiers,
+            class_name=oneof.ApiName(), full_namespace=oneof_ns,
+            storage_fields=oneof_fields)
+
+    # One last bit, generate implicit enum
+    oneof_enum = Enum()
+    oneof_enum.name = oneof.name
+    num = 10
+    for field in oneof.fields:
+        enum_field = EnumField()
+        enum_field.name = "".join(
+                ["enumval_", oneof.ApiName(), "_", field.name])
+        enum_field.number = num
+        num += 1
+        oneof_enum.fields.append(enum_field)
+    return generate_enum(oneof_partial, oneof_ns_indent, oneof_enum)
+
+
+def generate_storage_class(template, msg):
     """Generates storage class for a nested definition
     @param template c++ template to use
-    @param package a dot delimited string
-    @param class_name string name of component
-    @param simple_fields dict with info about fields in message
-    @param complex_fields list with info about fields that are messages
-    @param inline_nested_names list of names defined in top-level message
-    @param nested_types dict of types that are defined inline
-    @param oneofs list of dictionaries with info about oneofs
+    @param msg Message instance to generate storage from
     @returns string generated storage class
     """
-    # generate c++ namespace from protobuf package
     (ns_indent, full_namespace,
-     ns_begin, ns_end) = generate_namespace(package)
-    storage_doxygen = (ns_indent +
-                       r"/// \brief Generated storage class for component " +
-                       class_name)
+     ns_begin, ns_end) = generate_namespace(msg.package)
 
     inline_storage = []
-    for nested_name in nested_names:
-        # Recursively generate code for nested storage
-        nested_info = nested_types[nested_name]
-        nested_package = ".".join(nested_name.split(".")[:-1])
-        nested_partial = generate_storage_class(
-                tmpl_storage_decl, nested_package, nested_info["name"],
-                nested_info["simple_fields"], nested_info["complex_fields"],
-                nested_info["nested_types"], nested_types,
-                nested_info["oneofs"])
-        inline_storage.append(nested_partial)
+    for nested_name, nested_msg in msg.nested_msgs.items():
+        # Recursively generate code for nested messages
+        inline_storage.append(generate_storage_class(tmpl_storage_decl,
+                                                     nested_msg))
 
     # Inline storage for oneof
-    for oneof in oneofs:
-        # Special storage class for oneof types
-        (oneof_ns_indent, oneof_ns, oneof_ns_begin,
-         oneof_ns_end) = generate_namespace(oneof["package"])
-        oneof_partial = generate_storage_class(
-                tmpl_storage_union_decl, oneof["package"], oneof["api_name"],
-                oneof["simple_fields"], oneof["complex_fields"], [], [], [])
-
-        # Generate implicit enum
-        oneof_enum = {"fields": [], "name": oneof["api_name"]}
-        num = 10
-        for field in oneof["simple_fields"] + oneof["complex_fields"]:
-            name = "".join(["enumval_", oneof["api_name"], "_", field["name"]])
-            oneof_enum["fields"].append(
-                    {"name": name, "number": num})
-            num += 1
-        oneof_partial = generate_enum(oneof_partial,
-                                      oneof_ns_indent, oneof_enum)
-
-        # Generate constructors/destructor
-        copiers = []
-        destructors = []
-        for field in oneof["simple_fields"] + oneof["complex_fields"]:
-            copier = tmpl_union_field_copy
-            copier = (copier.replace("%%class_name%%", oneof["api_name"])
-                            .replace("%%full_namespace%%", oneof_ns)
-                            .replace("%%field_name%%", field["name"]))
-            copiers.append(copier)
-            destr = tmpl_union_field_destruct
-            destr = (destr.replace("%%class_name%%", oneof["api_name"])
-                          .replace("%%full_namespace%%", oneof_ns)
-                          .replace("%%field_name%%", field["name"]))
-            destructors.append(destr)
-        copiers = "\n".join(copiers)
-        destructors = "\n".join(destructors)
-        oneof_partial = (oneof_partial.replace("%%ucopy%%", copiers)
-                                      .replace("%%udestruct%%", destructors))
-
-        inline_storage.append(oneof_partial)
+    for oneof in msg.oneofs:
+        inline_storage.append(generate_storage_oneof(oneof))
 
     inline_storage = "\n".join(inline_storage)
 
-    storage_fields = []
-    for field in simple_fields:
-        field_doxygen = ns_indent + r"  /// \brief holds " + field["name"]
-        storage_field = tmpl_field
-        if field["repeated"]:
-            storage_field = tmpl_field_repeated
-        elif field["default"]:
-            storage_field = tmpl_field_with_default
-            storage_field = storage_field.replace(
-                    "%%field_default%%", field["default"])
-        storage_field = (
-                storage_field.replace("%%field_doxygen%%", field_doxygen)
-                .replace("%%field_type%%", field["type"])
-                .replace("%%field_name%%", field["name"])
-                .replace("%%ns_indent%%", ns_indent))
-        storage_fields.append(storage_field)
+    storage_fields = generate_storage_fields(msg.name, msg.fields)
 
-    for field in complex_fields:
-        field_doxygen = ns_indent + r"  /// \brief holds " + field["name"]
-        storage_field = tmpl_field
-        if field["repeated"]:
-            storage_field = tmpl_field_repeated
-        field_type = field["type"] + "Storage"
-        storage_field = (
-                storage_field.replace("%%field_doxygen%%", field_doxygen)
-                .replace("%%field_type%%", field_type)
-                .replace("%%field_name%%", field["name"])
-                .replace("%%ns_indent%%", ns_indent))
-        storage_fields.append(storage_field)
-
-    storage_fields = "\n".join(storage_fields)
-    hh_content = template
-    hh_content = (hh_content.replace("%%class_name%%", class_name)
-                  .replace("%%full_namespace%%", full_namespace)
-                  .replace("%%ns_indent%%", ns_indent)
-                  .replace("%%inline_storage%%", inline_storage)
-                  .replace("%%storage_doxygen%%", storage_doxygen)
-                  .replace("%%storage_fields%%", storage_fields))
-    return hh_content
+    return populate_template(
+            template, class_name=msg.name, full_namespace=full_namespace,
+            inline_storage=inline_storage, storage_fields=storage_fields)
 
 
-def generate_storage_header(dependency, package, component_name, simple_fields,
-                            complex_fields, nested_names, nested_types,
-                            oneofs):
+def generate_storage_header(dependency, msg):
     """Generates header for storage class
     @param dependency iterable of strings of protofiles
-    @param package a dot delimited string
-    @param component_name string name of component
-    @param simple_fields dict with info about fields in message
-    @param complex_fields list with info about fields that are messages
-    @param inline_nested_names list of names defined in top-level message
-    @param nested_types dict of types that are defined inline
-    @param oneofs list of dictionaries with info about oneofs
+    @param msg Message instance
     @returns string with header file
     """
     # generate c++ namespace from protobuf package
     (ns_indent, full_namespace,
-     ns_begin, ns_end) = generate_namespace(package)
+     ns_begin, ns_end) = generate_namespace(msg.package)
 
-    partial_class = generate_storage_class(
-            tmpl_storage_hh, package, component_name, simple_fields,
-            complex_fields, nested_names, nested_types, oneofs)
+    partial_class = generate_storage_class(tmpl_storage_hh, msg)
 
     includes = set()
     for dep in dependency:
         # discard ".proto"
         pieces = dep.split(".")[:-1]
         include = "/".join(pieces) + ".storage.hh"
-        include = tmpl_include.replace("%%include%%", include)
-        includes.add(include)
+        includes.add(populate_template(tmpl_include, include=include))
     includes = "".join(includes)
 
-    hh_content = partial_class
-    hh_content = (hh_content.replace("%%ns_begin%%", ns_begin)
-                  .replace("%%ns_end%%", ns_end)
-                  .replace("%%ns_indent%%", ns_indent)
-                  .replace("%%includes%%", includes))
-    return hh_content
+    return populate_template(partial_class, includes=includes)
 
 
 def generate_factory_cc(package, component_name):
@@ -553,138 +563,63 @@ def generate_factory_cc(package, component_name):
     """
     (ns_indent, full_namespace,
      ns_begin, ns_end) = generate_namespace(package)
-    factory_doxygen = (ns_indent +
-                       r"/// \brief Generated Factory class for component " +
-                       component_name)
-    cc_content = tmpl_factory_cc
-    cc_content = (cc_content.replace("%%component_name%%", component_name)
-                  .replace("%%full_namespace%%", full_namespace)
-                  .replace("%%ns_begin%%", ns_begin)
-                  .replace("%%ns_end%%", ns_end)
-                  .replace("%%ns_indent%%", ns_indent)
-                  .replace("%%factory_doxygen%%", factory_doxygen))
-    return cc_content
+
+    return populate_template(
+            tmpl_factory_cc, component_name=component_name,
+            full_namespace=full_namespace, ns_begin=ns_begin, ns_end=ns_end,
+            ns_indent=ns_indent)
 
 
-def gather_message_info(package, message_descriptor, nested_types):
-    """Given a MessageDescriptor, get required info from it
+def gather_message_info(package, message_descriptor):
+    """Given a MessageDescriptor, pull out the info we need and put it into
+    another representation that's easier to generate code from
     @param package string dot delimited
     @param message_descriptor MessageDescriptor
-    @param nested_types dict mapping full type name to nested message info
-                        (this dict will be modified)
-    @returns dict
-        package dot delimited string indicating namespace
-        name string of message name
-        enumerations list of info about inline enumerations
-        simple_fields list of info about simple fields
-        complex_fields list of info about complex fields
-        nested_types list of string identifying nested types in this message
-        oneofs list of info about oneof's in this message
+    @returns Message instance
     """
-    enumerations = []
-    simple_fields = []
-    complex_fields = []
-    inline_nested_names = []
-    oneofs = []
-    component_name = message_descriptor.name
+    msg = Message()
+    msg.name = message_descriptor.name
+
     if package and package[0] != ".":
         package = "." + package
+    msg.package = package
 
     # Recursively get info from nested messages
     for nested_descriptor in message_descriptor.nested_type:
-        nested_package = ".".join([package, component_name])
+        nested_package = ".".join([package, msg.name])
         type_name = ".".join([nested_package, nested_descriptor.name])
-        nested_types[type_name] = gather_message_info(
-                nested_package, nested_descriptor, nested_types)
-        inline_nested_names.append(type_name)
+        msg.nested_msgs[type_name] = gather_message_info(
+                nested_package, nested_descriptor)
 
     # Pull enumerations out of message
     for enum_descriptor in message_descriptor.enum_type:
-        enum = {}
-        enum["name"] = enum_descriptor.name
-        enum["fields"] = []
-        for value_descriptor in enum_descriptor.value:
-            field = {}
-            field["name"] = value_descriptor.name
-            field["number"] = value_descriptor.number
-            enum["fields"].append(field)
-        enumerations.append(enum)
+        enum = Enum.FromDescriptor(enum_descriptor)
+        msg.nested_enum.append(enum)
 
     # Pull info about Oneof's from message
     for oneof_descriptor in message_descriptor.oneof_decl:
-        oneof = {}
-        oneof["name"] = oneof_descriptor.name
-        oneof["package"] = ".".join([package, component_name])
-        oneof["api_name"] = oneof["name"] + "API"
-        oneof["simple_fields"] = []
-        oneof["complex_fields"] = []
-        oneofs.append(oneof)
+        oneof = Oneof()
+        oneof.name = oneof_descriptor.name
+        oneof.package = ".".join([package, msg.name])
+        msg.oneofs.append(oneof)
         # Add a complex field that returns a calss to access the oneof
-        field = {}
-        field["name"] = oneof["name"]
-        field["include"] = set()
-        field["oneof"] = None
-        field["substituted"] = False
-        field["nested"] = False
-        field["repeated"] = False
-        dot_type = ".".join([oneof["package"], oneof["api_name"]])
-        field["type"] = dot_type.replace(".", "::")
-        complex_fields.append(field)
+        field = Field()
+        field.name = oneof.name
+        field.is_complex = True
+        dot_type = ".".join([oneof.package, oneof.ApiName()])
+        field.type = dot_type.replace(".", "::")
+        msg.fields.append(field)
 
     # Pull info about fields from the message
     for field_descriptor in message_descriptor.field:
-        bucket = simple_fields
-        field = {}
-        field["name"] = field_descriptor.name
-        field["include"] = set()
-        field["oneof"] = None
-        field["substituted"] = False
-        field["nested"] = False
-        field["repeated"] = False
-        if FieldDescriptor.LABEL_REPEATED == field_descriptor.label:
-            field["repeated"] = True
-            field["include"].add("vector")
+        field = Field.FromDescriptor(field_descriptor)
 
-        if field_descriptor.type == FieldDescriptor.TYPE_MESSAGE:
-            # Complex/Nested type
-            if field_descriptor.type_name in known_complex_types:
-                # Swap complex type for a simple type
-                field.update(copy.deepcopy(
-                    known_complex_types[field_descriptor.type_name]))
-                field["substituted"] = True
-            else:
-                field["type"] = field_descriptor.type_name.replace(".", "::")
-                bucket = complex_fields
-                field["nested"] = True
-        elif FieldDescriptor.TYPE_ENUM == field_descriptor.type:
-            field["type"] = field_descriptor.type_name.replace(".", "::")
-            field["default"] = "static_cast<" + field["type"] + ">(0)"
+        if field.oneof_index is not None:
+            msg.oneofs[field.oneof_index].fields.append(field)
         else:
-            # Simple type
-            field["type"] = simple_types_to_cpp[field_descriptor.type]
-            default = field_descriptor.default_value
-            if (FieldDescriptor.TYPE_STRING == field_descriptor.type or
-                    FieldDescriptor.TYPE_BYTES == field_descriptor.type):
-                field["default"] = '"' + default + '"'
-            else:
-                field["default"] = default
+            msg.fields.append(field)
 
-        if field_descriptor.HasField("oneof_index"):
-            field["oneof"] = field_descriptor.oneof_index
-            if simple_fields == bucket:
-                bucket = oneofs[field["oneof"]]["simple_fields"]
-            else:
-                bucket = oneofs[field["oneof"]]["complex_fields"]
-        bucket.append(field)
-
-    return {"package": package,
-            "name": component_name,
-            "enumerations": enumerations,
-            "simple_fields": simple_fields,
-            "complex_fields": complex_fields,
-            "nested_types": inline_nested_names,
-            "oneofs": oneofs,
-            }
+    return msg
 
 
 def generate_message_files(dependency, package, message_descriptor):
@@ -698,22 +633,14 @@ def generate_message_files(dependency, package, message_descriptor):
         api_source string with C++ code for api implementation
         storage_header string with c++ code for storage class
     """
+    msg_info = gather_message_info(package, message_descriptor)
 
-    nested_types = {}
-    info = gather_message_info(package, message_descriptor, nested_types)
-
+    # Don't create includes for substituted types
     dependency = [dep for dep in dependency if dep not in ignore_dependencies]
 
     # Generate code with the information gathered
-    api_header, api_source = generate_api_files(
-            dependency, info["package"], info["name"], info["simple_fields"],
-            info["enumerations"], info["complex_fields"], info["nested_types"],
-            nested_types, info["oneofs"])
-
-    storage_header = generate_storage_header(
-            dependency, info["package"], info["name"], info["simple_fields"],
-            info["complex_fields"], info["nested_types"], nested_types,
-            info["oneofs"])
+    api_header, api_source = generate_api_files(dependency, msg_info)
+    storage_header = generate_storage_header(dependency, msg_info)
 
     return api_header, api_source, storage_header
 
