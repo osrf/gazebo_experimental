@@ -1,5 +1,6 @@
 set(protoc_tests
   DefaultValues.proto
+  EmptyNested.proto
   EnumType.proto
   NestedMessage.proto
   NestedOneof.proto

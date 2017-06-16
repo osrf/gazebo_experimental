@@ -25,6 +25,7 @@
 
 // Generated header files
 #include "DefaultValues.api.hh"
+#include "EmptyNested.api.hh"
 #include "EnumType.api.hh"
 #include "RepeatedMessage.api.hh"
 #include "NestedMessage.api.hh"
@@ -542,9 +543,37 @@ TEST(PIMPLCPP, NestedOneof)
   factory->DestructAPI(static_cast<void *>(&comp));
   factory->DestructStorage(static_cast<void *>(storage.get()));
 }
+
+/////////////////////////////////////////////////
+TEST(PIMPLCPP, EmptyNested)
+{
+  ignition::common::PluginLoader pl;
+  ignition::common::SystemPaths sp;
+  sp.AddPluginPaths("./");
+  std::string pathToLibrary = sp.FindSharedLibrary(
+      "gazeboComponentEmptyNested");
+  ASSERT_FALSE(pathToLibrary.empty());
+  std::string pluginName = pl.LoadLibrary(pathToLibrary);
+  ASSERT_EQ("::gazebo::components::test::EmptyNestedFactory", pluginName);
+
+  auto factory = pl.Instantiate<gazebo::ecs::ComponentFactory>(pluginName);
+  std::unique_ptr<char[]> storage(new char[factory->StorageSize()]);
+  factory->ConstructStorage(static_cast<void *>(storage.get()));
+
+  gazebo::components::test::EmptyNested comp;
+  factory->ConstructAPI(
+      static_cast<void *>(&comp), static_cast<void *>(storage.get()));
+
+  comp.Msg().SomeInt() = 747576;
+
+  EXPECT_EQ(747576, comp.Msg().SomeInt());
+
+  factory->DestructAPI(static_cast<void *>(&comp));
+  factory->DestructStorage(static_cast<void *>(storage.get()));
+}
+
 int main(int argc, char **argv)
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
-
