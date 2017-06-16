@@ -11,6 +11,7 @@ set(component_files
   gazebo/components/Inertial.proto
   gazebo/components/Material.proto
   gazebo/components/Name.proto
+  gazebo/components/PhysicsConfig.proto
 )
 
 set(generator_files
