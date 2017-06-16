@@ -9,6 +9,7 @@ set(component_files
   # gazebo/components/Pose.proto
   gazebo/components/Geometry.proto
   gazebo/components/Inertial.proto
+  gazebo/components/Material.proto
 )
 
 set(generator_files
