@@ -26,6 +26,6 @@ message Inertial
   optional double Mass = 1;
 
   /// \brief inertia matrix
-  optional Matrix3d inertia = 2;
+  optional Matrix3d Inertia = 2;
 }
 
