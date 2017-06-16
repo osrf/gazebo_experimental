@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef GAZEBO_COMPONENTS_%%class_name%%STORAGE_HH_
-#define GAZEBO_COMPONENTS_%%class_name%%STORAGE_HH_
+#ifndef %%include_guard%%_STORAGE_HH_
+#define %%include_guard%%_STORAGE_HH_
 
 #include <ignition/common/PluginMacros.hh>
 #include <gazebo/ecs/Component.hh>

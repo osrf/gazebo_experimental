@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef GAZEBO_COMPONENTS_%%class_name%%_HH_
-#define GAZEBO_COMPONENTS_%%class_name%%_HH_
+#ifndef %%include_guard%%_API_HH_
+#define %%include_guard%%_API_HH_
 
 %%includes%%
 #include <ignition/common/System.hh>

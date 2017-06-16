@@ -411,6 +411,9 @@ def generate_api_files(dependency, msg):
 
     hh_includes = set()
 
+    include_guard = "_".join(msg.package.split("."))
+    include_guard = "_".join([include_guard, msg.name]).upper()
+
     # Includes for .proto file level dependencies
     for dep in dependency:
         # discard ".proto"
@@ -426,7 +429,8 @@ def generate_api_files(dependency, msg):
     hh_content = populate_template(partial_cpp["class_decl"],
                                    full_namespace=full_namespace,
                                    ns_begin=ns_begin, ns_end=ns_end,
-                                   includes=hh_includes)
+                                   includes=hh_includes,
+                                   include_guard=include_guard)
 
     cc_content = populate_template(partial_cpp["class_def"],
                                    component_name=msg.name,
@@ -552,7 +556,11 @@ def generate_storage_header(dependency, msg):
         includes.add(populate_template(tmpl_include, include=include))
     includes = "".join(includes)
 
-    return populate_template(partial_class, includes=includes)
+    include_guard = "_".join(msg.package.split("."))
+    include_guard = "_".join([include_guard, msg.name]).upper()
+
+    return populate_template(partial_class, includes=includes,
+                             include_guard=include_guard)
 
 
 def generate_factory_cc(package, component_name):
