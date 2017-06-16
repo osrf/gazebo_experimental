@@ -26,4 +26,3 @@ message Pose3d
   optional Vector3d Translation = 1;
   optional Quaterniond Rotation = 2;
 }
-
