@@ -28,4 +28,3 @@ message Inertial
   /// \brief inertia matrix
   optional Matrix3d Inertia = 2;
 }
-
