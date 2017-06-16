@@ -6,12 +6,12 @@ include_directories(
 
 set(component_files
   gazebo/components/Collidable.proto
-  # gazebo/components/Pose.proto
   gazebo/components/Geometry.proto
   gazebo/components/Inertial.proto
   gazebo/components/Material.proto
   gazebo/components/Name.proto
   gazebo/components/PhysicsConfig.proto
+  gazebo/components/Pose.proto
 )
 
 set(generator_files
