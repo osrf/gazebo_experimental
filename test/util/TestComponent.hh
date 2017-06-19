@@ -29,7 +29,7 @@ struct TestComponentStorage
 
 
 #define GZTEST_TEST_COMPONENT(num) \
-gazebo::ecs::ComponentType gTestComponent##num##Type = gazebo::ecs::NO_COMPONENT; \
+gazebo::ecs::ComponentType gTestComponent##num##Type = num; \
  \
 class TestComponent##num : public gazebo::ecs::ComponentAPI \
 { \

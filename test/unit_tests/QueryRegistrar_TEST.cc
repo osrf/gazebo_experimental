@@ -16,29 +16,8 @@
 */
 
 #include <gtest/gtest.h>
-#include "gazebo/ecs/Component.hh"
 #include "util/TestComponent.hh"
 #include "gazebo/ecs/QueryRegistrar.hh"
-
-// Component Types for testing
-struct TC1
-{
-  float itemOne;
-};
-
-struct TC2
-{
-  float itemOne;
-  int itemTwo;
-};
-
-struct TC3
-{
-  float itemOne;
-  int itemTwo;
-  double itemThree;
-};
-
 
 /////////////////////////////////////////////////
 TEST(QueryRegistrar, InitiallyNoRegistrations)
