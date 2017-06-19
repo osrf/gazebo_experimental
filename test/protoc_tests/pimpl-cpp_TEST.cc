@@ -267,6 +267,25 @@ TEST(PIMPLCPP, EnumTypesModifyable)
 }
 
 /////////////////////////////////////////////////
+TEST(PIMPLCPP, OperatorBool)
+{
+  ComponentLoader<gazebo::components::test::EnumType> cl;
+  ASSERT_TRUE(cl.LoadComponent("EnumType"));
+
+  gazebo::components::test::EnumType et1;
+
+  // Set component type for class
+  et1.ComponentType(42);
+
+  gazebo::components::test::EnumType et2 = cl.Instance();
+
+  EXPECT_FALSE(et1);
+  EXPECT_TRUE(et2);
+
+  et1.ComponentType(gazebo::ecs::NO_COMPONENT);
+}
+
+/////////////////////////////////////////////////
 TEST(PIMPLCPP, DefaultValues)
 {
   ComponentLoader<gazebo::components::test::DefaultValues> cl;

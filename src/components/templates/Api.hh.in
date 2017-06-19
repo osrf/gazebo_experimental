@@ -76,6 +76,9 @@
 %%ns_indent%%  }
 
 %%ns_indent%%  // Inherited
+%%ns_indent%%  public: virtual operator bool() const override;
+
+%%ns_indent%%  // Inherited
 %%ns_indent%%  public: virtual const char *ComponentName() const override;
 
 %%ns_indent%%  // Inherited
