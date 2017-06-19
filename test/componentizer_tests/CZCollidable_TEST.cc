@@ -19,26 +19,13 @@
 #define GAZEBO_TESTHOOK 1
 
 #include "componentizers/CZCollidable.hh"
-#include "gazebo/components/Collidable.hh"
-#include "gazebo/ecs/ComponentFactory.hh"
+#include "gazebo/components/Collidable.api.hh"
+#include "gazebo/ecs/Component.hh"
 #include "gazebo/ecs/Manager.hh"
 
 
 namespace gzecs = gazebo::ecs;
 namespace gzcz = gazebo::componentizers;
-
-
-/////////////////////////////////////////////////
-TEST(CZCollidable, RegisterComponent)
-{
-  gzcz::CZCollidable cz;
-  cz.Init();
-  gzecs::ComponentType t =
-    gzecs::ComponentFactory::Type<gazebo::components::Collidable>();
-  ASSERT_NE(gzecs::NO_COMPONENT, t);
-  gzecs::ComponentTypeInfo info = gzecs::ComponentFactory::TypeInfo(t);
-  EXPECT_EQ("gazebo::components::Collidable", info.name);
-}
 
 
 /////////////////////////////////////////////////
@@ -142,8 +129,8 @@ TEST(CZCollidable, SdfTwoCollisions)
   gzecs::Entity &e2 = mgr.Entity(*(++entities.begin()));
   auto comp1 = e1.Component<gazebo::components::Collidable>();
   auto comp2 = e2.Component<gazebo::components::Collidable>();
-  EXPECT_NE(gzecs::NO_ENTITY, comp1->groupId);
-  EXPECT_EQ(comp1->groupId, comp2->groupId);
+  EXPECT_NE(gzecs::NO_ENTITY, comp1.GroupId());
+  EXPECT_EQ(comp1.GroupId(), comp2.GroupId());
 }
 
 //////////////////////////////////////////////////
