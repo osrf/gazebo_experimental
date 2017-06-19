@@ -19,7 +19,7 @@
 #define GAZEBO_ECS_ENTITY_HH_
 
 #include <memory>
-#include "gazebo/ecs/ComponentFactory.hh"
+#include "gazebo/ecs/Component.hh"
 
 namespace gazebo
 {
@@ -65,67 +65,49 @@ namespace gazebo
       /// \brief Return id of entity
       public: EntityId Id() const;
 
-      /// \brief Get a component by actual type for reading
-      /// \returns pointer to a component or nullptr on error
-      public: template <typename T>
-              T const *Component()
-              {
-                auto type = ComponentFactory::Type<T>();
-                return static_cast<T const *>(this->Component(type));
-              }
-
-      /// \brief Get a component by actual type for reading or writing
-      /// \returns pointer to a component or nullptr on error
-      public: template <typename T>
-              T *ComponentMutable()
-              {
-                auto type = ComponentFactory::Type<T>();
-                return static_cast<T*>(this->ComponentMutable(type));
-              }
-
       /// \brief Get a component by ComponentType for reading
-      /// \returns pointer to a component or nullptr on error
-      private: void const *Component(const ComponentType&);
+      /// \param[in] _api an instance of the component api
+      /// \returns true if entity has the component
+      private: bool Component(const ComponentAPI &_api);
 
       /// \brief Get a component by ComponentType for reading or writing
-      /// \returns pointer to a component or nullptr on error
-      private: void *ComponentMutable(const ComponentType&);
+      /// \param[in] _api an instance of the component api
+      /// \returns true if entity has the component
+      private: bool ComponentMutable(ComponentAPI &_api);
 
-      /// \brief Add a component by actual type
-      /// \returns pointer to a component or nullptr on error
-      public: template <typename T>
-              T *AddComponent()
-              {
-                auto type = ComponentFactory::Type<T>();
-                return static_cast<T*>(this->AddComponent(type));
-              }
-
-      /// \brief Add a component by ComponentType
-      /// \returns pointer to a component or nullptr on error
-      public: void *AddComponent(const ComponentType&);
-
-      /// \brief remove a component from an entity by actual type
-      public: template <typename T>
-              bool RemoveComponent()
-              {
-                ComponentType type = ComponentFactory::Type<T>();
-                return this->RemoveComponent(type);
-              }
+      /// \param[in] _id The entity that gets the component
+      /// \param[out] _api An API instance that will allow read/write access
+      /// \returns true if a component was added to the entity
+      public: bool AddComponent(EntityId _id, ComponentAPI &_api);
 
       /// \brief remove a component from an entity
+      /// \returns true if the component was removed
+      public: template <typename T>
+        bool RemoveComponent()
+        {
+          static_assert(std::is_base_of<ComponentAPI, T>::value,
+              "Expected subclass of gazebo::ecs::ComponentAPI");
+          T comp;
+          return this->RemoveComponent(comp.ComponentType());
+        }
+
+      /// \brief remove a component from an entity
+      /// \returns true if the component was removed
       public: bool RemoveComponent(ComponentType _type);
 
-      /// \brief Test if a component is different by actual type
-      /// \returns the difference if any
+      /// \brief Test if a component changed last timestep
       public: template <typename T>
-              Difference IsDifferent() const
-              {
-                auto type = ComponentFactory::Type<T>();
-                return this->IsDifferent(type);
-              }
+        Difference IsDifferent()
+        {
+          static_assert(std::is_base_of<ComponentAPI, T>::value,
+              "Expected subclass of gazebo::ecs::ComponentAPI");
+          T comp;
+          return this->IsDifferent(comp.ComponentType());
+        }
 
       /// \brief Test if a component changed last timestep
       /// \param[in] _type Type of component to check
+      /// \returns The difference between this time step and the last
       public: Difference IsDifferent(ComponentType _type) const;
 
       /// \brief Private data pointer

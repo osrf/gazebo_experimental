@@ -21,7 +21,7 @@
 #include <memory>
 
 #include "gazebo/ecs/Entity.hh"
-#include "gazebo/ecs/ComponentFactory.hh"
+#include "gazebo/ecs/Component.hh"
 
 namespace gazebo
 {
@@ -78,59 +78,33 @@ namespace gazebo
       /// \brief Get an Entity instance by Id
       public: ::gazebo::ecs::Entity &Entity(EntityId _id) const;
 
-      /// \brief Add a new component to an entity by actual type
-      public: template <typename T>
-              T *AddComponent(EntityId _id)
-              {
-                ComponentType type = ComponentFactory::Type<T>();
-                return static_cast<T*>(this->AddComponent(_id, type));
-              }
+      /// \brief Add a ComponentFactory.
+      /// \description Calling this method enables the database to store a new
+      ///              type of component.
+      /// \returns true if the factory was successfully loaded
+      public: bool AddComponentFactory(std::unique_ptr<ComponentFactory> _cf);
 
-      /// \brief Add a new component to an entity
-      /// \returns pointer to component or nullptr if it already exists
-      public: void *AddComponent(EntityId _id, ComponentType _type);
-
-      /// \brief remove a component from an entity by actual type
-      public: template <typename T>
-              bool RemoveComponent(EntityId _id)
-              {
-                ComponentType type = ComponentFactory::Type<T>();
-                return this->RemoveComponent(_id, type);
-              }
+      /// \brief Add new component to an entity
+      /// \param[in] _id The entity that gets the component
+      /// \param[out] _api An API instance that will allow read/write access
+      /// \returns true if a component was added to the entity
+      public: bool AddComponent(EntityId _id, ComponentAPI &_api);
 
       /// \brief remove a component from an entity
+      /// \returns true if the entity had the component and it is now removed
       public: bool RemoveComponent(EntityId _id, ComponentType _type);
 
       /// \brief Get a component that's on an entity for reading only
-      public: template <typename T>
-              T const *EntityComponent(EntityId _id) const
-              {
-                ComponentType type = ComponentFactory::Type<T>();
-                return static_cast<T const *>(this->EntityComponent(_id, type));
-              }
-
-      /// \brief Get a component that's on an entity for reading only
-      public: void const *EntityComponent(EntityId _id,
-                  ComponentType _type) const;
-
-      /// \brief Get a component that's on an entity for reading only
-      public: template <typename T>
-              T *EntityComponentMutable(EntityId _id)
-              {
-                ComponentType type = ComponentFactory::Type<T>();
-                return static_cast<T*>(this->EntityComponentMutable(_id, type));
-              }
+      /// \param[in] _id The entity whose component is to be read
+      /// \param[out] _api An API instance that will allow read access
+      /// \returns true if the entity has the component
+      public: bool EntityComponent(EntityId _id, ComponentAPI &_api) const;
 
       /// \brief Get a component that's on an entity for reading or writing
-      public: void *EntityComponentMutable(EntityId _id, ComponentType _type);
-
-      /// \brief Test if a component changed last timestep
-      public: template <typename T>
-              Difference IsDifferent(EntityId _id) const
-              {
-                ComponentType type = ComponentFactory::Type<T>();
-                return this->IsDifferent(_id, type);
-              }
+      /// \param[in] _id The entity that gets the component
+      /// \param[out] _api An API instance that will allow read/write access
+      /// \returns true if the entity has the component
+      public: bool EntityComponentMutable(EntityId _id, ComponentAPI &_api);
 
       /// \brief Test if a component changed last timestep
       public: Difference IsDifferent(EntityId _id, ComponentType _type) const;

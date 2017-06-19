@@ -27,7 +27,7 @@
 #include "gazebo/ecs/Componentizer.hh"
 #include "gazebo/ecs/Entity.hh"
 #include "gazebo/ecs/System.hh"
-#include "gazebo/ecs/ComponentFactory.hh"
+#include "gazebo/ecs/Component.hh"
 
 
 namespace gazebo
@@ -98,6 +98,19 @@ namespace gazebo
       ///
       /// Ex: sm->LoadComponentizer(std::move(aUniquePtrInstance))
       public: bool LoadComponentizer(std::unique_ptr<Componentizer> _cz);
+
+      /// \brief Load a component factory from a type
+      public: template <typename T>
+        bool LoadComponentFactory()
+        {
+          return this->LoadComponentFactory(
+              std::unique_ptr<ComponentFactory>(new T()));
+        }
+
+      /// \brief Load a component factory
+      ///
+      /// Ex: sm->LoadComponent(std::move(aUniquePtrInstance))
+      public: bool LoadComponentFactory(std::unique_ptr<ComponentFactory> _cf);
 
       /// \brief Load a world from sdf string
       /// \returns true if the sdf is successfully parsed

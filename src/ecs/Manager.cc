@@ -225,6 +225,12 @@ bool Manager::LoadComponentizer(std::unique_ptr<Componentizer> _cz)
   return success;
 }
 
+//////////////////////////////////////////////////
+bool Manager::LoadComponentFactory(std::unique_ptr<ComponentFactory> _cf)
+{
+  return this->dataPtr->database.AddComponentFactory(std::move(_cf));
+}
+
 /////////////////////////////////////////////////
 bool Manager::LoadWorld(const std::string &_world)
 {

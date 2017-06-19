@@ -78,22 +78,22 @@ EntityId Entity::Id() const
 }
 
 /////////////////////////////////////////////////
-void const *Entity::Component(const ComponentType &_type)
+bool Entity::Component(const ComponentAPI &_api)
 {
-  return this->dataPtr->database->EntityComponent(this->dataPtr->id, _type);
+  return this->dataPtr->database->EntityComponent(this->dataPtr->id, _api);
 }
 
 /////////////////////////////////////////////////
-void *Entity::ComponentMutable(const ComponentType &_type)
+bool Entity::ComponentMutable(const ComponentAPI &_api)
 {
   return this->dataPtr->database->EntityComponentMutable(this->dataPtr->id,
-      _type);
+      _api);
 }
 
 /////////////////////////////////////////////////
-void *Entity::AddComponent(const ComponentType &_type)
+bool Entity::AddComponent(const ComponentAPI &_api)
 {
-  return this->dataPtr->database->AddComponent(this->dataPtr->id, _type);
+  return this->dataPtr->database->AddComponent(this->dataPtr->id, _api);
 }
 
 /////////////////////////////////////////////////

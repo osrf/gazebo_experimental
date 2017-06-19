@@ -21,8 +21,9 @@
 #include <memory>
 #include <vector>
 #include <set>
+#include <type_traits>
 #include "gazebo/ecs/Entity.hh"
-#include "gazebo/ecs/ComponentFactory.hh"
+#include "gazebo/ecs/Component.hh"
 
 namespace gazebo
 {
@@ -46,13 +47,19 @@ namespace gazebo
       /// \brief Return true if this is an empty/null entity query.
       public: bool IsNull();
 
-      // TODO templated version
       /// \brief Add a component based on a name.
-      /// \param[in] _name Name of the component to add. This will look up
-      /// the component in the ComponentFactory.
-      /// \return True on success, which means the component was found in
-      /// the ComponentFactory.
+      /// \param[in] _name Name of the component to add
+      /// \return True on success, which means the component exists
       public: bool AddComponent(const std::string &_name);
+
+      public: template <typename T>
+        bool AddComponent()
+        {
+          static_assert(std::is_base_of<ComponentAPI, T>::value,
+              "AddComponent expects subclass of gazebo::ecs::ComponentAPI");
+          T comp;
+          return this->AddComponent(comp.ComponentType());
+        }
 
       /// \brief Add a component based on a component type.
       /// \param[in] _type Type of component to add.
