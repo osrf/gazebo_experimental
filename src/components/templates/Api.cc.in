@@ -40,11 +40,18 @@ gazebo::ecs::ComponentType %%class_name%%::ComponentType() const
   return g%%class_name%%ComponentType;
 }
 
+//////////////////////////////////////////////////
 void %%class_name%%::ComponentType(gazebo::ecs::ComponentType _type)
 {
   // allow type assignment once per run
   if (g%%class_name%%ComponentType == gazebo::ecs::NO_COMPONENT)
     g%%class_name%%ComponentType = _type;
+}
+
+//////////////////////////////////////////////////
+%%class_name%%::operator bool() const
+{
+  return g%%class_name%%ComponentType != gazebo::ecs::NO_COMPONENT && this->dataPtr;
 }
 
 %%inline_definitions%%

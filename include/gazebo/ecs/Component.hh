@@ -45,6 +45,8 @@ namespace gazebo
       {
       }
 
+      /// \returns true if the component api is fully functional
+      public: virtual operator bool() const = 0;
 
       /// \brief Return the name of the component type
       public: virtual const char *ComponentName() const = 0;
