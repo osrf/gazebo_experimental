@@ -20,18 +20,21 @@
 
 #include "componentizers/CZCollidable.hh"
 #include "gazebo/components/Collidable.api.hh"
+#include "gazebo/components/Collidable.factory.hh"
 #include "gazebo/ecs/Component.hh"
 #include "gazebo/ecs/Manager.hh"
 
 
 namespace gzecs = gazebo::ecs;
 namespace gzcz = gazebo::componentizers;
+namespace gzc = gazebo::components;
 
 
 /////////////////////////////////////////////////
 TEST(CZCollidable, SdfNoCollisions)
 {
   gzecs::Manager mgr;
+  mgr.LoadComponentFactory<gzc::CollidableFactory>();
   mgr.LoadComponentizer<gzcz::CZCollidable>();
 
   std::string world = " \
@@ -56,6 +59,7 @@ TEST(CZCollidable, SdfNoCollisions)
 TEST(CZCollidable, SdfOneCollision)
 {
   gzecs::Manager mgr;
+  mgr.LoadComponentFactory<gzc::CollidableFactory>();
   mgr.LoadComponentizer<gzcz::CZCollidable>();
 
   std::string world = " \
@@ -90,6 +94,7 @@ TEST(CZCollidable, SdfOneCollision)
 TEST(CZCollidable, SdfTwoCollisions)
 {
   gzecs::Manager mgr;
+  mgr.LoadComponentFactory<gzc::CollidableFactory>();
   mgr.LoadComponentizer<gzcz::CZCollidable>();
 
   std::string world = " \

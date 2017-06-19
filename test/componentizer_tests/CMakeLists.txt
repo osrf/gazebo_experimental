@@ -45,3 +45,7 @@ foreach (src_file ${unit_tests})
   add_test(${BINARY_NAME} ${CMAKE_CURRENT_BINARY_DIR}/${BINARY_NAME}
     --gtest_output=xml:${CMAKE_BINARY_DIR}/test_results/${BINARY_NAME}.xml)
 endforeach()
+
+target_link_libraries(CZ_CZCollidable_TEST
+  gazeboComponentCollidable
+)
