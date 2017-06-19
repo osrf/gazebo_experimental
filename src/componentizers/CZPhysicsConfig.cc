@@ -18,8 +18,7 @@
 #include <ignition/common/Console.hh>
 #include <ignition/common/PluginMacros.hh>
 #include <ignition/math.hh>
-#include "gazebo/components/PhysicsConfig.hh"
-#include "gazebo/ecs/ComponentFactory.hh"
+#include <gazebo/components/PhysicsConfig.api.hh>
 #include "CZPhysicsConfig.hh"
 
 namespace gzcompz = gazebo::componentizers;
@@ -34,9 +33,6 @@ CZPhysicsConfig::~CZPhysicsConfig()
 //////////////////////////////////////////////////
 void CZPhysicsConfig::Init()
 {
-  igndbg << "Registering PhysicsConfig component" << std::endl;
-  ecs::ComponentFactory::Register<gazebo::components::PhysicsConfig>(
-      "gazebo::components::PhysicsConfig");
 }
 
 //////////////////////////////////////////////////
@@ -62,7 +58,7 @@ void CZPhysicsConfig::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
       ecs::Entity &entity = _mgr.Entity(id);
 
       auto comp = entity.AddComponent<components::PhysicsConfig>();
-      comp->maxStepSize = _elem.Get<double>("max_step_size");
+      comp.MaxStepSize() = _elem.Get<double>("max_step_size");
       igndbg << "Added PhysicsConfig to " << id << std::endl;
     }
   }

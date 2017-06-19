@@ -18,8 +18,7 @@
 #include <ignition/common/Console.hh>
 #include <ignition/common/PluginMacros.hh>
 #include <ignition/math.hh>
-#include "gazebo/components/Collidable.hh"
-#include "gazebo/ecs/ComponentFactory.hh"
+#include <gazebo/components/Collidable.api.hh>
 #include "CZCollidable.hh"
 
 namespace gzcompz = gazebo::componentizers;
@@ -34,9 +33,6 @@ CZCollidable::~CZCollidable()
 //////////////////////////////////////////////////
 void CZCollidable::Init()
 {
-  igndbg << "Registering Collidable component" << std::endl;
-  ecs::ComponentFactory::Register<gazebo::components::Collidable>(
-      "gazebo::components::Collidable");
 }
 
 //////////////////////////////////////////////////
@@ -62,7 +58,7 @@ void CZCollidable::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
 
       auto comp = entity.AddComponent<components::Collidable>();
       // Group all collissions on a link together
-      comp->groupId = groupId;
+      comp->GroupId() = groupId;
 
       igndbg << "Group " << groupId << " member " << id << std::endl;
 

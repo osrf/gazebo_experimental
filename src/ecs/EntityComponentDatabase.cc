@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <assert.h>
+#include <map>
 #include <set>
 #include <utility>
 
@@ -30,6 +31,9 @@ typedef std::pair<EntityId, ComponentType> StorageKey;
 
 class gazebo::ecs::EntityComponentDatabasePrivate
 {
+  /// \brief ComponentFactories this database knows how to use
+  public: std::vector<std::unique_ptr<ComponentFactory> > componentFactories;
+
   /// \brief entities that are to be created next update
   public: std::vector<EntityId> toCreateEntities;
 
@@ -97,8 +101,8 @@ EntityComponentDatabase::~EntityComponentDatabase()
     char *storage = this->dataPtr->components[index];
     void *data = static_cast<void*>(storage);
 
-    ComponentTypeInfo info = ComponentFactory::TypeInfo(type);
-    info.destructor(data);
+    auto &cf = this->dataPtr->componentFactories[type];
+    cf->DestructStorage(data);
     delete [] storage;
   }
 
@@ -109,8 +113,8 @@ EntityComponentDatabase::~EntityComponentDatabase()
     char *storage = kv.second;
     void *data = static_cast<void*>(storage);
 
-    ComponentTypeInfo info = ComponentFactory::TypeInfo(type);
-    info.destructor(data);
+    auto &cf = this->dataPtr->componentFactories[type];
+    cf->DestructStorage(data);
     delete [] storage;
   }
 
@@ -121,10 +125,25 @@ EntityComponentDatabase::~EntityComponentDatabase()
     char *storage = kv.second;
     void *data = static_cast<void*>(storage);
 
-    ComponentTypeInfo info = ComponentFactory::TypeInfo(type);
-    info.destructor(data);
+    auto &cf = this->dataPtr->componentFactories[type];
+    cf->DestructStorage(data);
     delete [] storage;
   }
+}
+
+/////////////////////////////////////////////////
+bool EntityComponentDatabase::AddComponentFactory(
+    std::unique_ptr<ComponentFactory> _cf)
+{
+  bool success = false;
+  if (_cf)
+  {
+    // set the component type to the index in componentFactories
+    _cf->ComponentType(this->dataPtr->componentFactories.size());
+    this->dataPtr->componentFactories.push_back(std::move(_cf));
+    success = true;
+  }
+  return success;
 }
 
 /////////////////////////////////////////////////
@@ -212,8 +231,8 @@ bool EntityComponentDatabase::DeleteEntity(EntityId _id)
     if (this->dataPtr->toDeleteEntities.find(_id) ==
           this->dataPtr->toDeleteEntities.end())
     {
-      std::vector<ComponentType> knownTypes = ComponentFactory::Types();
-      for (const ComponentType type : knownTypes)
+      for (int type = 0; type < this->dataPtr->componentFactories.size();
+          ++type)
       {
         this->RemoveComponent(_id, type);
       }
@@ -239,27 +258,32 @@ gazebo::ecs::Entity &EntityComponentDatabase::Entity(EntityId _id) const
 }
 
 /////////////////////////////////////////////////
-void *EntityComponentDatabase::AddComponent(EntityId _id, ComponentType _type)
+bool EntityComponentDatabase::AddComponent(EntityId _id, ComponentAPI &_api)
 {
-  void *component = nullptr;
-  StorageKey key = std::make_pair(_id, _type);
+  bool success = false;
+  ComponentType type = _api.ComponentType();
+  StorageKey key = std::make_pair(_id, type);
   // if component has not been added already
   if (this->dataPtr->componentIndices.find(key) ==
       this->dataPtr->componentIndices.end() &&
       this->dataPtr->toAddComponents.find(key) ==
-      this->dataPtr->toAddComponents.end())
+      this->dataPtr->toAddComponents.end() &&
+      type >= 0 &&
+      type < this->dataPtr->componentFactories.size())
   {
+    auto &cf = this->dataPtr->componentFactories[type];
     // Allocate memory and call constructor
-    ComponentTypeInfo info = ComponentFactory::TypeInfo(_type);
-    // TODO store components of same type in adjacent memory
-    char *storage = new char[info.size];
-    component = static_cast<void *>(storage);
-    info.constructor(component);
+    void *storage = static_cast<void *>(new char[cf->StorageSize()]);
+    cf->ConstructStorage(storage);
 
-    this->dataPtr->toAddComponents[key] = storage;
+    this->dataPtr->toAddComponents[key] = static_cast<char *>(storage);
+
+    // Set up API class to use the new storage
+    cf->ConstructAPI(static_cast<void*>(&_api), storage);
+    success = true;
   }
 
-  return component;
+  return success;;
 }
 
 /////////////////////////////////////////////////
@@ -268,7 +292,8 @@ bool EntityComponentDatabase::RemoveComponent(EntityId _id, ComponentType _type)
   bool success = false;
   StorageKey key = std::make_pair(_id, _type);
   auto kvIter = this->dataPtr->componentIndices.find(key);
-  if (kvIter != this->dataPtr->componentIndices.end())
+  if (kvIter != this->dataPtr->componentIndices.end() &&
+      _type >= 0 && _type < this->dataPtr->componentFactories.size())
   {
     // Check if it has already been removed
     if (!std::binary_search(this->dataPtr->toRemoveComponents.begin(),
@@ -286,50 +311,62 @@ bool EntityComponentDatabase::RemoveComponent(EntityId _id, ComponentType _type)
 }
 
 /////////////////////////////////////////////////
-void const *EntityComponentDatabase::EntityComponent(EntityId _id,
-    ComponentType _type) const
+bool EntityComponentDatabase::EntityComponent(EntityId _id,
+    ComponentAPI &_api) const
 {
-  void const *component = nullptr;
-  StorageKey key = std::make_pair(_id, _type);
+  bool success = false;
+  ComponentType type = _api.ComponentType();
+  StorageKey key = std::make_pair(_id, type);
   if (this->dataPtr->componentIndices.find(key) !=
-      this->dataPtr->componentIndices.end())
+      this->dataPtr->componentIndices.end() &&
+      type >= 0 && type < this->dataPtr->componentFactories.size())
   {
     auto index = this->dataPtr->componentIndices[key];
     char *data = this->dataPtr->components[index];
-    component = static_cast<void const *>(data);
+    void *storage = static_cast<void *>(data);
+
+    auto &cf = this->dataPtr->componentFactories[type];
+    cf->ConstructAPI(static_cast<void *>(&_api), storage);
+    success = true;
   }
-  return component;
+  return success;
 }
 
 /////////////////////////////////////////////////
-void *EntityComponentDatabase::EntityComponentMutable(EntityId _id,
-    ComponentType _type)
+bool EntityComponentDatabase::EntityComponentMutable(EntityId _id,
+    ComponentAPI &_api)
 {
-  void *component = nullptr;
-  StorageKey key = std::make_pair(_id, _type);
+  bool success = false;
+  ComponentType type = _api.ComponentType();
+  StorageKey key = std::make_pair(_id, type);
   auto compIter = this->dataPtr->componentIndices.find(key);
-  if (compIter != this->dataPtr->componentIndices.end())
+  if (compIter != this->dataPtr->componentIndices.end() &&
+      type >= 0 && type < this->dataPtr->componentFactories.size())
   {
+    auto &cf = this->dataPtr->componentFactories[type];
+    void *storage = nullptr;
     auto modIter = this->dataPtr->toModifyComponents.find(key);
     if (modIter != this->dataPtr->toModifyComponents.end())
     {
       // Already been modified, return pointer to new storage
-      char *storage = modIter->second;
-      component = static_cast<void *>(storage);
+      // TODO allow component to be modified if the thing doing the
+      // modifications is higher priority
+      storage = static_cast<void *>(modIter->second);
     }
     else
     {
+      // create temporary storage for the updated data
       char const *readOnlyStorage = this->dataPtr->components[compIter->second];
       void const *readOnlyComp = static_cast<void const *>(readOnlyStorage);
-      // create temporary storage for the updated data
-      ComponentTypeInfo info = ComponentFactory::TypeInfo(_type);
-      char *storage = new char[info.size];
-      component = static_cast<void *>(storage);
-      info.deepCopier(readOnlyComp, component);
-      this->dataPtr->toModifyComponents[key] = storage;
+      storage = static_cast<void *>(new char[cf->StorageSize()]);
+      cf->DeepCopyStorage(readOnlyComp, storage);
+      this->dataPtr->toModifyComponents[key] = static_cast<char *>(storage);
     }
+
+    cf->ConstructAPI(static_cast<void *>(&_api), storage);
+    success = true;
   }
-  return component;
+  return success;
 }
 
 /////////////////////////////////////////////////
@@ -421,7 +458,7 @@ void EntityComponentDatabase::Update()
   {
     StorageKey key = kv.first;
     this->dataPtr->differences[key] = WAS_MODIFIED;
-    ComponentTypeInfo info = ComponentFactory::TypeInfo(key.second);
+    auto &cf = this->dataPtr->componentFactories[key.second];
 
     // Get pointer to temporary storage with modifications
     char *modifiedStorage = kv.second;
@@ -431,10 +468,10 @@ void EntityComponentDatabase::Update()
     char *mainStorage = this->dataPtr->components[mainIdx];
 
     // destruct old component in main storage
-    info.destructor(static_cast<void *>(modifiedStorage));
+    cf->DestructStorage(static_cast<void *>(modifiedStorage));
 
     // Copy modified component to main storage
-    info.shallowCopier(static_cast<const void *>(modifiedStorage),
+    cf->ShallowCopyStorage(static_cast<const void *>(modifiedStorage),
         static_cast<void *>(mainStorage));
 
     // Free space used for modified component
@@ -447,11 +484,9 @@ void EntityComponentDatabase::Update()
   {
     int index = this->dataPtr->componentIndices.find(key)->second;
     // call destructor
-    void *component = nullptr;
-    ComponentTypeInfo info = ComponentFactory::TypeInfo(key.second);
-    char *storage = this->dataPtr->components[index];
-    component = static_cast<void *>(storage);
-    info.destructor(component);
+    auto &cf = this->dataPtr->componentFactories[key.second];
+    void *storage = static_cast<void *>(this->dataPtr->components[index]);
+    cf->DestructStorage(storage);
 
     this->dataPtr->differences[key] = WAS_DELETED;
 

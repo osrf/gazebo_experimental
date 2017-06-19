@@ -18,8 +18,7 @@
 #include <ignition/common/Console.hh>
 #include <ignition/common/PluginMacros.hh>
 #include <ignition/math.hh>
-#include "gazebo/components/Pose.hh"
-#include "gazebo/ecs/ComponentFactory.hh"
+#include <gazebo/components/Pose.api.hh>
 #include "CZPose.hh"
 
 namespace gzcompz = gazebo::componentizers;
@@ -34,9 +33,6 @@ CZPose::~CZPose()
 //////////////////////////////////////////////////
 void CZPose::Init()
 {
-  igndbg << "Registering Pose component" << std::endl;
-  ecs::ComponentFactory::Register<gazebo::components::Pose>(
-      "gazebo::components::Pose");
 }
 
 //////////////////////////////////////////////////
@@ -88,9 +84,9 @@ void CZPose::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
     ecs::EntityId id = _ids.at(&_elem);
     ecs::Entity &entity = _mgr.Entity(id);
     auto comp = entity.AddComponent<components::Pose>();
-    comp->parentFrame = parentFrame;
-    comp->definesFrame = definesFrame;
-    comp->pose = pose;
+    comp.ParentFrame() = parentFrame;
+    comp.DefinesFrame() = definesFrame;
+    comp.Origin() = pose;
     igndbg << "Pose " << pose << " in frame " << parentFrame << " on "
       << id << std::endl;
   }

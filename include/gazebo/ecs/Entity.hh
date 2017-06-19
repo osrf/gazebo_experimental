@@ -67,23 +67,52 @@ namespace gazebo
 
       /// \brief Get a component by ComponentType for reading
       /// \param[in] _api an instance of the component api
-      /// \returns true if entity has the component
-      private: bool Component(const ComponentAPI &_api);
+      /// \returns ComponentAPI instance
+      public: template <typename T>
+        const T Component() const
+        {
+          T api;
+          this->Component(api);
+          return api;
+        }
+
+      /// \brief Get a component by ComponentType for reading
+      /// \param[in] _api an instance of the component api
+      private: void Component(ComponentAPI &_api) const;
 
       /// \brief Get a component by ComponentType for reading or writing
       /// \param[in] _api an instance of the component api
-      /// \returns true if entity has the component
-      private: bool ComponentMutable(ComponentAPI &_api);
+      /// \returns ComponentAPI instance
+      public: template <typename T>
+        T ComponentMutable() const
+        {
+          T api;
+          this->ComponentMutable(api);
+          return api;
+        }
 
-      /// \param[in] _id The entity that gets the component
+      /// \brief Get a component by ComponentType for reading or writing
+      /// \param[in] _api an instance of the component api
+      private: void ComponentMutable(ComponentAPI &_api) const;
+
+      /// \brief Add a component to an entity
+      /// \returns an instance of the ComponentAPI
+      public: template <typename T>
+        T AddComponent() const
+        {
+          T api;
+          this->AddComponent(api);
+          return api;
+        }
+
+      /// \brief Add a component to an entity
       /// \param[out] _api An API instance that will allow read/write access
-      /// \returns true if a component was added to the entity
-      public: bool AddComponent(EntityId _id, ComponentAPI &_api);
+      private: void AddComponent(ComponentAPI &_api) const;
 
       /// \brief remove a component from an entity
       /// \returns true if the component was removed
       public: template <typename T>
-        bool RemoveComponent()
+        bool RemoveComponent() const
         {
           static_assert(std::is_base_of<ComponentAPI, T>::value,
               "Expected subclass of gazebo::ecs::ComponentAPI");
@@ -93,11 +122,11 @@ namespace gazebo
 
       /// \brief remove a component from an entity
       /// \returns true if the component was removed
-      public: bool RemoveComponent(ComponentType _type);
+      public: bool RemoveComponent(ComponentType _type) const;
 
       /// \brief Test if a component changed last timestep
       public: template <typename T>
-        Difference IsDifferent()
+        Difference IsDifferent() const
         {
           static_assert(std::is_base_of<ComponentAPI, T>::value,
               "Expected subclass of gazebo::ecs::ComponentAPI");

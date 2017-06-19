@@ -17,8 +17,7 @@
 #include <sdf/sdf.hh>
 #include <ignition/common/PluginMacros.hh>
 #include <ignition/common/Console.hh>
-#include "gazebo/components/Name.hh"
-#include "gazebo/ecs/ComponentFactory.hh"
+#include <gazebo/components/Name.api.hh>
 #include "CZName.hh"
 
 namespace gzcompz = gazebo::componentizers;
@@ -33,9 +32,6 @@ CZName::~CZName()
 //////////////////////////////////////////////////
 void CZName::Init()
 {
-  igndbg << "CZName registering Name component" << std::endl;
-  ecs::ComponentFactory::Register<gazebo::components::Name>(
-      "gazebo::components::Name");
 }
 
 //////////////////////////////////////////////////
@@ -51,7 +47,7 @@ void CZName::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
       ecs::EntityId id = _ids.at(&_elem);
       ecs::Entity &e = _mgr.Entity(id);
       auto nameComponent = e.AddComponent<components::Name>();
-      nameComponent->name = name;
+      nameComponent.Text() = name;
       igndbg << "Added Name " << name << " to " << id << std::endl;
     }
   }

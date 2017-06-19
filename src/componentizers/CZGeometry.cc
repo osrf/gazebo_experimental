@@ -16,8 +16,7 @@
 */
 #include <ignition/common/Console.hh>
 #include <ignition/common/PluginMacros.hh>
-#include "gazebo/components/Geometry.hh"
-#include "gazebo/ecs/ComponentFactory.hh"
+#include <gazebo/components/Geometry.api.hh>
 #include "CZGeometry.hh"
 
 namespace gzcompz = gazebo::componentizers;
@@ -32,9 +31,6 @@ CZGeometry::~CZGeometry()
 //////////////////////////////////////////////////
 void CZGeometry::Init()
 {
-  igndbg << "Registering Geometry component" << std::endl;
-  ecs::ComponentFactory::Register<gazebo::components::Geometry>(
-      "gazebo::components::Geometry");
 }
 
 //////////////////////////////////////////////////
@@ -82,8 +78,10 @@ void CZGeometry::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
 void CZGeometry::AttachBox(sdf::ElementPtr &_elem, ecs::Entity &_entity)
 {
   auto geom = _entity.AddComponent<components::Geometry>();
-  geom->type = components::Geometry::BOX;
-  geom->box.size = _elem->Get<ignition::math::Vector3d>("size");
+  auto size = _elem->Get<ignition::math::Vector3d>("size");
+  geom.Shape().Box().X() = size.X();
+  geom.Shape().Box().Y() = size.Y();
+  geom.Shape().Box().Z() = size.Z();
   igndbg << "Added box to " << _entity.Id() << std::endl;
 }
 
@@ -91,8 +89,7 @@ void CZGeometry::AttachBox(sdf::ElementPtr &_elem, ecs::Entity &_entity)
 void CZGeometry::AttachSphere(sdf::ElementPtr &_elem, ecs::Entity &_entity)
 {
   auto geom = _entity.AddComponent<components::Geometry>();
-  geom->type = components::Geometry::SPHERE;
-  geom->sphere.radius = _elem->Get<double>("radius");
+  geom.Shape().Sphere().Radius() = _elem->Get<double>("radius");
   igndbg << "Added Sphere to " << _entity.Id() << std::endl;
 }
 
@@ -100,9 +97,8 @@ void CZGeometry::AttachSphere(sdf::ElementPtr &_elem, ecs::Entity &_entity)
 void CZGeometry::AttachCylinder(sdf::ElementPtr &_elem, ecs::Entity &_entity)
 {
   auto geom = _entity.AddComponent<components::Geometry>();
-  geom->type = components::Geometry::CYLINDER;
-  geom->cylinder.radius = _elem->Get<double>("radius");
-  geom->cylinder.length = _elem->Get<double>("length");
+  geom.Shape().Cylinder().Radius() = _elem->Get<double>("radius");
+  geom.Shape().Cylinder().Length() = _elem->Get<double>("length");
   igndbg << "Added Cylinder to " << _entity.Id() << std::endl;
 }
 

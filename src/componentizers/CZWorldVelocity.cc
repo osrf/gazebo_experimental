@@ -18,8 +18,7 @@
 #include <ignition/common/Console.hh>
 #include <ignition/common/PluginMacros.hh>
 #include <ignition/math.hh>
-#include "gazebo/components/WorldVelocity.hh"
-#include "gazebo/ecs/ComponentFactory.hh"
+#include <gazebo/components/WorldVelocity.api.hh>
 #include "CZWorldVelocity.hh"
 
 namespace gzcompz = gazebo::componentizers;
@@ -34,9 +33,6 @@ CZWorldVelocity::~CZWorldVelocity()
 //////////////////////////////////////////////////
 void CZWorldVelocity::Init()
 {
-  igndbg << "Registering WorldVelocity component" << std::endl;
-  ecs::ComponentFactory::Register<gazebo::components::WorldVelocity>(
-      "gazebo::components::WorldVelocity");
 }
 
 //////////////////////////////////////////////////
@@ -66,7 +62,7 @@ void CZWorldVelocity::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
 
       ecs::EntityId id = _ids.at(&_elem);
       ecs::Entity &entity = _mgr.Entity(id);
-      auto comp = entity.AddComponent<components::WorldVelocity>();
+      entity.AddComponent<components::WorldVelocity>();
       igndbg << "Added WorldVelocity to " << id << std::endl;
     }
   }

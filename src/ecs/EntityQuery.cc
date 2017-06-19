@@ -44,12 +44,6 @@ EntityQuery::~EntityQuery()
 }
 
 /////////////////////////////////////////////////
-bool EntityQuery::AddComponent(const std::string &_name)
-{
-  return this->AddComponent(ComponentFactory::Type(_name));
-}
-
-/////////////////////////////////////////////////
 bool EntityQuery::AddComponent(ComponentType _type)
 {
   if (_type != NO_COMPONENT)

@@ -18,13 +18,13 @@
 #include <iostream>
 #include <ignition/common/PluginMacros.hh>
 
-#include "gazebo/components/Inertial.hh"
-#include "gazebo/components/Geometry.hh"
-#include "gazebo/components/PhysicsConfig.hh"
-#include "gazebo/components/Pose.hh"
-#include "gazebo/components/WorldVelocity.hh"
-#include "gazebo/ecs/Manager.hh"
-#include "gazebo/ecs/EntityQuery.hh"
+#include <gazebo/components/Inertial.api.hh>
+#include <gazebo/components/Geometry.api.hh>
+#include <gazebo/components/PhysicsConfig.api.hh>
+#include <gazebo/components/Pose.api.hh>
+#include <gazebo/components/WorldVelocity.api.hh>
+#include <gazebo/ecs/Manager.hh>
+#include <gazebo/ecs/EntityQuery.hh>
 #include "PhysicsSystem.hh"
 
 namespace gzsys = gazebo::systems;
@@ -75,8 +75,8 @@ void PhysicsSystem::UpdateConfig(const ecs::EntityQuery &_result)
     auto difference = entity.IsDifferent<components::PhysicsConfig>();
     if (difference == ecs::WAS_CREATED || difference == ecs::WAS_MODIFIED)
     {
-      auto const *geom = entity.Component<components::PhysicsConfig>();
-      this->maxStepSize = geom->maxStepSize;
+      auto config = entity.Component<components::PhysicsConfig>();
+      this->maxStepSize = config.MaxStepSize();
     }
   }
 }

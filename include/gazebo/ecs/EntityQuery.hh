@@ -47,11 +47,8 @@ namespace gazebo
       /// \brief Return true if this is an empty/null entity query.
       public: bool IsNull();
 
-      /// \brief Add a component based on a name.
-      /// \param[in] _name Name of the component to add
-      /// \return True on success, which means the component exists
-      public: bool AddComponent(const std::string &_name);
-
+      /// \brief Add a component to the query
+      /// \return True if the type was successfully added.
       public: template <typename T>
         bool AddComponent()
         {

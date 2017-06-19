@@ -85,77 +85,86 @@ static bool VerbosityValidator(const char */*_flagname*/, int _value)
   return _value >= 0 && _value <= 4;
 }
 
-
 //////////////////////////////////////////////////
-bool LoadSystems(gzecs::Manager &_mgr, std::vector<std::string> _libs)
+std::vector<std::string> LoadLibraries(std::vector<std::string> _libs,
+    ignition::common::PluginLoader _pl, ignition::common::SystemPaths _sp)
 {
-  ignition::common::PluginLoader pluginLoader;
-  ignition::common::SystemPaths sp;
-  sp.SetPluginPathEnv("GAZEBO_PLUGIN_PATH");
-
+  std::vector<std::string> pluginNames;
   for (auto const &libName : _libs)
   {
     std::string pathToLibrary = sp.FindSharedLibrary(libName);
     std::string pluginName = pluginLoader.LoadLibrary(pathToLibrary);
     if (!pluginName.empty())
     {
-      std::unique_ptr<gzecs::System> sys;
-      sys = pluginLoader.Instantiate<gzecs::System>(pluginName);
-      if (!_mgr.LoadSystem(pluginName, std::move(sys)))
-      {
-        ignerr << "Failed to load " << pluginName << " from " << libName
-          << std::endl;
-        return false;
-      }
-      else
-      {
-        igndbg << "Loaded plugin " << pluginName << " from " << libName
-          << std::endl;
-      }
+      pluginNames.push_back(pluginName);
     }
     else
     {
       ignerr << "Failed to load library " << libName << std::endl;
-      return false;
     }
   }
-  return true;
+  return pluginNames;
 }
 
 //////////////////////////////////////////////////
-bool LoadComponentizers(gzecs::Manager &_mgr, std::vector<std::string> _libs)
+void LoadSystems(gzecs::Manager &_mgr, std::vector<std::string> _libs)
 {
   ignition::common::PluginLoader pluginLoader;
   ignition::common::SystemPaths sp;
   sp.SetPluginPathEnv("GAZEBO_PLUGIN_PATH");
 
-  for (auto const &libName : _libs)
+  std::vector<std::string> plugins = LoadLibraries(_libs, pluginLoader, sp);
+
+  for (auto const &pluginName : plugins)
   {
-    std::string pathToLibrary = sp.FindSharedLibrary(libName);
-    std::string pluginName = pluginLoader.LoadLibrary(pathToLibrary);
-    if (pluginName.size())
-    {
-      std::unique_ptr<gzecs::Componentizer> cz;
-      cz = pluginLoader.Instantiate<gzecs::Componentizer>(pluginName);
-      if (!_mgr.LoadComponentizer(std::move(cz)))
-      {
-        ignerr << "Failed to load " << pluginName << " from " << libName
-          << std::endl;
-        return false;
-      }
-      else
-      {
-        igndbg << "Loaded plugin " << pluginName << " from " << libName
-          << std::endl;
-      }
-    }
+    std::unique_ptr<gzecs::System> sys;
+    sys = pluginLoader.Instantiate<gzecs::System>(pluginName);
+    if (!_mgr.LoadSystem(pluginName, std::move(sys)))
+      ignerr << "Failed to load " << pluginName << std::endl;
     else
-    {
-      ignerr << "Failed to load library " << libName << std::endl;
-      return false;
-    }
+      igndbg << "Loaded plugin " << pluginName << std::endl;
   }
-  return true;
+}
+
+//////////////////////////////////////////////////
+void LoadComponentizers(gzecs::Manager &_mgr, std::vector<std::string> _libs)
+{
+  ignition::common::PluginLoader pluginLoader;
+  ignition::common::SystemPaths sp;
+  sp.SetPluginPathEnv("GAZEBO_PLUGIN_PATH");
+
+  std::vector<std::string> plugins = LoadLibraries(_libs, pluginLoader, sp);
+
+  for (auto const &plubinName : plugins)
+  {
+    std::unique_ptr<gzecs::Componentizer> sys;
+    sys = pluginLoader.Instantiate<gzecs::Componentizer>(pluginName);
+    if (!_mgr.LoadComponentizer(pluginName, std::move(sys)))
+      ignerr << "Failed to load " << pluginName << std::endl;
+    else
+      igndbg << "Loaded plugin " << pluginName << std::endl;
+  }
+}
+
+//////////////////////////////////////////////////
+void LoadComponentFactories(gzecs::Manager &_mgr,
+    std::vector<std::string> _libs)
+{
+  ignition::common::PluginLoader pluginLoader;
+  ignition::common::SystemPaths sp;
+  sp.SetPluginPathEnv("GAZEBO_PLUGIN_PATH");
+
+  std::vector<std::string> plugins = LoadLibraries(_libs, pluginLoader, sp);
+
+  for (auto const &pluginName : plugins)
+  {
+    std::unique_ptr<gzecs::ComponentFactory> sys;
+    sys = pluginLoader.Instantiate<gzecs::ComponentFactory>(pluginName);
+    if (!_mgr.LoadComponentFactory(pluginName, std::move(sys)))
+      ignerr << "Failed to load " << pluginName << std::endl;
+    else
+      igndbg << "Loaded plugin " << pluginName << std::endl;
+  }
 }
 
 //////////////////////////////////////////////////
@@ -301,7 +310,18 @@ int main(int _argc, char **_argv)
 
     gzecs::Manager manager;
 
-    if (!LoadComponentizers(manager, {
+    LoadComponentFactories(manager, {
+        "gazeboComponentCollidable",
+        "gazeboComponentGeometry",
+        "gazeboComponentInertial",
+        "gazeboComponentMaterial",
+        "gazeboComponentName",
+        "gazeboComponentPhysicsConfig",
+        "gazeboComponentPose",
+        "gazeboComponentWorldVelocity",
+        });
+
+    LoadComponentizers(manager, {
           "gazeboCZName",
           "gazeboCZGeometry",
           "gazeboCZMaterial",
@@ -310,18 +330,11 @@ int main(int _argc, char **_argv)
           "gazeboCZInertial",
           "gazeboCZPhysicsConfig",
           "gazeboCZWorldVelocity",
-          }))
-    {
-      return 2;
-    }
+          });
 
-    // Load ECS systems
-    if (!LoadSystems(manager, {
+    LoadSystems(manager, {
         "gazeboPhysicsSystem",
-        }))
-    {
-      return 1;
-    }
+        });
 
     if (!LoadWorld(manager, filename))
     {

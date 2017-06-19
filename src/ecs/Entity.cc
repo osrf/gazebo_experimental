@@ -78,26 +78,25 @@ EntityId Entity::Id() const
 }
 
 /////////////////////////////////////////////////
-bool Entity::Component(const ComponentAPI &_api)
+void Entity::Component(ComponentAPI &_api) const
 {
-  return this->dataPtr->database->EntityComponent(this->dataPtr->id, _api);
+  this->dataPtr->database->EntityComponent(this->dataPtr->id, _api);
 }
 
 /////////////////////////////////////////////////
-bool Entity::ComponentMutable(const ComponentAPI &_api)
+void Entity::ComponentMutable(ComponentAPI &_api) const
 {
-  return this->dataPtr->database->EntityComponentMutable(this->dataPtr->id,
-      _api);
+  this->dataPtr->database->EntityComponentMutable(this->dataPtr->id, _api);
 }
 
 /////////////////////////////////////////////////
-bool Entity::AddComponent(const ComponentAPI &_api)
+void Entity::AddComponent(ComponentAPI &_api) const
 {
-  return this->dataPtr->database->AddComponent(this->dataPtr->id, _api);
+  this->dataPtr->database->AddComponent(this->dataPtr->id, _api);
 }
 
 /////////////////////////////////////////////////
-bool Entity::RemoveComponent(ComponentType _type)
+bool Entity::RemoveComponent(ComponentType _type) const
 {
   return this->dataPtr->database->RemoveComponent(this->dataPtr->id, _type);
 }

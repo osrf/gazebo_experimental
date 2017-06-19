@@ -18,8 +18,7 @@
 #include <ignition/common/Console.hh>
 #include <ignition/common/PluginMacros.hh>
 #include <ignition/math.hh>
-#include "gazebo/components/Inertial.hh"
-#include "gazebo/ecs/ComponentFactory.hh"
+#include <gazebo/components/Inertial.api.hh>
 #include "CZInertial.hh"
 
 namespace gzcompz = gazebo::componentizers;
@@ -34,9 +33,6 @@ CZInertial::~CZInertial()
 //////////////////////////////////////////////////
 void CZInertial::Init()
 {
-  igndbg << "Registering Inertial component" << std::endl;
-  ecs::ComponentFactory::Register<gazebo::components::Inertial>(
-      "gazebo::components::Inertial");
 }
 
 //////////////////////////////////////////////////
@@ -63,7 +59,7 @@ void CZInertial::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
       auto comp = entity.AddComponent<components::Inertial>();
       if (_elem.HasElement("mass"))
       {
-        comp->mass = _elem.Get<double>("mass");
+        comp->Mass() = _elem.Get<double>("mass");
       }
       if (_elem.HasElement("inertia"))
       {
@@ -74,9 +70,9 @@ void CZInertial::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
         const double ixy = inertia->Get<double>("ixy");
         const double ixz = inertia->Get<double>("ixz");
         const double iyz = inertia->Get<double>("iyz");
-        comp->inertia.Set(ixx, ixy, ixz,
-                          ixy, iyy, iyz,
-                          ixz, iyz, izz);
+        comp.Inertia().Set(ixx, ixy, ixz,
+                           ixy, iyy, iyz,
+                           ixz, iyz, izz);
       }
       igndbg << "Added Inertial to " << parentId << std::endl;
     }

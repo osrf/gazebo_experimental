@@ -18,8 +18,7 @@
 #include <ignition/common/Console.hh>
 #include <ignition/common/PluginMacros.hh>
 #include <ignition/math.hh>
-#include "gazebo/components/Material.hh"
-#include "gazebo/ecs/ComponentFactory.hh"
+#include <gazebo/components/Material.api.hh>
 #include "CZMaterial.hh"
 
 namespace gzcompz = gazebo::componentizers;
@@ -34,9 +33,6 @@ CZMaterial::~CZMaterial()
 //////////////////////////////////////////////////
 void CZMaterial::Init()
 {
-  igndbg << "Registering Material component" << std::endl;
-  ecs::ComponentFactory::Register<gazebo::components::Material>(
-      "gazebo::components::Material");
 }
 
 //////////////////////////////////////////////////
@@ -53,11 +49,10 @@ void CZMaterial::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
     ecs::EntityId id = _ids.at(&_elem);
     ecs::Entity &visualEntity = _mgr.Entity(id);
     auto material = visualEntity.AddComponent<components::Material>();
-    material->type = components::Material::COLOR;
-    material->color.red = 0.7;
-    material->color.green = 0.7;
-    material->color.blue = 0.7;
-    material->color.alpha = 1.0;
+    material.Appearance().Color().Red() = 0.7;
+    material.Appearance().Color().Green() = 0.7;
+    material.Appearance().Color().Blue() = 0.7;
+    material.Appearance().Color().Alpha() = 1.0;
     igndbg << "Added default material to " << id << std::endl;
   }
   else if (_elem.GetName() == "material")
@@ -84,12 +79,11 @@ void CZMaterial::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
       auto color = ambient->Get<ignition::math::Color>();
 
       auto material = visualEntity.AddComponent<components::Material>();
-      material->type = components::Material::COLOR;
-      material->color.red = color[0];
-      material->color.green = color[1];
-      material->color.blue = color[2];
-      material->color.alpha = color[3];
-    igndbg << "Added flat color material to " << id << std::endl;
+      material.Appearance().Color().Red() = color[0];
+      material.Appearance().Color().Green() = color[1];
+      material.Appearance().Color().Blue() = color[2];
+      material.Appearance().Color().Alpha() = color[3];
+      igndbg << "Added flat color material to " << id << std::endl;
     }
   }
 }
