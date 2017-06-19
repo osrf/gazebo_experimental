@@ -17,33 +17,12 @@
 
 #include <algorithm>
 #include <gtest/gtest.h>
-#include "gazebo/ecs/ComponentFactory.hh"
+#include "util/TestComponent.hh"
 #include "gazebo/ecs/EntityQuery.hh"
 #include "gazebo/ecs/Manager.hh"
 
 namespace gzecs = gazebo::ecs;
 
-/////////////////////////////////////////////////
-// Component Types for testing
-struct TC1
-{
-  float itemOne;
-};
-
-/////////////////////////////////////////////////
-struct TC2
-{
-  float itemOne;
-  int itemTwo;
-};
-
-/////////////////////////////////////////////////
-struct TC3
-{
-  float itemOne;
-  int itemTwo;
-  double itemThree;
-};
 
 /////////////////////////////////////////////////
 class TestHookSystem : public gzecs::System
@@ -54,7 +33,7 @@ class TestHookSystem : public gzecs::System
   public: virtual void Init(gzecs::QueryRegistrar &_registrar)
     {
       gzecs::EntityQuery q;
-      q.AddComponent("TC1");
+      q.AddComponent<TestComponent1>();
       _registrar.Register(q, std::bind(&TestHookSystem::Update, this,
             std::placeholders::_1));
       this->sentinel = "Init Ran";
@@ -236,11 +215,6 @@ TEST(Manager, SetTimePaused)
 
 int main(int argc, char **argv)
 {
-  // Register types with the factory
-  gazebo::ecs::ComponentFactory::Register<TC1>("TC1");
-  gazebo::ecs::ComponentFactory::Register<TC2>("TC2");
-  gazebo::ecs::ComponentFactory::Register<TC3>("TC3");
-
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
