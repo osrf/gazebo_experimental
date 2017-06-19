@@ -21,7 +21,7 @@
 #include <gazebo/ecs/Component.hh>
 
 
-struct TestComponent1Storage
+struct TestComponentStorage
 {
   int item1;
   int item2;
@@ -33,13 +33,13 @@ gazebo::ecs::ComponentType gTestComponent1Type = gazebo::ecs::NO_COMPONENT;
 
 class TestComponent1 : public gazebo::ecs::ComponentAPI
 {
-  protected: TestComponent1Storage *dataPtr = nullptr;
+  protected: TestComponentStorage *dataPtr = nullptr;
 
   public: TestComponent1()
   {
   }
 
-  public: TestComponent1(TestComponent1Storage *_stor)
+  public: TestComponent1(TestComponentStorage *_stor)
   {
     this->dataPtr = _stor;
   }
@@ -76,7 +76,7 @@ class TestComponent1 : public gazebo::ecs::ComponentAPI
 
 
 class TestComponent1Factory : public gazebo::ecs::ComponentFactoryHelper<
-                              TestComponent1, TestComponent1Storage>
+                              TestComponent1, TestComponentStorage>
 {
 };
 
