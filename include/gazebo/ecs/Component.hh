@@ -161,10 +161,10 @@ namespace gazebo
       public: virtual void DestructStorage(void *_location) const = 0;
 
       /// \brief Shallow copy storage from one location to another
-      public: virtual void ShallowCopyStorage(void *_from, void *_to) const = 0;
+      public: virtual void ShallowCopyStorage(void const *_from, void *_to) const = 0;
 
       /// \brief Deep copy storage from one location to another
-      public: virtual void DeepCopyStorage(void *_from, void *_to) const = 0;
+      public: virtual void DeepCopyStorage(void const *_from, void *_to) const = 0;
     };
 
 
@@ -226,7 +226,7 @@ namespace gazebo
         static_cast<STORAGE*>(_location)->~STORAGE();
       }
 
-      public: virtual void ShallowCopyStorage(void *_from, void *_to) const
+      public: virtual void ShallowCopyStorage(void const *_from, void *_to) const
               override
       {
         // Copy each byte from one location to another
@@ -238,7 +238,7 @@ namespace gazebo
         }
       }
 
-      public: virtual void DeepCopyStorage(void *_from, void *_to) const
+      public: virtual void DeepCopyStorage(void const *_from, void *_to) const
               override
       {
         // Copy component using its copy constructor and placement new.
