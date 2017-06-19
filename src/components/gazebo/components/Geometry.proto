@@ -35,15 +35,15 @@ message Geometry
   message SphereGeometry
   {
     /// \brief side radius in meters
-    optional double radius = 1 [default = 0.5];
+    optional double Radius = 1 [default = 0.5];
   }
 
   message CylinderGeometry
   {
     /// \brief side radius in meters
-    optional double radius = 1 [default = 0.5];
+    optional double Radius = 1 [default = 0.5];
     /// \brief side length in meters
-    optional double length = 2 [default = 1.0];
+    optional double Length = 2 [default = 1.0];
   }
 
   oneof Shape

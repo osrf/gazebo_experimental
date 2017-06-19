@@ -58,7 +58,7 @@ void CZCollidable::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
 
       auto comp = entity.AddComponent<components::Collidable>();
       // Group all collissions on a link together
-      comp->GroupId() = groupId;
+      comp.GroupId() = groupId;
 
       igndbg << "Group " << groupId << " member " << id << std::endl;
 
