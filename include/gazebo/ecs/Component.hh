@@ -82,7 +82,7 @@ namespace gazebo
       }
 
       /// \brief Returns the unique name of the component
-      public: virtual const char *ComponentName() const
+      public: const char *ComponentName() const
       {
         // Make dummy storage and API to get component name
         char *dummyStorage = new char[this->StorageSize()];
@@ -91,7 +91,9 @@ namespace gazebo
         void *vAPI = static_cast<void*>(dummyAPI);
         this->ConstructStorage(vStor);
         this->ConstructAPI(vAPI, vStor);
+
         const char *name = static_cast<ComponentAPI*>(vAPI)->ComponentName();
+
         this->DestructAPI(vAPI);
         this->DestructStorage(vStor);
         delete [] dummyAPI;
@@ -100,7 +102,7 @@ namespace gazebo
       }
 
       /// \brief Sets the component type used to identify the API
-      public: virtual const char *ComponentType(ecs::ComponentType _type)
+      public: const char *ComponentType(ecs::ComponentType _type)
       {
         // Make dummy storage and API to set component type
         char *dummyStorage = new char[this->StorageSize()];
@@ -109,11 +111,34 @@ namespace gazebo
         void *vAPI = static_cast<void*>(dummyAPI);
         this->ConstructStorage(vStor);
         this->ConstructAPI(vAPI, vStor);
+
         static_cast<ComponentAPI*>(vAPI)->ComponentType(_type);
+
         this->DestructAPI(vAPI);
         this->DestructStorage(vStor);
         delete [] dummyAPI;
         delete [] dummyStorage;
+      }
+
+      /// \brief Gets the component type used to identify the API
+      public: ecs::ComponentType ComponentType()
+      {
+        // Make dummy storage and API to set component type
+        char *dummyStorage = new char[this->StorageSize()];
+        char *dummyAPI = new char[this->APISize()];
+        void *vStor = static_cast<void*>(dummyStorage);
+        void *vAPI = static_cast<void*>(dummyAPI);
+        this->ConstructStorage(vStor);
+        this->ConstructAPI(vAPI, vStor);
+
+        ecs::ComponentType type =
+          static_cast<ComponentAPI*>(vAPI)->ComponentType();
+
+        this->DestructAPI(vAPI);
+        this->DestructStorage(vStor);
+        delete [] dummyAPI;
+        delete [] dummyStorage;
+        return type;
       }
 
       /// \brief Returns the size in bytes needed to store this component
