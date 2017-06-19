@@ -505,7 +505,7 @@ void EntityComponentDatabase::Update()
 
     this->dataPtr->differences[key] = WAS_DELETED;
 
-    delete [] storage;
+    delete [] static_cast<char *>(storage);
     this->dataPtr->components.erase(this->dataPtr->components.begin() + index);
     this->dataPtr->componentIndices.erase(key);
     // Update the indexes beyond

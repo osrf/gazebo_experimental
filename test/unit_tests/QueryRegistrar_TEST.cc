@@ -16,7 +16,8 @@
 */
 
 #include <gtest/gtest.h>
-#include "gazebo/ecs/ComponentFactory.hh"
+#include "gazebo/ecs/Component.hh"
+#include "util/TestComponent.hh"
 #include "gazebo/ecs/QueryRegistrar.hh"
 
 // Component Types for testing
@@ -38,6 +39,7 @@ struct TC3
   double itemThree;
 };
 
+
 /////////////////////////////////////////////////
 TEST(QueryRegistrar, InitiallyNoRegistrations)
 {
@@ -50,7 +52,7 @@ TEST(QueryRegistrar, RegisterOneQuery)
 {
   gazebo::ecs::QueryRegistrar r;
   gazebo::ecs::EntityQuery q;
-  q.AddComponent("TC1");
+  q.AddComponent<TestComponent1>();
   std::string sentinel;
   gazebo::ecs::QueryCallback cb = [&sentinel] (
       const gazebo::ecs::EntityQuery &_q) -> void {
@@ -69,8 +71,8 @@ TEST(QueryRegistrar, QueryOrderIsPreserved)
   gazebo::ecs::QueryRegistrar r;
   gazebo::ecs::EntityQuery q1;
   gazebo::ecs::EntityQuery q2;
-  q1.AddComponent("TC1");
-  q2.AddComponent("TC2");
+  q1.AddComponent<TestComponent1>();
+  q2.AddComponent<TestComponent1>();
   std::string sentinel;
   gazebo::ecs::QueryCallback cb1 = [&sentinel] (
       const gazebo::ecs::EntityQuery &_q) -> void {
@@ -92,11 +94,6 @@ TEST(QueryRegistrar, QueryOrderIsPreserved)
 
 int main(int argc, char **argv)
 {
-  // Register types with the factory
-  gazebo::ecs::ComponentFactory::Register<TC1>("TC1");
-  gazebo::ecs::ComponentFactory::Register<TC2>("TC2");
-  gazebo::ecs::ComponentFactory::Register<TC3>("TC3");
-
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

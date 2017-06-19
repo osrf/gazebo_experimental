@@ -59,7 +59,7 @@ void CZInertial::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
       auto comp = entity.AddComponent<components::Inertial>();
       if (_elem.HasElement("mass"))
       {
-        comp->Mass() = _elem.Get<double>("mass");
+        comp.Mass() = _elem.Get<double>("mass");
       }
       if (_elem.HasElement("inertia"))
       {

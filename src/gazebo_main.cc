@@ -28,7 +28,7 @@
 #include <ignition/common/PluginLoader.hh>
 #include <ignition/common/SystemPaths.hh>
 #include <ignition/math/Rand.hh>
-#include "gazebo/ecs/ComponentFactory.hh"
+#include "gazebo/ecs/Component.hh"
 #include "gazebo/ecs/Manager.hh"
 #include <sdf/sdf.hh>
 
@@ -87,13 +87,14 @@ static bool VerbosityValidator(const char */*_flagname*/, int _value)
 
 //////////////////////////////////////////////////
 std::vector<std::string> LoadLibraries(std::vector<std::string> _libs,
-    ignition::common::PluginLoader _pl, ignition::common::SystemPaths _sp)
+    ignition::common::PluginLoader _pl,
+    ignition::common::SystemPaths &_sp)
 {
   std::vector<std::string> pluginNames;
   for (auto const &libName : _libs)
   {
-    std::string pathToLibrary = sp.FindSharedLibrary(libName);
-    std::string pluginName = pluginLoader.LoadLibrary(pathToLibrary);
+    std::string pathToLibrary = _sp.FindSharedLibrary(libName);
+    std::string pluginName = _pl.LoadLibrary(pathToLibrary);
     if (!pluginName.empty())
     {
       pluginNames.push_back(pluginName);
@@ -135,11 +136,11 @@ void LoadComponentizers(gzecs::Manager &_mgr, std::vector<std::string> _libs)
 
   std::vector<std::string> plugins = LoadLibraries(_libs, pluginLoader, sp);
 
-  for (auto const &plubinName : plugins)
+  for (auto const &pluginName : plugins)
   {
     std::unique_ptr<gzecs::Componentizer> sys;
     sys = pluginLoader.Instantiate<gzecs::Componentizer>(pluginName);
-    if (!_mgr.LoadComponentizer(pluginName, std::move(sys)))
+    if (!_mgr.LoadComponentizer(std::move(sys)))
       ignerr << "Failed to load " << pluginName << std::endl;
     else
       igndbg << "Loaded plugin " << pluginName << std::endl;
@@ -160,7 +161,7 @@ void LoadComponentFactories(gzecs::Manager &_mgr,
   {
     std::unique_ptr<gzecs::ComponentFactory> sys;
     sys = pluginLoader.Instantiate<gzecs::ComponentFactory>(pluginName);
-    if (!_mgr.LoadComponentFactory(pluginName, std::move(sys)))
+    if (!_mgr.LoadComponentFactory(std::move(sys)))
       ignerr << "Failed to load " << pluginName << std::endl;
     else
       igndbg << "Loaded plugin " << pluginName << std::endl;

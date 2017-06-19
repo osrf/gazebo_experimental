@@ -37,7 +37,7 @@ void PhysicsSystem::Init(ecs::QueryRegistrar &_registrar)
 {
   // Query for global/configuration info
   ecs::EntityQuery configQuery;
-  if (!configQuery.AddComponent("gazebo::components::PhysicsConfig"))
+  if (!configQuery.AddComponent<gazebo::components::PhysicsConfig>())
   {
     std::cerr << "Undefined component[gazebo::components::PhysicsConfig]\n";
   }
@@ -49,9 +49,9 @@ void PhysicsSystem::Init(ecs::QueryRegistrar &_registrar)
 
   // Query for bodies to simulate
   ecs::EntityQuery query;
-  if (!query.AddComponent("gazebo::components::Geometry"))
+  if (!query.AddComponent<gazebo::components::Geometry>())
     std::cerr << "Undefined component[gazebo::components::Geometry]\n";
-  if (!query.AddComponent("gazebo::components::Pose"))
+  if (!query.AddComponent<gazebo::components::Pose>())
     std::cerr << "Undefined component[gazebo::components::Pose]\n";
   // TODO require component with contact or surface properies
 
