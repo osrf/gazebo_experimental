@@ -28,56 +28,55 @@ struct TestComponentStorage
 };
 
 
-gazebo::ecs::ComponentType gTestComponent1Type = gazebo::ecs::NO_COMPONENT;
-
-
-class TestComponent1 : public gazebo::ecs::ComponentAPI
-{
-  protected: TestComponentStorage *dataPtr = nullptr;
-
-  public: TestComponent1()
-  {
-  }
-
-  public: TestComponent1(TestComponentStorage *_stor)
-  {
-    this->dataPtr = _stor;
-  }
-
-  public: virtual ~TestComponent1()
-  {
-  }
-
-  /// \returns true if the component api is fully functional
-  public: virtual operator bool() const override
-  {
-    return dataPtr;
-  };
-
-  /// \brief Return the name of the component type
-  public: virtual const char *ComponentName() const override
-  {
-    return "TestComponent1";
-  }
-
-  /// \brief Return a unique id for this component
-  public: virtual gazebo::ecs::ComponentType ComponentType() const override
-  {
-    return gTestComponent1Type;
-  }
-
-  /// \brief Initializes a static or global variable with a unique id
-  /// \remarks this should only allow the type to be set once
-  public: virtual void ComponentType(gazebo::ecs::ComponentType _type) override
-  {
-    gTestComponent1Type = _type;
-  }
+#define GZTEST_TEST_COMPONENT(num) \
+gazebo::ecs::ComponentType gTestComponent##num##Type = gazebo::ecs::NO_COMPONENT; \
+ \
+class TestComponent##num : public gazebo::ecs::ComponentAPI \
+{ \
+  protected: TestComponentStorage *dataPtr = nullptr; \
+ \
+  public: TestComponent##num() \
+  { \
+  } \
+ \
+  public: TestComponent##num(TestComponentStorage *_stor) \
+  { \
+    this->dataPtr = _stor; \
+  } \
+ \
+  public: virtual ~TestComponent##num() \
+  { \
+  } \
+ \
+  public: virtual operator bool() const override \
+  { \
+    return dataPtr; \
+  }; \
+ \
+  public: virtual const char *ComponentName() const override \
+  { \
+    return "TestComponent" #num; \
+  } \
+ \
+  public: virtual gazebo::ecs::ComponentType ComponentType() const override \
+  { \
+    return gTestComponent##num##Type; \
+  } \
+ \
+  public: virtual void ComponentType( \
+              gazebo::ecs::ComponentType _type) override \
+  { \
+    gTestComponent##num##Type = _type; \
+  } \
+}; \
+ \
+class TestComponent##num##Factory : public gazebo::ecs::ComponentFactoryHelper< \
+                              TestComponent##num, TestComponentStorage> \
+{ \
 };
 
-
-class TestComponent1Factory : public gazebo::ecs::ComponentFactoryHelper<
-                              TestComponent1, TestComponentStorage>
-{
-};
+GZTEST_TEST_COMPONENT(1);
+GZTEST_TEST_COMPONENT(2);
+GZTEST_TEST_COMPONENT(3);
 
 #endif
