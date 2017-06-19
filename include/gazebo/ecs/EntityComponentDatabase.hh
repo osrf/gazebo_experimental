@@ -90,14 +90,45 @@ namespace gazebo
 
       /// \brief Add new component to an entity
       /// \param[in] _id The entity that gets the component
+      /// \returns Instance of component
+      public: template <typename T>
+      T AddComponent(EntityId _id)
+      {
+        T api;
+        this->AddComponent(_id, api);
+        return api;
+      }
+
+      /// \brief Add new component to an entity
+      /// \param[in] _id The entity that gets the component
       /// \param[out] _api An API instance that will allow read/write access
       /// \returns true if a component was added to the entity
       public: bool AddComponent(EntityId _id, ComponentAPI &_api);
 
       /// \brief remove a component from an entity
       /// \returns true if the entity had the component and it is now removed
+      public: template <typename T>
+      bool RemoveComponent(EntityId _id)
+      {
+        T api;
+        return this->RemoveComponent(_id, api.ComponentType());
+      }
+
+      /// \brief remove a component from an entity
+      /// \returns true if the entity had the component and it is now removed
       public: bool RemoveComponent(EntityId _id,
                   gazebo::ecs::ComponentType _type);
+
+      /// \brief Get a component that's on an entity for reading only
+      /// \param[in] _id The entity whose component is to be read
+      /// \returns Instance of component
+      public: template <typename T>
+      const T EntityComponent(EntityId _id) const
+      {
+        T api;
+        this->EntityComponent(_id, api);
+        return api;
+      }
 
       /// \brief Get a component that's on an entity for reading only
       /// \param[in] _id The entity whose component is to be read
@@ -107,9 +138,28 @@ namespace gazebo
 
       /// \brief Get a component that's on an entity for reading or writing
       /// \param[in] _id The entity that gets the component
+      /// \returns instance of the component
+      public: template <typename T>
+      T EntityComponentMutable(EntityId _id)
+      {
+        T api;
+        this->EntityComponentMutable(_id, api);
+        return api;
+      }
+
+      /// \brief Get a component that's on an entity for reading or writing
+      /// \param[in] _id The entity that gets the component
       /// \param[out] _api An API instance that will allow read/write access
       /// \returns true if the entity has the component
       public: bool EntityComponentMutable(EntityId _id, ComponentAPI &_api);
+
+      /// \brief Test if a component changed last timestep
+      public: template <typename T>
+      Difference IsDifferent(EntityId _id) const
+      {
+        T api;
+        return this->IsDifferent(_id, api.ComponentType());
+      }
 
       /// \brief Test if a component changed last timestep
       public: Difference IsDifferent(EntityId _id,

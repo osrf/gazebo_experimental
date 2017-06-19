@@ -18,29 +18,10 @@
 #include <algorithm>
 #include <gtest/gtest.h>
 
-#include "gazebo/ecs/ComponentFactory.hh"
+#include "util/TestComponent.hh"
 #include "gazebo/ecs/EntityComponentDatabase.hh"
 #include "gazebo/ecs/EntityQuery.hh"
 
-
-// Component Types for testing
-struct TC1
-{
-  float itemOne;
-};
-
-struct TC2
-{
-  float itemOne;
-  int itemTwo;
-};
-
-struct TC3
-{
-  float itemOne;
-  int itemTwo;
-  double itemThree;
-};
 
 /////////////////////////////////////////////////
 TEST(EntityComponentDatabase, FirstEntityIdIsNotNoEntityId)
@@ -69,200 +50,236 @@ TEST(EntityComponentDatabase, CreateUniqueEntities)
 TEST(EntityComponentDatabase, AddComponentToOneEntityId)
 {
   gazebo::ecs::EntityComponentDatabase uut;
+  uut.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent1Factory));
+
   std::vector<gazebo::ecs::EntityId> entities;
   entities.push_back(uut.CreateEntity());
   entities.push_back(uut.CreateEntity());
   entities.push_back(uut.CreateEntity());
   entities.push_back(uut.CreateEntity());
 
-  uut.AddComponent<TC1>(entities[2]);
+  uut.AddComponent<TestComponent1>(entities[2]);
   uut.Update();
 
-  EXPECT_EQ(nullptr, uut.EntityComponent<TC1>(entities[0]));
-  EXPECT_EQ(nullptr, uut.EntityComponent<TC1>(entities[1]));
-  EXPECT_NE(nullptr, uut.EntityComponent<TC1>(entities[2]));
-  EXPECT_EQ(nullptr, uut.EntityComponent<TC1>(entities[3]));
+  EXPECT_FALSE(uut.EntityComponent<TestComponent1>(entities[0]));
+  EXPECT_FALSE(uut.EntityComponent<TestComponent1>(entities[1]));
+  EXPECT_TRUE(uut.EntityComponent<TestComponent1>(entities[2]));
+  EXPECT_FALSE(uut.EntityComponent<TestComponent1>(entities[3]));
 }
 
 /////////////////////////////////////////////////
 TEST(EntityComponentDatabase, AddDifferentComponentsToDifferentEntities)
 {
   gazebo::ecs::EntityComponentDatabase uut;
+  uut.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent1Factory));
+  uut.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent2Factory));
+  uut.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent3Factory));
   std::vector<gazebo::ecs::EntityId> entities;
   entities.push_back(uut.CreateEntity());
   entities.push_back(uut.CreateEntity());
   entities.push_back(uut.CreateEntity());
   entities.push_back(uut.CreateEntity());
 
-  auto const type1 = gazebo::ecs::ComponentFactory::Type<TC1>();
-  auto const type2 = gazebo::ecs::ComponentFactory::Type<TC2>();
-  auto const type3 = gazebo::ecs::ComponentFactory::Type<TC3>();
-
-  uut.AddComponent<TC1>(entities[0]);
-  uut.AddComponent<TC2>(entities[1]);
-  uut.AddComponent<TC3>(entities[2]);
+  uut.AddComponent<TestComponent1>(entities[0]);
+  uut.AddComponent<TestComponent2>(entities[1]);
+  uut.AddComponent<TestComponent3>(entities[2]);
   uut.Update();
 
-  EXPECT_NE(nullptr, uut.EntityComponent<TC1>(entities[0]));
-  EXPECT_EQ(nullptr, uut.EntityComponent<TC1>(entities[1]));
-  EXPECT_EQ(nullptr, uut.EntityComponent<TC1>(entities[2]));
-  EXPECT_EQ(nullptr, uut.EntityComponent<TC1>(entities[3]));
+  EXPECT_TRUE(uut.EntityComponent<TestComponent1>(entities[0]));
+  EXPECT_FALSE(uut.EntityComponent<TestComponent1>(entities[1]));
+  EXPECT_FALSE(uut.EntityComponent<TestComponent1>(entities[2]));
+  EXPECT_FALSE(uut.EntityComponent<TestComponent1>(entities[3]));
 
-  EXPECT_EQ(nullptr, uut.EntityComponent<TC2>(entities[0]));
-  EXPECT_NE(nullptr, uut.EntityComponent<TC2>(entities[1]));
-  EXPECT_EQ(nullptr, uut.EntityComponent<TC2>(entities[2]));
-  EXPECT_EQ(nullptr, uut.EntityComponent<TC2>(entities[3]));
+  EXPECT_FALSE(uut.EntityComponent<TestComponent2>(entities[0]));
+  EXPECT_TRUE(uut.EntityComponent<TestComponent2>(entities[1]));
+  EXPECT_FALSE(uut.EntityComponent<TestComponent2>(entities[2]));
+  EXPECT_FALSE(uut.EntityComponent<TestComponent2>(entities[3]));
 
-  EXPECT_EQ(nullptr, uut.EntityComponent<TC3>(entities[0]));
-  EXPECT_EQ(nullptr, uut.EntityComponent<TC3>(entities[1]));
-  EXPECT_NE(nullptr, uut.EntityComponent<TC3>(entities[2]));
-  EXPECT_EQ(nullptr, uut.EntityComponent<TC3>(entities[3]));
+  EXPECT_FALSE(uut.EntityComponent<TestComponent3>(entities[0]));
+  EXPECT_FALSE(uut.EntityComponent<TestComponent3>(entities[1]));
+  EXPECT_TRUE(uut.EntityComponent<TestComponent3>(entities[2]));
+  EXPECT_FALSE(uut.EntityComponent<TestComponent3>(entities[3]));
 }
 
 /////////////////////////////////////////////////
 TEST(EntityComponentDatabase, AddMultipleComponentsToOneEntityId)
 {
   gazebo::ecs::EntityComponentDatabase uut;
+  uut.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent1Factory));
+  uut.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent2Factory));
+  uut.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent3Factory));
   std::vector<gazebo::ecs::EntityId> entities;
   entities.push_back(uut.CreateEntity());
   entities.push_back(uut.CreateEntity());
   entities.push_back(uut.CreateEntity());
 
-  uut.AddComponent<TC1>(entities[0]);
-  uut.AddComponent<TC2>(entities[0]);
-  uut.AddComponent<TC3>(entities[0]);
+  uut.AddComponent<TestComponent1>(entities[0]);
+  uut.AddComponent<TestComponent2>(entities[0]);
+  uut.AddComponent<TestComponent3>(entities[0]);
   uut.Update();
 
-  EXPECT_NE(nullptr, uut.EntityComponent<TC1>(entities[0]));
-  EXPECT_EQ(nullptr, uut.EntityComponent<TC1>(entities[1]));
-  EXPECT_EQ(nullptr, uut.EntityComponent<TC1>(entities[2]));
+  EXPECT_TRUE(uut.EntityComponent<TestComponent1>(entities[0]));
+  EXPECT_FALSE(uut.EntityComponent<TestComponent1>(entities[1]));
+  EXPECT_FALSE(uut.EntityComponent<TestComponent1>(entities[2]));
 
-  EXPECT_NE(nullptr, uut.EntityComponent<TC2>(entities[0]));
-  EXPECT_EQ(nullptr, uut.EntityComponent<TC2>(entities[1]));
-  EXPECT_EQ(nullptr, uut.EntityComponent<TC2>(entities[2]));
+  EXPECT_TRUE(uut.EntityComponent<TestComponent2>(entities[0]));
+  EXPECT_FALSE(uut.EntityComponent<TestComponent2>(entities[1]));
+  EXPECT_FALSE(uut.EntityComponent<TestComponent2>(entities[2]));
 
-  EXPECT_NE(nullptr, uut.EntityComponent<TC3>(entities[0]));
-  EXPECT_EQ(nullptr, uut.EntityComponent<TC3>(entities[1]));
-  EXPECT_EQ(nullptr, uut.EntityComponent<TC3>(entities[2]));
+  EXPECT_TRUE(uut.EntityComponent<TestComponent3>(entities[0]));
+  EXPECT_FALSE(uut.EntityComponent<TestComponent3>(entities[1]));
+  EXPECT_FALSE(uut.EntityComponent<TestComponent3>(entities[2]));
 }
 
 /////////////////////////////////////////////////
 TEST(EntityComponentDatabase, ComponentsAreEditableWhenAdding)
 {
   gazebo::ecs::EntityComponentDatabase uut;
+  uut.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent1Factory));
+  uut.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent2Factory));
+  uut.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent3Factory));
   gazebo::ecs::EntityId entity;
   entity = uut.CreateEntity();
 
-  float one_one = 123.0f;
-  float two_one = 456.0f;
-  int two_two = 7;
-  float three_one = 789.0f;
-  float three_two = 9;
-  float three_three = -147.8f;
+  int c1_1 = 34431;
+  int c1_2 = -432;
+  int c2_1 = -9701;
+  int c2_2 = -14981;
+  int c3_1 = 1811;
+  int c3_2 = 1712;
 
-  auto first = uut.AddComponent<TC1>(entity);
-  first->itemOne = one_one;
-  auto second = uut.AddComponent<TC2>(entity);
-  second->itemOne = two_one;
-  second->itemTwo = two_two;
-  auto third = uut.AddComponent<TC3>(entity);
-  third->itemOne = three_one;
-  third->itemTwo = three_two;
-  third->itemThree = three_three;
+  auto first = uut.AddComponent<TestComponent1>(entity);
+  auto second = uut.AddComponent<TestComponent2>(entity);
+  auto third = uut.AddComponent<TestComponent3>(entity);
+
+  ASSERT_TRUE(first);
+  ASSERT_TRUE(second);
+  ASSERT_TRUE(third);
+
+  first.Item1() = c1_1;
+  first.Item2() = c1_2;
+  second.Item1() = c2_1;
+  second.Item2() = c2_2;
+  third.Item1() = c3_1;
+  third.Item2() = c3_2;
 
   uut.Update();
 
-  ASSERT_NE(nullptr, uut.EntityComponent<TC1>(entity));
-  ASSERT_NE(nullptr, uut.EntityComponent<TC2>(entity));
-  ASSERT_NE(nullptr, uut.EntityComponent<TC3>(entity));
+  ASSERT_TRUE(uut.EntityComponent<TestComponent1>(entity));
+  ASSERT_TRUE(uut.EntityComponent<TestComponent2>(entity));
+  ASSERT_TRUE(uut.EntityComponent<TestComponent3>(entity));
 
-  EXPECT_EQ(one_one, uut.EntityComponent<TC1>(entity)->itemOne);
-  EXPECT_EQ(two_one, uut.EntityComponent<TC2>(entity)->itemOne);
-  EXPECT_EQ(two_two, uut.EntityComponent<TC2>(entity)->itemTwo);
-  EXPECT_EQ(three_one, uut.EntityComponent<TC3>(entity)->itemOne);
-  EXPECT_EQ(three_two, uut.EntityComponent<TC3>(entity)->itemTwo);
-  EXPECT_EQ(three_three, uut.EntityComponent<TC3>(entity)->itemThree);
+  EXPECT_EQ(c1_1, uut.EntityComponent<TestComponent1>(entity).Item1());
+  EXPECT_EQ(c1_2, uut.EntityComponent<TestComponent1>(entity).Item2());
+  EXPECT_EQ(c2_1, uut.EntityComponent<TestComponent2>(entity).Item1());
+  EXPECT_EQ(c2_2, uut.EntityComponent<TestComponent2>(entity).Item2());
+  EXPECT_EQ(c3_1, uut.EntityComponent<TestComponent3>(entity).Item1());
+  EXPECT_EQ(c3_2, uut.EntityComponent<TestComponent3>(entity).Item2());
 }
 
 /////////////////////////////////////////////////
 TEST(EntityComponentDatabase, ComponentsAreNotEditableBeforeFirstUpdate)
 {
   gazebo::ecs::EntityComponentDatabase uut;
+  uut.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent1Factory));
   gazebo::ecs::EntityId entity;
   entity = uut.CreateEntity();
 
-  auto first = uut.AddComponent<TC1>(entity);
+  auto first = uut.AddComponent<TestComponent1>(entity);
 
-  ASSERT_EQ(nullptr, uut.EntityComponent<TC1>(entity));
-  ASSERT_EQ(nullptr, uut.EntityComponentMutable<TC1>(entity));
+  ASSERT_FALSE(uut.EntityComponent<TestComponent1>(entity));
+  ASSERT_FALSE(uut.EntityComponentMutable<TestComponent1>(entity));
   uut.Update();
-  ASSERT_NE(nullptr, uut.EntityComponent<TC1>(entity));
-  ASSERT_NE(nullptr, uut.EntityComponentMutable<TC1>(entity));
+  ASSERT_TRUE(uut.EntityComponent<TestComponent1>(entity));
+  ASSERT_TRUE(uut.EntityComponentMutable<TestComponent1>(entity));
 }
 
 /////////////////////////////////////////////////
 TEST(EntityComponentDatabase, ComponentsAreEditableAfterFirstUpdate)
 {
   gazebo::ecs::EntityComponentDatabase uut;
+  uut.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent1Factory));
+  uut.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent2Factory));
+  uut.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent3Factory));
   gazebo::ecs::EntityId entity;
   entity = uut.CreateEntity();
 
-  uut.AddComponent<TC1>(entity);
-  uut.AddComponent<TC2>(entity);
-  uut.AddComponent<TC3>(entity);
+  uut.AddComponent<TestComponent1>(entity);
+  uut.AddComponent<TestComponent2>(entity);
+  uut.AddComponent<TestComponent3>(entity);
   uut.Update();
 
-  float one_one = 123.0f;
-  float two_one = 456.0f;
-  int two_two = 7;
-  float three_one = 789.0f;
-  float three_two = 9;
-  float three_three = -147.8f;
+  int c1_1 = 34431;
+  int c1_2 = -432;
+  int c2_1 = -9701;
+  int c2_2 = -14981;
+  int c3_1 = 1811;
+  int c3_2 = 1712;
 
-  auto first = uut.EntityComponentMutable<TC1>(entity);
-  auto second = uut.EntityComponentMutable<TC2>(entity);
-  auto third = uut.EntityComponentMutable<TC3>(entity);
+  auto first = uut.EntityComponentMutable<TestComponent1>(entity);
+  auto second = uut.EntityComponentMutable<TestComponent2>(entity);
+  auto third = uut.EntityComponentMutable<TestComponent3>(entity);
 
-  ASSERT_NE(nullptr, first);
-  ASSERT_NE(nullptr, second);
-  ASSERT_NE(nullptr, third);
+  ASSERT_TRUE(first);
+  ASSERT_TRUE(second);
+  ASSERT_TRUE(third);
 
-  first->itemOne = one_one;
-  second->itemOne = two_one;
-  second->itemTwo = two_two;
-  third->itemOne = three_one;
-  third->itemTwo = three_two;
-  third->itemThree = three_three;
+  first.Item1() = c1_1;
+  first.Item2() = c1_2;
+  second.Item1() = c2_1;
+  second.Item2() = c2_2;
+  third.Item1() = c3_1;
+  third.Item2() = c3_2;
   uut.Update();
 
-  EXPECT_EQ(one_one, uut.EntityComponent<TC1>(entity)->itemOne);
-  EXPECT_EQ(two_one, uut.EntityComponent<TC2>(entity)->itemOne);
-  EXPECT_EQ(two_two, uut.EntityComponent<TC2>(entity)->itemTwo);
-  EXPECT_EQ(three_one, uut.EntityComponent<TC3>(entity)->itemOne);
-  EXPECT_EQ(three_two, uut.EntityComponent<TC3>(entity)->itemTwo);
-  EXPECT_EQ(three_three, uut.EntityComponent<TC3>(entity)->itemThree);
+  EXPECT_EQ(c1_1, uut.EntityComponent<TestComponent1>(entity).Item1());
+  EXPECT_EQ(c1_2, uut.EntityComponent<TestComponent1>(entity).Item2());
+  EXPECT_EQ(c2_1, uut.EntityComponent<TestComponent2>(entity).Item1());
+  EXPECT_EQ(c2_2, uut.EntityComponent<TestComponent2>(entity).Item2());
+  EXPECT_EQ(c3_1, uut.EntityComponent<TestComponent3>(entity).Item1());
+  EXPECT_EQ(c3_2, uut.EntityComponent<TestComponent3>(entity).Item2());
 }
 
 /////////////////////////////////////////////////
 TEST(EntityComponentDatabase, QueryExistingEntities)
 {
   gazebo::ecs::EntityComponentDatabase uut;
+  uut.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent1Factory));
+  uut.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent2Factory));
+  uut.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent3Factory));
   std::vector<gazebo::ecs::EntityId> entities;
   entities.push_back(uut.CreateEntity());
   entities.push_back(uut.CreateEntity());
   entities.push_back(uut.CreateEntity());
 
-  uut.AddComponent<TC1>(entities[0]);
-  uut.AddComponent<TC2>(entities[0]);
-  uut.AddComponent<TC2>(entities[1]);
-  uut.AddComponent<TC3>(entities[0]);
-  uut.AddComponent<TC3>(entities[1]);
-  uut.AddComponent<TC3>(entities[2]);
+  uut.AddComponent<TestComponent1>(entities[0]);
+  uut.AddComponent<TestComponent2>(entities[0]);
+  uut.AddComponent<TestComponent2>(entities[1]);
+  uut.AddComponent<TestComponent3>(entities[0]);
+  uut.AddComponent<TestComponent3>(entities[1]);
+  uut.AddComponent<TestComponent3>(entities[2]);
   uut.Update();
 
   gazebo::ecs::EntityQuery query;
-  query.AddComponent("TC2");
-  query.AddComponent("TC3");
+  query.AddComponent<TestComponent2>();
+  query.AddComponent<TestComponent3>();
   auto queryAdd = uut.AddQuery(std::move(query));
 
   ASSERT_EQ(2, uut.Query(queryAdd.first).EntityIds().size());
@@ -288,10 +305,16 @@ TEST(EntityComponentDatabase, QueryExistingEntities)
 TEST(EntityComponentDatabase, QueryNewEntities)
 {
   gazebo::ecs::EntityComponentDatabase uut;
+  uut.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent1Factory));
+  uut.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent2Factory));
+  uut.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent3Factory));
 
   gazebo::ecs::EntityQuery query;
-  query.AddComponent("TC2");
-  query.AddComponent("TC3");
+  query.AddComponent<TestComponent2>();
+  query.AddComponent<TestComponent3>();
   auto queryAdd = uut.AddQuery(std::move(query));
 
   std::vector<gazebo::ecs::EntityId> entities;
@@ -299,12 +322,12 @@ TEST(EntityComponentDatabase, QueryNewEntities)
   entities.push_back(uut.CreateEntity());
   entities.push_back(uut.CreateEntity());
 
-  uut.AddComponent<TC1>(entities[0]);
-  uut.AddComponent<TC2>(entities[0]);
-  uut.AddComponent<TC2>(entities[1]);
-  uut.AddComponent<TC3>(entities[0]);
-  uut.AddComponent<TC3>(entities[1]);
-  uut.AddComponent<TC3>(entities[2]);
+  uut.AddComponent<TestComponent1>(entities[0]);
+  uut.AddComponent<TestComponent2>(entities[0]);
+  uut.AddComponent<TestComponent2>(entities[1]);
+  uut.AddComponent<TestComponent3>(entities[0]);
+  uut.AddComponent<TestComponent3>(entities[1]);
+  uut.AddComponent<TestComponent3>(entities[2]);
 
   EXPECT_EQ(0, uut.Query(queryAdd.first).EntityIds().size());
   uut.Update();
@@ -332,21 +355,27 @@ TEST(EntityComponentDatabase, QueryNewEntities)
 TEST(EntityComponentDatabase, RemoveQueryNoResults)
 {
   gazebo::ecs::EntityComponentDatabase uut;
+  uut.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent1Factory));
+  uut.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent2Factory));
+  uut.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent3Factory));
   std::vector<gazebo::ecs::EntityId> entities;
   entities.push_back(uut.CreateEntity());
   entities.push_back(uut.CreateEntity());
   entities.push_back(uut.CreateEntity());
 
-  uut.AddComponent<TC1>(entities[0]);
-  uut.AddComponent<TC2>(entities[0]);
-  uut.AddComponent<TC2>(entities[1]);
-  uut.AddComponent<TC3>(entities[0]);
-  uut.AddComponent<TC3>(entities[1]);
-  uut.AddComponent<TC3>(entities[2]);
+  uut.AddComponent<TestComponent1>(entities[0]);
+  uut.AddComponent<TestComponent2>(entities[0]);
+  uut.AddComponent<TestComponent2>(entities[1]);
+  uut.AddComponent<TestComponent3>(entities[0]);
+  uut.AddComponent<TestComponent3>(entities[1]);
+  uut.AddComponent<TestComponent3>(entities[2]);
 
   gazebo::ecs::EntityQuery query;
-  query.AddComponent("TC2");
-  query.AddComponent("TC3");
+  query.AddComponent<TestComponent2>();
+  query.AddComponent<TestComponent3>();
 
   auto result = uut.AddQuery(std::move(query));
   uut.RemoveQuery(result.first);
@@ -358,53 +387,61 @@ TEST(EntityComponentDatabase, RemoveQueryNoResults)
 TEST(EntityComponentDatabase, TrackComponentChanges)
 {
   gazebo::ecs::EntityComponentDatabase uut;
+  uut.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent1Factory));
+  uut.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent2Factory));
+  uut.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent3Factory));
   gazebo::ecs::EntityId entity = uut.CreateEntity();
 
-  uut.AddComponent<TC1>(entity);
+  uut.AddComponent<TestComponent1>(entity);
   // component is created after this update ends
-  EXPECT_EQ(gazebo::ecs::NO_DIFFERENCE, uut.IsDifferent<TC1>(entity));
+  EXPECT_EQ(gazebo::ecs::NO_DIFFERENCE, uut.IsDifferent<TestComponent1>(entity));
   uut.Update();
-  EXPECT_EQ(gazebo::ecs::WAS_CREATED, uut.IsDifferent<TC1>(entity));
+  EXPECT_EQ(gazebo::ecs::WAS_CREATED, uut.IsDifferent<TestComponent1>(entity));
 
-  uut.AddComponent<TC2>(entity);
+  uut.AddComponent<TestComponent2>(entity);
   // component is created after this update ends
-  EXPECT_EQ(gazebo::ecs::NO_DIFFERENCE, uut.IsDifferent<TC2>(entity));
+  EXPECT_EQ(gazebo::ecs::NO_DIFFERENCE, uut.IsDifferent<TestComponent2>(entity));
   uut.Update();
-  EXPECT_EQ(gazebo::ecs::WAS_CREATED, uut.IsDifferent<TC2>(entity));
-  EXPECT_EQ(gazebo::ecs::NO_DIFFERENCE, uut.IsDifferent<TC1>(entity));
+  EXPECT_EQ(gazebo::ecs::WAS_CREATED, uut.IsDifferent<TestComponent2>(entity));
+  EXPECT_EQ(gazebo::ecs::NO_DIFFERENCE, uut.IsDifferent<TestComponent1>(entity));
 
   uut.Update();
-  uut.RemoveComponent<TC1>(entity);
+  uut.RemoveComponent<TestComponent1>(entity);
   // component is removed after this update ends
-  EXPECT_EQ(gazebo::ecs::NO_DIFFERENCE, uut.IsDifferent<TC1>(entity));
-  EXPECT_EQ(gazebo::ecs::NO_DIFFERENCE, uut.IsDifferent<TC2>(entity));
+  EXPECT_EQ(gazebo::ecs::NO_DIFFERENCE, uut.IsDifferent<TestComponent1>(entity));
+  EXPECT_EQ(gazebo::ecs::NO_DIFFERENCE, uut.IsDifferent<TestComponent2>(entity));
   uut.Update();
-  EXPECT_EQ(gazebo::ecs::WAS_DELETED, uut.IsDifferent<TC1>(entity));
-  EXPECT_EQ(gazebo::ecs::NO_DIFFERENCE, uut.IsDifferent<TC2>(entity));
+  EXPECT_EQ(gazebo::ecs::WAS_DELETED, uut.IsDifferent<TestComponent1>(entity));
+  EXPECT_EQ(gazebo::ecs::NO_DIFFERENCE, uut.IsDifferent<TestComponent2>(entity));
 
   uut.DeleteEntity(entity);
   // component and entity are removed after this update ends
-  EXPECT_EQ(gazebo::ecs::NO_DIFFERENCE, uut.IsDifferent<TC2>(entity));
+  EXPECT_EQ(gazebo::ecs::NO_DIFFERENCE, uut.IsDifferent<TestComponent2>(entity));
   uut.Update();
-  EXPECT_EQ(gazebo::ecs::WAS_DELETED, uut.IsDifferent<TC2>(entity));
+  EXPECT_EQ(gazebo::ecs::WAS_DELETED, uut.IsDifferent<TestComponent2>(entity));
 }
 
 /////////////////////////////////////////////////
 TEST(EntityComponentDatabase, QueriesIncludeDeletedEntitiesForOneUpdate)
 {
   gazebo::ecs::EntityComponentDatabase uut;
+  uut.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent1Factory));
   std::vector<gazebo::ecs::EntityId> entities;
   entities.push_back(uut.CreateEntity());
   entities.push_back(uut.CreateEntity());
   entities.push_back(uut.CreateEntity());
 
-  uut.AddComponent<TC1>(entities[0]);
-  uut.AddComponent<TC1>(entities[1]);
-  uut.AddComponent<TC1>(entities[2]);
+  uut.AddComponent<TestComponent1>(entities[0]);
+  uut.AddComponent<TestComponent1>(entities[1]);
+  uut.AddComponent<TestComponent1>(entities[2]);
 
 
   gazebo::ecs::EntityQuery query;
-  query.AddComponent("TC1");
+  query.AddComponent<TestComponent1>();
 
   auto result = uut.AddQuery(std::move(query));
   uut.Update();
@@ -418,7 +455,7 @@ TEST(EntityComponentDatabase, QueriesIncludeDeletedEntitiesForOneUpdate)
   EXPECT_EQ(3, uut.Query(result.first).EntityIds().size());
   for (auto id : uut.Query(result.first).EntityIds())
   {
-    EXPECT_EQ(gazebo::ecs::WAS_DELETED, uut.IsDifferent<TC1>(id));
+    EXPECT_EQ(gazebo::ecs::WAS_DELETED, uut.IsDifferent<TestComponent1>(id));
   }
 
   uut.Update();
@@ -429,134 +466,151 @@ TEST(EntityComponentDatabase, QueriesIncludeDeletedEntitiesForOneUpdate)
 TEST(EntityComponentDatabase, ModifyThenRemoveComponent)
 {
   gazebo::ecs::EntityComponentDatabase uut;
+  uut.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent1Factory));
   gazebo::ecs::EntityId entity = uut.CreateEntity();
-  uut.AddComponent<TC1>(entity);
+  uut.AddComponent<TestComponent1>(entity);
   uut.Update();
 
-  ASSERT_NE(nullptr, uut.EntityComponentMutable<TC1>(entity));
-  EXPECT_TRUE(uut.RemoveComponent<TC1>(entity));
+  ASSERT_TRUE(uut.EntityComponentMutable<TestComponent1>(entity));
+  EXPECT_TRUE(uut.RemoveComponent<TestComponent1>(entity));
 
   uut.Update();
-  EXPECT_EQ(gazebo::ecs::WAS_DELETED, uut.IsDifferent<TC1>(entity));
-  EXPECT_EQ(nullptr, uut.EntityComponent<TC1>(entity));
+  EXPECT_EQ(gazebo::ecs::WAS_DELETED, uut.IsDifferent<TestComponent1>(entity));
+  EXPECT_FALSE(uut.EntityComponent<TestComponent1>(entity));
 }
 
 /////////////////////////////////////////////////
 TEST(EntityComponentDatabase, CreateComponentSetInitialValues)
 {
   gazebo::ecs::EntityComponentDatabase uut;
+  uut.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent1Factory));
   gazebo::ecs::EntityId entity = uut.CreateEntity();
-  auto comp = uut.AddComponent<TC1>(entity);
-  comp->itemOne = 12345.0;
+  auto comp = uut.AddComponent<TestComponent1>(entity);
+  ASSERT_TRUE(comp);
+  comp.Item1() = 12345;
 
   uut.Update();
-  auto constComp = uut.EntityComponent<TC1>(entity);
-  ASSERT_NE(nullptr, constComp);
-  EXPECT_FLOAT_EQ(12345.0, comp->itemOne);
+  auto constComp = uut.EntityComponent<TestComponent1>(entity);
+  ASSERT_TRUE(constComp);
+  EXPECT_EQ(12345, comp.Item1());
 }
 
 /////////////////////////////////////////////////
 TEST(EntityComponentDatabase, MutableComponentHasSetValues)
 {
   gazebo::ecs::EntityComponentDatabase uut;
+  uut.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent1Factory));
   gazebo::ecs::EntityId entity = uut.CreateEntity();
-  auto comp = uut.AddComponent<TC1>(entity);
-  comp->itemOne = 12345.0;
+  auto comp = uut.AddComponent<TestComponent1>(entity);
+  ASSERT_TRUE(comp);
+  comp.Item1() = 12345;
   uut.Update();
 
-  comp = uut.EntityComponentMutable<TC1>(entity);
-  ASSERT_NE(nullptr, comp);
-  EXPECT_FLOAT_EQ(12345.0, comp->itemOne);
+  comp = uut.EntityComponentMutable<TestComponent1>(entity);
+  ASSERT_TRUE(comp);
+  EXPECT_EQ(12345, comp.Item1());
 }
 
 /////////////////////////////////////////////////
 TEST(EntityComponentDatabase, ModifyComponentHappensNextUpdate)
 {
   gazebo::ecs::EntityComponentDatabase uut;
+  uut.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent1Factory));
   gazebo::ecs::EntityId entity = uut.CreateEntity();
-  auto comp = uut.AddComponent<TC1>(entity);
-  comp->itemOne = 12345.0;
+  auto comp = uut.AddComponent<TestComponent1>(entity);
+  ASSERT_TRUE(comp);
+  comp.Item1() = 12345;
   uut.Update();
 
-  comp = uut.EntityComponentMutable<TC1>(entity);
-  ASSERT_NE(nullptr, comp);
-  comp->itemOne = 6789.0;
+  comp = uut.EntityComponentMutable<TestComponent1>(entity);
+  ASSERT_TRUE(comp);
+  comp.Item1() = 6789;
 
-  EXPECT_EQ(gazebo::ecs::WAS_CREATED, uut.IsDifferent<TC1>(entity));
+  EXPECT_EQ(gazebo::ecs::WAS_CREATED, uut.IsDifferent<TestComponent1>(entity));
   uut.Update();
-  EXPECT_EQ(gazebo::ecs::WAS_MODIFIED, uut.IsDifferent<TC1>(entity));
+  EXPECT_EQ(gazebo::ecs::WAS_MODIFIED, uut.IsDifferent<TestComponent1>(entity));
 
-  auto constComp = uut.EntityComponent<TC1>(entity);
-  ASSERT_NE(nullptr, constComp);
-  EXPECT_FLOAT_EQ(6789.0, constComp->itemOne);
+  auto constComp = uut.EntityComponent<TestComponent1>(entity);
+  ASSERT_TRUE(constComp);
+  EXPECT_EQ(6789, constComp.Item1());
 }
 
 /////////////////////////////////////////////////
 TEST(EntityComponentDatabase, RemoveComponent)
 {
   gazebo::ecs::EntityComponentDatabase uut;
+  uut.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent1Factory));
   gazebo::ecs::EntityId id = uut.CreateEntity();
 
-  uut.AddComponent<TC1>(id);
-  EXPECT_EQ(nullptr, uut.EntityComponent<TC1>(id));
+  uut.AddComponent<TestComponent1>(id);
+  EXPECT_FALSE(uut.EntityComponent<TestComponent1>(id));
   uut.Update();
-  EXPECT_NE(nullptr, uut.EntityComponent<TC1>(id));
+  EXPECT_TRUE(uut.EntityComponent<TestComponent1>(id));
 
-  uut.RemoveComponent<TC1>(id);
-  EXPECT_NE(nullptr, uut.EntityComponent<TC1>(id));
+  uut.RemoveComponent<TestComponent1>(id);
+  EXPECT_TRUE(uut.EntityComponent<TestComponent1>(id));
   uut.Update();
-  EXPECT_EQ(nullptr, uut.EntityComponent<TC1>(id));
+  EXPECT_FALSE(uut.EntityComponent<TestComponent1>(id));
 }
 
 /////////////////////////////////////////////////
 TEST(EntityComponentDatabase, RemoveComponentAccessAnother)
 {
   gazebo::ecs::EntityComponentDatabase uut;
+  uut.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent1Factory));
+  uut.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent2Factory));
   gazebo::ecs::EntityId id = uut.CreateEntity();
-  auto const type1 = gazebo::ecs::ComponentFactory::Type<TC1>();
-  auto const type2 = gazebo::ecs::ComponentFactory::Type<TC2>();
 
-  auto c1 = uut.AddComponent<TC1>(id);
-  auto c2 = uut.AddComponent<TC2>(id);
-  ASSERT_NE(nullptr, c1);
-  ASSERT_NE(nullptr, c2);
+  auto c1 = uut.AddComponent<TestComponent1>(id);
+  auto c2 = uut.AddComponent<TestComponent2>(id);
+  ASSERT_TRUE(c1);
+  ASSERT_TRUE(c2);
 
-  c1->itemOne = 1234;
-  c2->itemOne = 5678;
-  c2->itemTwo = 9012;
+  c1.Item1() = 1234;
+  c2.Item1() = 5678;
+  c2.Item2() = 9012;
 
   uut.Update();
-  uut.RemoveComponent<TC1>(id);
+  uut.RemoveComponent<TestComponent1>(id);
 
-  auto c2_test = uut.EntityComponent<TC2>(id);
-  ASSERT_NE(nullptr, c2_test);
-  EXPECT_EQ(5678, c2_test->itemOne);
-  EXPECT_EQ(9012, c2_test->itemTwo);
+  auto c2_test = uut.EntityComponent<TestComponent2>(id);
+  ASSERT_TRUE(c2_test);
+  EXPECT_EQ(5678, c2_test.Item1());
+  EXPECT_EQ(9012, c2_test.Item2());
 
   uut.Update();
-  EXPECT_EQ(nullptr, uut.EntityComponent<TC1>(id));
-  c2_test = uut.EntityComponent<TC2>(id);
-  ASSERT_NE(nullptr, c2_test);
-  EXPECT_EQ(5678, c2_test->itemOne);
-  EXPECT_EQ(9012, c2_test->itemTwo);
+  EXPECT_FALSE(uut.EntityComponent<TestComponent1>(id));
+  c2_test = uut.EntityComponent<TestComponent2>(id);
+  ASSERT_TRUE(c2_test);
+  EXPECT_EQ(5678, c2_test.Item1());
+  EXPECT_EQ(9012, c2_test.Item2());
 }
 
 /////////////////////////////////////////////////
 TEST(EntityComponentDatabase, DeleteEntity)
 {
   gazebo::ecs::EntityComponentDatabase uut;
+  uut.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent1Factory));
   gazebo::ecs::EntityId id = uut.CreateEntity();
 
-  uut.AddComponent<TC1>(id);
-  EXPECT_EQ(nullptr, uut.EntityComponent<TC1>(id));
+  uut.AddComponent<TestComponent1>(id);
+  EXPECT_FALSE(uut.EntityComponent<TestComponent1>(id));
   uut.Update();
-  EXPECT_NE(nullptr, uut.EntityComponent<TC1>(id));
+  EXPECT_TRUE(uut.EntityComponent<TestComponent1>(id));
 
   uut.DeleteEntity(id);
-  EXPECT_NE(nullptr, uut.EntityComponent<TC1>(id));
+  EXPECT_TRUE(uut.EntityComponent<TestComponent1>(id));
   uut.Update();
   EXPECT_EQ(gazebo::ecs::NO_ENTITY, uut.Entity(id).Id());
-  EXPECT_EQ(nullptr, uut.EntityComponent<TC1>(id));
+  EXPECT_FALSE(uut.EntityComponent<TestComponent1>(id));
 }
 
 /////////////////////////////////////////////////
@@ -593,62 +647,71 @@ TEST(EntityComponentDatabase, ReuseSmallestAvailableEntityId)
 TEST(EntityComponentDatabaseEntity, IsDifferent)
 {
   gazebo::ecs::EntityComponentDatabase db;
+  db.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent1Factory));
   gazebo::ecs::Entity &entity = db.Entity(db.CreateEntity());
-  entity.AddComponent<TC1>();
+  entity.AddComponent<TestComponent1>();
   db.Update();
-  EXPECT_EQ(gazebo::ecs::WAS_CREATED, entity.IsDifferent<TC1>());
+  EXPECT_EQ(gazebo::ecs::WAS_CREATED, entity.IsDifferent<TestComponent1>());
 }
 
 /////////////////////////////////////////////////
 TEST(EntityComponentDatabaseEntity, ReadComponent)
 {
   gazebo::ecs::EntityComponentDatabase db;
+  db.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent1Factory));
   gazebo::ecs::Entity &entity = db.Entity(db.CreateEntity());
-  auto comp = entity.AddComponent<TC1>();
-  comp->itemOne = 1234.0;
+  auto comp = entity.AddComponent<TestComponent1>();
+  ASSERT_TRUE(comp);
+  comp.Item1() = 1234;
   db.Update();
-  auto readOnlyComp = entity.Component<TC1>();
-  EXPECT_FLOAT_EQ(1234.0, readOnlyComp->itemOne);
+  auto readOnlyComp = entity.Component<TestComponent1>();
+  ASSERT_TRUE(readOnlyComp);
+  EXPECT_EQ(1234, readOnlyComp.Item1());
 
   db.Update();
-  EXPECT_EQ(gazebo::ecs::NO_DIFFERENCE, entity.IsDifferent<TC1>());
+  EXPECT_EQ(gazebo::ecs::NO_DIFFERENCE, entity.IsDifferent<TestComponent1>());
 }
 
 /////////////////////////////////////////////////
 TEST(EntityComponentDatabaseEntity, WriteComponent)
 {
   gazebo::ecs::EntityComponentDatabase db;
+  db.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent1Factory));
   gazebo::ecs::Entity &entity = db.Entity(db.CreateEntity());
-  auto comp = entity.AddComponent<TC1>();
-  comp->itemOne = 1234.0;
+  auto comp = entity.AddComponent<TestComponent1>();
+  ASSERT_TRUE(comp);
+  comp.Item1() = 1234;
   db.Update();
-  auto mutableComp = entity.ComponentMutable<TC1>();
-  mutableComp->itemOne = 4567.0;
+  auto mutableComp = entity.ComponentMutable<TestComponent1>();
+  ASSERT_TRUE(mutableComp);
+  mutableComp.Item1() = 4567;
 
   db.Update();
-  EXPECT_EQ(gazebo::ecs::WAS_MODIFIED, entity.IsDifferent<TC1>());
-  auto readOnlyComp = entity.Component<TC1>();
-  EXPECT_FLOAT_EQ(4567.0, readOnlyComp->itemOne);
+  EXPECT_EQ(gazebo::ecs::WAS_MODIFIED, entity.IsDifferent<TestComponent1>());
+  auto readOnlyComp = entity.Component<TestComponent1>();
+  EXPECT_EQ(4567, readOnlyComp.Item1());
 }
 
 /////////////////////////////////////////////////
 TEST(EntityComponentDatabaseEntity, RemoveComponent)
 {
   gazebo::ecs::EntityComponentDatabase db;
+  db.AddComponentFactory(std::unique_ptr<gazebo::ecs::ComponentFactory>(
+        new TestComponent1Factory));
   gazebo::ecs::Entity &entity = db.Entity(db.CreateEntity());
-  entity.AddComponent<TC1>();
+  entity.AddComponent<TestComponent1>();
   db.Update();
-  entity.RemoveComponent<TC1>();
+  entity.RemoveComponent<TestComponent1>();
   db.Update();
-  EXPECT_EQ(gazebo::ecs::WAS_DELETED, entity.IsDifferent<TC1>());
+  EXPECT_EQ(gazebo::ecs::WAS_DELETED, entity.IsDifferent<TestComponent1>());
 }
+
 
 int main(int argc, char **argv)
 {
-  gazebo::ecs::ComponentFactory::Register<TC1>("TC1");
-  gazebo::ecs::ComponentFactory::Register<TC2>("TC2");
-  gazebo::ecs::ComponentFactory::Register<TC3>("TC3");
-
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

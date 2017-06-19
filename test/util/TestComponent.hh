@@ -68,6 +68,26 @@ class TestComponent##num : public gazebo::ecs::ComponentAPI \
   { \
     gTestComponent##num##Type = _type; \
   } \
+ \
+  public: int &Item1() \
+  { \
+    return this->dataPtr->item1; \
+  } \
+ \
+  public: const int &Item1() const\
+  { \
+    return this->dataPtr->item1; \
+  } \
+ \
+  public: int &Item2() \
+  { \
+    return this->dataPtr->item2; \
+  } \
+ \
+  public: const int &Item2() const\
+  { \
+    return this->dataPtr->item2; \
+  } \
 }; \
  \
 class TestComponent##num##Factory : public gazebo::ecs::ComponentFactoryHelper< \
