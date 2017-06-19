@@ -16,20 +16,14 @@
 */
 
 #include <ignition/common/PluginMacros.hh>
-#include <gazebo/ecs/Component.hh>
 
-#include "%%component_name%%.api.hh"
-#include "%%component_name%%.storage.hh"
+#include "%%component_name%%.factory.hh"
 
 %%ns_begin%%
-%%ns_indent%%class IGNITION_COMMON_VISIBLE %%component_name%%Factory :
-%%ns_indent%%  public ::gazebo::ecs::ComponentFactoryHelper<%%component_name%%, %%component_name%%Storage>
+%%ns_indent%%%%component_name%%Factory::~%%component_name%%Factory()
 %%ns_indent%%{
-%%ns_indent%%  virtual ~%%component_name%%Factory()
-%%ns_indent%%  {
-%%ns_indent%%    // nothing to do here
-%%ns_indent%%  }
-%%ns_indent%%};
+%%ns_indent%%  // nothing to do here
+%%ns_indent%%}
 %%ns_end%%
 
 IGN_COMMON_REGISTER_SINGLE_PLUGIN(%%full_namespace%%::%%component_name%%Factory,

@@ -30,6 +30,7 @@ set(generator_files
   templates/EnumField.hh.in
   templates/Enum.hh.in
   templates/Factory.cc.in
+  templates/Factory.hh.in
   templates/Include.hh.in
   templates/StorageClassDecl.hh.in
   templates/StorageClassUnion.hh.in
