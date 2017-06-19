@@ -150,6 +150,7 @@ ignore_dependencies = [
         "gazebo/components/Vector3d.proto",
         "gazebo/components/Quaterniond.proto",
         "gazebo/components/Pose3d.proto",
+        "gazebo/components/Matrix3d.proto",
         ]
 
 
