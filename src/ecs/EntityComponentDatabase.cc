@@ -27,7 +27,7 @@
 
 using namespace gazebo::ecs;
 
-typedef std::pair<EntityId, ComponentType> StorageKey;
+typedef std::pair<EntityId, gazebo::ecs::ComponentType> StorageKey;
 
 class gazebo::ecs::EntityComponentDatabasePrivate
 {
@@ -77,7 +77,7 @@ class gazebo::ecs::EntityComponentDatabasePrivate
   /// \brief check if an entity has these components
   /// \returns true iff entity has all components in the set
   public: bool EntityMatches(EntityId _id,
-              const std::set<ComponentType> &_types) const;
+              const std::set<gazebo::ecs::ComponentType> &_types) const;
 
   /// \brief Queries on this manager
   public: std::vector<EntityQuery> queries;
@@ -95,7 +95,7 @@ EntityComponentDatabase::~EntityComponentDatabase()
   // Call destructor on the components
   for (auto const &kv : this->dataPtr->componentIndices)
   {
-    const ComponentType &type = kv.first.second;
+    const gazebo::ecs::ComponentType &type = kv.first.second;
     const int index = kv.second;
 
     char *storage = this->dataPtr->components[index];
@@ -109,7 +109,7 @@ EntityComponentDatabase::~EntityComponentDatabase()
   // Destruct modified components that never made it to to main storage
   for (auto const &kv : this->dataPtr->toModifyComponents)
   {
-    const ComponentType &type = kv.first.second;
+    const gazebo::ecs::ComponentType &type = kv.first.second;
     char *storage = kv.second;
     void *data = static_cast<void*>(storage);
 
@@ -121,7 +121,7 @@ EntityComponentDatabase::~EntityComponentDatabase()
   // Destruct added components that never made it to to main storage
   for (auto const &kv : this->dataPtr->toAddComponents)
   {
-    const ComponentType &type = kv.first.second;
+    const gazebo::ecs::ComponentType &type = kv.first.second;
     char *storage = kv.second;
     void *data = static_cast<void*>(storage);
 
@@ -257,11 +257,25 @@ gazebo::ecs::Entity &EntityComponentDatabase::Entity(EntityId _id) const
   }
 }
 
+//////////////////////////////////////////////////
+gazebo::ecs::ComponentType EntityComponentDatabase::ComponentType(
+    const std::string &name) const
+{
+  for (auto &cf : this->dataPtr->componentFactories)
+  {
+    if (name == cf->ComponentName())
+    {
+      return cf->ComponentType();
+    }
+  }
+  return NO_COMPONENT;
+}
+
 /////////////////////////////////////////////////
 bool EntityComponentDatabase::AddComponent(EntityId _id, ComponentAPI &_api)
 {
   bool success = false;
-  ComponentType type = _api.ComponentType();
+  gazebo::ecs::ComponentType type = _api.ComponentType();
   StorageKey key = std::make_pair(_id, type);
   // if component has not been added already
   if (this->dataPtr->componentIndices.find(key) ==
@@ -287,7 +301,8 @@ bool EntityComponentDatabase::AddComponent(EntityId _id, ComponentAPI &_api)
 }
 
 /////////////////////////////////////////////////
-bool EntityComponentDatabase::RemoveComponent(EntityId _id, ComponentType _type)
+bool EntityComponentDatabase::RemoveComponent(EntityId _id,
+    gazebo::ecs::ComponentType _type)
 {
   bool success = false;
   StorageKey key = std::make_pair(_id, _type);
@@ -315,7 +330,7 @@ bool EntityComponentDatabase::EntityComponent(EntityId _id,
     ComponentAPI &_api) const
 {
   bool success = false;
-  ComponentType type = _api.ComponentType();
+  gazebo::ecs::ComponentType type = _api.ComponentType();
   StorageKey key = std::make_pair(_id, type);
   if (this->dataPtr->componentIndices.find(key) !=
       this->dataPtr->componentIndices.end() &&
@@ -337,7 +352,7 @@ bool EntityComponentDatabase::EntityComponentMutable(EntityId _id,
     ComponentAPI &_api)
 {
   bool success = false;
-  ComponentType type = _api.ComponentType();
+  gazebo::ecs::ComponentType type = _api.ComponentType();
   StorageKey key = std::make_pair(_id, type);
   auto compIter = this->dataPtr->componentIndices.find(key);
   if (compIter != this->dataPtr->componentIndices.end() &&
@@ -371,7 +386,7 @@ bool EntityComponentDatabase::EntityComponentMutable(EntityId _id,
 
 /////////////////////////////////////////////////
 bool EntityComponentDatabasePrivate::EntityMatches(EntityId _id,
-    const std::set<ComponentType> &_types) const
+    const std::set<gazebo::ecs::ComponentType> &_types) const
 {
   bool found = true;
   for (auto const &type : _types)
@@ -429,7 +444,7 @@ const EntityQuery &EntityComponentDatabase::Query(
 
 /////////////////////////////////////////////////
 Difference EntityComponentDatabase::IsDifferent(EntityId _id,
-    ComponentType _type) const
+    gazebo::ecs::ComponentType _type) const
 {
   Difference d = NO_DIFFERENCE;
   StorageKey key = std::make_pair(_id, _type);

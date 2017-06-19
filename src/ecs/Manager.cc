@@ -326,7 +326,8 @@ std::set<gazebo::ecs::EntityId> Manager::QueryEntities(
   EntityQuery q;
   for (const std::string compName : _components)
   {
-    q.AddComponent(compName);
+    ComponentType t = this->dataPtr->database.ComponentType(compName);
+    q.AddComponent(t);
   }
 
   this->dataPtr->database.InstantQuery(q);

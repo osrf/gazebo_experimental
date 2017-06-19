@@ -78,6 +78,10 @@ namespace gazebo
       /// \brief Get an Entity instance by Id
       public: ::gazebo::ecs::Entity &Entity(EntityId _id) const;
 
+      /// \brief get component type by component name
+      public: gazebo::ecs::ComponentType ComponentType(const
+                  std::string &name) const;
+
       /// \brief Add a ComponentFactory.
       /// \description Calling this method enables the database to store a new
       ///              type of component.
@@ -92,7 +96,8 @@ namespace gazebo
 
       /// \brief remove a component from an entity
       /// \returns true if the entity had the component and it is now removed
-      public: bool RemoveComponent(EntityId _id, ComponentType _type);
+      public: bool RemoveComponent(EntityId _id,
+                  gazebo::ecs::ComponentType _type);
 
       /// \brief Get a component that's on an entity for reading only
       /// \param[in] _id The entity whose component is to be read
@@ -107,7 +112,8 @@ namespace gazebo
       public: bool EntityComponentMutable(EntityId _id, ComponentAPI &_api);
 
       /// \brief Test if a component changed last timestep
-      public: Difference IsDifferent(EntityId _id, ComponentType _type) const;
+      public: Difference IsDifferent(EntityId _id,
+                  gazebo::ecs::ComponentType _type) const;
 
       /// \brief Test hook for instantaneous query results
       public: void InstantQuery(EntityQuery &_query);
