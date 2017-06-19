@@ -189,6 +189,7 @@ def populate_template(template, **kwargs):
     return populated
 
 
+tmpl_factory_hh = get_template("Factory.hh.in")
 tmpl_factory_cc = get_template("Factory.cc.in")
 tmpl_api_hh = get_template("Api.hh.in")
 tmpl_api_cc = get_template("Api.cc.in")
@@ -569,7 +570,7 @@ def generate_storage_header(dependency, msg):
                              include_guard=include_guard)
 
 
-def generate_factory_cc(package, component_name):
+def generate_factory_files(package, component_name):
     """Generates cc file with factory class
     @param package string dot delimited
     @param component_name string name of component
@@ -578,10 +579,19 @@ def generate_factory_cc(package, component_name):
     (ns_indent, full_namespace,
      ns_begin, ns_end) = generate_namespace(package)
 
-    return populate_template(
+    include_guard = "_".join(package.split("."))
+    include_guard = "_".join([include_guard, component_name]).upper()
+
+    factory_hh = populate_template(
+            tmpl_factory_hh, component_name=component_name,
+            full_namespace=full_namespace, ns_begin=ns_begin, ns_end=ns_end,
+            ns_indent=ns_indent, include_guard=include_guard)
+
+    factory_cc = populate_template(
             tmpl_factory_cc, component_name=component_name,
             full_namespace=full_namespace, ns_begin=ns_begin, ns_end=ns_end,
             ns_indent=ns_indent)
+    return factory_hh, factory_cc
 
 
 def gather_message_info(package, message_descriptor):
@@ -676,7 +686,8 @@ def generate_code(request, response):
         api_header, api_source, storage_header = generate_message_files(
                 proto_file.dependency, proto_file.package, message_descriptor)
 
-        factory_cc = generate_factory_cc(proto_file.package, component_name)
+        factory_hh, factory_cc = generate_factory_files(proto_file.package,
+                                                        component_name)
 
         base_filename = proto_file.name.split(".")[0]
 
@@ -691,6 +702,10 @@ def generate_code(request, response):
         storage_hh_file = response.file.add()
         storage_hh_file.name = base_filename + ".storage.hh"
         storage_hh_file.content = storage_header
+
+        factory_cc_file = response.file.add()
+        factory_cc_file.name = base_filename + ".factory.hh"
+        factory_cc_file.content = factory_hh
 
         factory_cc_file = response.file.add()
         factory_cc_file.name = base_filename + ".factory.cc"

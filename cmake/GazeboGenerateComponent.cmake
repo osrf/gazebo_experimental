@@ -17,6 +17,7 @@ MACRO (GAZEBO_GENERATE_COMPONENT _protobuf)
   set(GAZEBO_GENERATE_COMPONENT_HEADERS
     ${CMAKE_CURRENT_BINARY_DIR}/${rel_dir}/${comp_name}.api.hh
     ${CMAKE_CURRENT_BINARY_DIR}/${rel_dir}/${comp_name}.storage.hh
+    ${CMAKE_CURRENT_BINARY_DIR}/${rel_dir}/${comp_name}.factory.hh
     )
   set(gen_cc
     ${CMAKE_CURRENT_BINARY_DIR}/${rel_dir}/${comp_name}.api.cc
