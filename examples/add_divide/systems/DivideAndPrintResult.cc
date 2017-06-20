@@ -17,7 +17,7 @@
 #include <iostream>
 #include <ignition/common/PluginMacros.hh>
 
-#include "components/Fraction.hh"
+#include "components/Fraction.api.hh"
 #include "gazebo/ecs/Manager.hh"
 #include "systems/DivideAndPrintResult.hh"
 
@@ -30,8 +30,8 @@ void DivideAndPrintResult::Init(ecs::QueryRegistrar &_registrar)
   ecs::EntityQuery query;
 
   // Add components which are required
-  if (!query.AddComponent("gazebo::components::Fraction"))
-    std::cerr << "Undefined component[gazebo::components::Fraction]\n";
+  if (!query.AddComponent<components::Fraction>())
+    std::cerr << "Undefined component[components::Fraction]\n";
 
   _registrar.Register(query,
       std::bind(&DivideAndPrintResult::Update, this, std::placeholders::_1));
@@ -45,10 +45,10 @@ void DivideAndPrintResult::Update(const ecs::EntityQuery &_result)
   for (auto const &entityId : _result.EntityIds())
   {
     auto &entity = mgr.Entity(entityId);
-    auto fraction = entity.Component<gazebo::components::Fraction>();
+    auto fraction = entity.Component<components::Fraction>();
 
     std::cout << "Dividing " << entityId << ":" <<
-      fraction->numerator / fraction->denominator << std::endl;
+      fraction.Numerator() / fraction.Denominator() << std::endl;
   }
 }
 

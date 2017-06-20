@@ -23,6 +23,11 @@
 
 #include "components/Fraction.api.hh"
 #include "components/Triplet.api.hh"
+
+// Factory includes are normally unnecessary/unavailable
+#include "components/Fraction.factory.hh"
+#include "components/Triplet.factory.hh"
+
 #include "gazebo/ecs/Manager.hh"
 
 #include "systems/DivideAndPrintResult.hh"
@@ -34,6 +39,11 @@ int main(int argc, char **argv)
   // Something to deal with loading plugins
   ignition::common::PluginLoader pm;
 
+  // Normally component factories are loaded as plugins,
+  // but this example has to link against them anyways to create components
+  manager.LoadComponentFactory<components::FractionFactory>();
+  manager.LoadComponentFactory<components::TripletFactory>();
+
   // First way to load a system: not using a plugin. Useful for testing
   manager.LoadSystem<gazebo::systems::DivideAndPrintResult>("DivideAndPrint");
 
@@ -41,7 +51,11 @@ int main(int argc, char **argv)
   ignition::common::SystemPaths sp;
   sp.SetPluginPathEnv("GAZEBO_PLUGIN_PATH");
   std::string pathToLib = sp.FindSharedLibrary("AddAndPrintResult");
-  std::string pluginName = pm.LoadLibrary(pathToLib);
+  std::string pluginName;
+  if (pathToLib.empty())
+    std::cerr << "Failed to find AddAndPrintResult library" << std::endl;
+  else
+    pluginName = pm.LoadLibrary(pathToLib);
 
   if (pluginName.size())
   {
@@ -67,7 +81,7 @@ int main(int argc, char **argv)
 
     if (e % 2 == 0)
     {
-      auto *fraction = entity.AddComponent<gazebo::components::Fraction>();
+      auto fraction = entity.AddComponent<components::Fraction>();
       if (fraction)
       {
         fraction.Numerator() = 100.0f + i;
@@ -82,7 +96,7 @@ int main(int argc, char **argv)
     if (e % 3 == 0)
     {
       // Another method of adding a component to an entity
-      auto numbers = entity.AddComponent<gazebo::components::Triplet>();
+      auto numbers = entity.AddComponent<components::Triplet>();
       if (numbers)
       {
         numbers.First() = e;

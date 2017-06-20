@@ -17,7 +17,7 @@
 #include <iostream>
 #include <ignition/common/PluginMacros.hh>
 
-#include "components/Triplet.hh"
+#include "components/Triplet.api.hh"
 #include "gazebo/ecs/Manager.hh"
 #include "systems/AddAndPrintResult.hh"
 
@@ -30,8 +30,8 @@ void AddAndPrintResult::Init(ecs::QueryRegistrar &_registrar)
   ecs::EntityQuery query;
 
   // Add components which are required
-  if (!query.AddComponent("gazebo::components::Triplet"))
-    std::cerr << "Undefined component[gazebo::components::Triplet]\n";
+  if (!query.AddComponent<components::Triplet>())
+    std::cerr << "Undefined component[components::Triplet]\n";
 
   _registrar.Register(query,
       std::bind(&AddAndPrintResult::Update, this, std::placeholders::_1));
@@ -45,10 +45,10 @@ void AddAndPrintResult::Update(const ecs::EntityQuery &_query)
   for (auto const &entityId : _query.EntityIds())
   {
     auto &entity = mgr.Entity(entityId);
-    auto numbers = entity.Component<gazebo::components::Triplet>();
+    auto numbers = entity.Component<components::Triplet>();
 
     std::cout << "Adding " << entityId << ":" <<
-      numbers->first + numbers->second + numbers->third << std::endl;
+      numbers.First() + numbers.Second() + numbers.Third() << std::endl;
   }
 }
 
