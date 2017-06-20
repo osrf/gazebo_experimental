@@ -21,7 +21,6 @@
 #include "componentizers/CZCollidable.hh"
 #include "gazebo/components/Collidable.api.hh"
 #include "gazebo/components/Collidable.factory.hh"
-#include "gazebo/ecs/Component.hh"
 #include "gazebo/ecs/Manager.hh"
 
 

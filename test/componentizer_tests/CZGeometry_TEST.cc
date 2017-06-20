@@ -19,32 +19,21 @@
 #define GAZEBO_TESTHOOK 1
 
 #include "componentizers/CZGeometry.hh"
-#include "gazebo/components/Geometry.hh"
-#include "gazebo/ecs/ComponentFactory.hh"
+#include "gazebo/components/Geometry.api.hh"
+#include "gazebo/components/Geometry.factory.hh"
 #include "gazebo/ecs/Manager.hh"
 
 
 namespace gzecs = gazebo::ecs;
 namespace gzcz = gazebo::componentizers;
-
-
-/////////////////////////////////////////////////
-TEST(CZGeometry, RegisterComponent)
-{
-  gzcz::CZGeometry cz;
-  cz.Init();
-  gzecs::ComponentType t =
-    gzecs::ComponentFactory::Type<gazebo::components::Geometry>();
-  ASSERT_NE(gzecs::NO_COMPONENT, t);
-  gzecs::ComponentTypeInfo info = gzecs::ComponentFactory::TypeInfo(t);
-  EXPECT_EQ("gazebo::components::Geometry", info.name);
-}
+namespace gzc = gazebo::components;
 
 
 /////////////////////////////////////////////////
 TEST(CZGeometry, SdfNoGeometry)
 {
   gzecs::Manager mgr;
+  mgr.LoadComponentFactory<gzc::GeometryFactory>();
   mgr.LoadComponentizer<gzcz::CZGeometry>();
 
   std::string world = " \
@@ -69,6 +58,7 @@ TEST(CZGeometry, SdfNoGeometry)
 TEST(CZGeometry, SdfSphereGeometry)
 {
   gzecs::Manager mgr;
+  mgr.LoadComponentFactory<gzc::GeometryFactory>();
   mgr.LoadComponentizer<gzcz::CZGeometry>();
 
   std::string world = " \
@@ -99,14 +89,15 @@ TEST(CZGeometry, SdfSphereGeometry)
   ASSERT_EQ(1, entities.size());
   gzecs::Entity &e = mgr.Entity(*(entities.begin()));
   auto comp = e.Component<gazebo::components::Geometry>();
-  EXPECT_EQ(gazebo::components::Geometry::SPHERE, comp->type);
-  EXPECT_DOUBLE_EQ(0.5, comp->sphere.radius);
+  EXPECT_TRUE(comp.Shape().HasSphere());
+  EXPECT_DOUBLE_EQ(0.5, comp.Shape().Sphere().Radius());
 }
 
 /////////////////////////////////////////////////
 TEST(CZGeometry, SdfBoxGeometry)
 {
   gzecs::Manager mgr;
+  mgr.LoadComponentFactory<gzc::GeometryFactory>();
   mgr.LoadComponentizer<gzcz::CZGeometry>();
 
   std::string world = " \
@@ -137,16 +128,17 @@ TEST(CZGeometry, SdfBoxGeometry)
   ASSERT_EQ(1, entities.size());
   gzecs::Entity &e = mgr.Entity(*(entities.begin()));
   auto comp = e.Component<gazebo::components::Geometry>();
-  EXPECT_EQ(gazebo::components::Geometry::BOX, comp->type);
-  EXPECT_DOUBLE_EQ(0.5, comp->box.size.X());
-  EXPECT_DOUBLE_EQ(0.6, comp->box.size.Y());
-  EXPECT_DOUBLE_EQ(0.7, comp->box.size.Z());
+  EXPECT_TRUE(comp.Shape().HasBox());
+  EXPECT_DOUBLE_EQ(0.5, comp.Shape().Box().X());
+  EXPECT_DOUBLE_EQ(0.6, comp.Shape().Box().Y());
+  EXPECT_DOUBLE_EQ(0.7, comp.Shape().Box().Z());
 }
 
 /////////////////////////////////////////////////
 TEST(CZGeometry, SdfCylinderGeometry)
 {
   gzecs::Manager mgr;
+  mgr.LoadComponentFactory<gzc::GeometryFactory>();
   mgr.LoadComponentizer<gzcz::CZGeometry>();
 
   std::string world = " \
@@ -178,9 +170,9 @@ TEST(CZGeometry, SdfCylinderGeometry)
   ASSERT_EQ(1, entities.size());
   gzecs::Entity &e = mgr.Entity(*(entities.begin()));
   auto comp = e.Component<gazebo::components::Geometry>();
-  EXPECT_EQ(gazebo::components::Geometry::CYLINDER, comp->type);
-  EXPECT_DOUBLE_EQ(0.54321, comp->cylinder.radius);
-  EXPECT_DOUBLE_EQ(1.234, comp->cylinder.length);
+  EXPECT_TRUE(comp.Shape().HasCylinder());
+  EXPECT_DOUBLE_EQ(0.54321, comp.Shape().Cylinder().Radius());
+  EXPECT_DOUBLE_EQ(1.234, comp.Shape().Cylinder().Length());
 }
 
 //////////////////////////////////////////////////
