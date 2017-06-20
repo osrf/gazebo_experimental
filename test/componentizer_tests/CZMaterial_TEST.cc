@@ -19,32 +19,21 @@
 #define GAZEBO_TESTHOOK 1
 
 #include "componentizers/CZMaterial.hh"
-#include "gazebo/components/Material.hh"
-#include "gazebo/ecs/ComponentFactory.hh"
+#include "gazebo/components/Material.api.hh"
+#include "gazebo/components/Material.factory.hh"
 #include "gazebo/ecs/Manager.hh"
 
 
 namespace gzecs = gazebo::ecs;
 namespace gzcz = gazebo::componentizers;
-
-
-/////////////////////////////////////////////////
-TEST(CZMaterial, RegisterComponent)
-{
-  gzcz::CZMaterial cz;
-  cz.Init();
-  gzecs::ComponentType t =
-    gzecs::ComponentFactory::Type<gazebo::components::Material>();
-  ASSERT_NE(gzecs::NO_COMPONENT, t);
-  gzecs::ComponentTypeInfo info = gzecs::ComponentFactory::TypeInfo(t);
-  EXPECT_EQ("gazebo::components::Material", info.name);
-}
+namespace gzc = gazebo::components;
 
 
 /////////////////////////////////////////////////
 TEST(CZMaterial, NoMaterial)
 {
   gzecs::Manager mgr;
+  mgr.LoadComponentFactory<gzc::MaterialFactory>();
   mgr.LoadComponentizer<gzcz::CZMaterial>();
 
   std::string world = " \
@@ -69,6 +58,7 @@ TEST(CZMaterial, NoMaterial)
 TEST(CZMaterial, VisualWithMaterial)
 {
   gzecs::Manager mgr;
+  mgr.LoadComponentFactory<gzc::MaterialFactory>();
   mgr.LoadComponentizer<gzcz::CZMaterial>();
 
   std::string world = " \
@@ -97,11 +87,11 @@ TEST(CZMaterial, VisualWithMaterial)
   ASSERT_EQ(1, entities.size());
   gzecs::Entity &e = mgr.Entity(*(entities.begin()));
   auto comp = e.Component<gazebo::components::Material>();
-  EXPECT_EQ(gazebo::components::Material::COLOR, comp->type);
-  EXPECT_FLOAT_EQ(0.1, comp->color.red);
-  EXPECT_FLOAT_EQ(0.2, comp->color.green);
-  EXPECT_FLOAT_EQ(0.3, comp->color.blue);
-  EXPECT_FLOAT_EQ(1.0, comp->color.alpha);
+  EXPECT_TRUE(comp.Appearance().HasColor());
+  EXPECT_FLOAT_EQ(0.1, comp.Appearance().Color().Red());
+  EXPECT_FLOAT_EQ(0.2, comp.Appearance().Color().Green());
+  EXPECT_FLOAT_EQ(0.3, comp.Appearance().Color().Blue());
+  EXPECT_FLOAT_EQ(1.0, comp.Appearance().Color().Alpha());
 }
 
 //////////////////////////////////////////////////
