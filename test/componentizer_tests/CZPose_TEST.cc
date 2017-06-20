@@ -88,7 +88,7 @@ TEST(CZPose, ModelWithPose)
   EXPECT_DOUBLE_EQ(2.2, comp.Origin().Pos().Y());
   EXPECT_DOUBLE_EQ(3.3, comp.Origin().Pos().Z());
 
-  auto eulerAngles = comp.Origin.Rot().Euler();
+  auto eulerAngles = comp.Origin().Rot().Euler();
   EXPECT_NEAR(0.1, eulerAngles.X(), allowedAngularError);
   EXPECT_NEAR(1.2, eulerAngles.Y(), allowedAngularError);
   EXPECT_NEAR(2.3, eulerAngles.Z(), allowedAngularError);
