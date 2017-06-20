@@ -53,3 +53,7 @@ target_link_libraries(CZ_CZCollidable_TEST
 target_link_libraries(CZ_CZGeometry_TEST
   gazeboComponentGeometry
 )
+
+target_link_libraries(CZ_CZInertial_TEST
+  gazeboComponentInertial
+)

@@ -19,32 +19,21 @@
 #define GAZEBO_TESTHOOK 1
 
 #include "componentizers/CZInertial.hh"
-#include "gazebo/components/Inertial.hh"
-#include "gazebo/ecs/ComponentFactory.hh"
+#include "gazebo/components/Inertial.api.hh"
+#include "gazebo/components/Inertial.factory.hh"
 #include "gazebo/ecs/Manager.hh"
 
 
 namespace gzecs = gazebo::ecs;
 namespace gzcz = gazebo::componentizers;
-
-
-/////////////////////////////////////////////////
-TEST(CZInertial, RegisterComponent)
-{
-  gzcz::CZInertial cz;
-  cz.Init();
-  gzecs::ComponentType t =
-    gzecs::ComponentFactory::Type<gazebo::components::Inertial>();
-  ASSERT_NE(gzecs::NO_COMPONENT, t);
-  gzecs::ComponentTypeInfo info = gzecs::ComponentFactory::TypeInfo(t);
-  EXPECT_EQ("gazebo::components::Inertial", info.name);
-}
+namespace gzc = gazebo::components;
 
 
 /////////////////////////////////////////////////
 TEST(CZInertial, NoInertial)
 {
   gzecs::Manager mgr;
+  mgr.LoadComponentFactory<gzc::InertialFactory>();
   mgr.LoadComponentizer<gzcz::CZInertial>();
 
   std::string world = " \
@@ -69,6 +58,7 @@ TEST(CZInertial, NoInertial)
 TEST(CZInertial, LinkWithInertial)
 {
   gzecs::Manager mgr;
+  mgr.LoadComponentFactory<gzc::InertialFactory>();
   mgr.LoadComponentizer<gzcz::CZInertial>();
 
   std::string world = " \
@@ -103,16 +93,16 @@ TEST(CZInertial, LinkWithInertial)
   ASSERT_EQ(1, entities.size());
   gzecs::Entity &e = mgr.Entity(*(entities.begin()));
   auto comp = e.Component<gazebo::components::Inertial>();
-  EXPECT_DOUBLE_EQ(3.14, comp->mass);
-  EXPECT_DOUBLE_EQ(1.23, comp->inertia(0, 0));
-  EXPECT_DOUBLE_EQ(2.34, comp->inertia(1, 1));
-  EXPECT_DOUBLE_EQ(3.45, comp->inertia(2, 2));
-  EXPECT_DOUBLE_EQ(4.56, comp->inertia(0, 1));
-  EXPECT_DOUBLE_EQ(4.56, comp->inertia(1, 0));
-  EXPECT_DOUBLE_EQ(5.67, comp->inertia(0, 2));
-  EXPECT_DOUBLE_EQ(5.67, comp->inertia(2, 0));
-  EXPECT_DOUBLE_EQ(6.78, comp->inertia(1, 2));
-  EXPECT_DOUBLE_EQ(6.78, comp->inertia(2, 1));
+  EXPECT_DOUBLE_EQ(3.14, comp.Mass());
+  EXPECT_DOUBLE_EQ(1.23, comp.Inertia()(0, 0));
+  EXPECT_DOUBLE_EQ(2.34, comp.Inertia()(1, 1));
+  EXPECT_DOUBLE_EQ(3.45, comp.Inertia()(2, 2));
+  EXPECT_DOUBLE_EQ(4.56, comp.Inertia()(0, 1));
+  EXPECT_DOUBLE_EQ(4.56, comp.Inertia()(1, 0));
+  EXPECT_DOUBLE_EQ(5.67, comp.Inertia()(0, 2));
+  EXPECT_DOUBLE_EQ(5.67, comp.Inertia()(2, 0));
+  EXPECT_DOUBLE_EQ(6.78, comp.Inertia()(1, 2));
+  EXPECT_DOUBLE_EQ(6.78, comp.Inertia()(2, 1));
 }
 
 //////////////////////////////////////////////////
