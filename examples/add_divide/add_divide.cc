@@ -21,9 +21,8 @@
 #include <ignition/common/PluginLoader.hh>
 #include <ignition/common/SystemPaths.hh>
 
-#include "components/Fraction.hh"
-#include "components/Triplet.hh"
-#include "gazebo/ecs/ComponentFactory.hh"
+#include "components/Fraction.api.hh"
+#include "components/Triplet.api.hh"
 #include "gazebo/ecs/Manager.hh"
 
 #include "systems/DivideAndPrintResult.hh"
@@ -34,12 +33,6 @@ int main(int argc, char **argv)
 
   // Something to deal with loading plugins
   ignition::common::PluginLoader pm;
-
-  // TODO Componentizer to register components
-  gazebo::ecs::ComponentFactory::Register<gazebo::components::Triplet>(
-      "gazebo::components::Triplet");
-  gazebo::ecs::ComponentFactory::Register<gazebo::components::Fraction>(
-      "gazebo::components::Fraction");
 
   // First way to load a system: not using a plugin. Useful for testing
   manager.LoadSystem<gazebo::systems::DivideAndPrintResult>("DivideAndPrint");
@@ -72,15 +65,13 @@ int main(int argc, char **argv)
     // Convenience wrapper for working with an Id
     gazebo::ecs::Entity &entity = manager.Entity(e);
 
-    // TODO manager.CreateEntity<ComponentA, ComponentB, ...>();
-
     if (e % 2 == 0)
     {
       auto *fraction = entity.AddComponent<gazebo::components::Fraction>();
-      if (nullptr != fraction)
+      if (fraction)
       {
-        fraction->numerator = 100.0f + i;
-        fraction->denominator = 1.0f + i;
+        fraction.Numerator() = 100.0f + i;
+        fraction.Denominator() = 1.0f + i;
       }
       else
       {
@@ -92,11 +83,11 @@ int main(int argc, char **argv)
     {
       // Another method of adding a component to an entity
       auto numbers = entity.AddComponent<gazebo::components::Triplet>();
-      if (nullptr != numbers)
+      if (numbers)
       {
-        numbers->first = e;
-        numbers->second = i;
-        numbers->third = 3;
+        numbers.First() = e;
+        numbers.Second() = i;
+        numbers.Third() = 3;
       }
       else
       {
