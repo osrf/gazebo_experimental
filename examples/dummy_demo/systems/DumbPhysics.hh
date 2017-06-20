@@ -18,8 +18,11 @@
 #ifndef GAZEBO_PRIVATE_SYSTEMS_DUMBPHYSICS_HH_
 #define GAZEBO_PRIVATE_SYSTEMS_DUMBPHYSICS_HH_
 
-#include "gazebo/components/WorldPose.hh"
-#include "gazebo/components/WorldVelocity.hh"
+#include "gazebo/components/Inertial.api.hh"
+#include "gazebo/components/Geometry.api.hh"
+#include "gazebo/components/Pose.api.hh"
+#include "gazebo/components/WorldVelocity.api.hh"
+
 #include "gazebo/ecs/Entity.hh"
 #include "gazebo/ecs/System.hh"
 #include "gazebo/util/DiagnosticsManager.hh"
@@ -56,53 +59,53 @@ namespace gazebo
       /// \param[in] _body Internal representation of a body
       /// \param[in] _component ECS sphere geometry component
       private: void SyncInternalGeom(dumb_physics::Body *_body,
-                   const components::Geometry *_component);
+                   const components::Geometry &_component);
 
       /// \brief Sets internal representation to match component
       /// \param[in] _body Internal representation of a body
       /// \param[in] _component ECS inertial component. Only the mass is used
       /// by this system.
       private: void SyncInternalMass(dumb_physics::Body *_body,
-                   const components::Inertial *_component);
+                   const components::Inertial &_component);
 
       /// \brief Sets internal representation to match component
       /// \param[in] _body Internal representation of a body
       /// \param[in] _component ECS world velocity component. Both lienar and
       /// angular are handled.
       private: void SyncInternalVelocity(dumb_physics::Body *_body,
-                   const components::WorldVelocity *_component);
+                   const components::WorldVelocity &_component);
 
       /// \brief Sets internal representation to match component
       /// \param[in] _body Internal representation of a body
       /// \param[in] _component ECS world pose component
       private: void SyncInternalPose(dumb_physics::Body *_body,
-                   const components::WorldPose *_component);
+                   const components::Pose &_component);
 
       /// \brief Sets component to match internal representation
       /// \param[in] _body External representation of a body
       /// \param[in] _component ECS sphere geometry component
       private: void SyncExternalGeom(const dumb_physics::Body *_body,
-                   components::Geometry *_component);
+                   components::Geometry &_component);
 
       /// \brief Sets component to match internal representation
       /// \param[in] _body External representation of a body
       /// \param[in] _component ECS inertial component. Only the mass is used
       /// by this system.
       private: void SyncExternalMass(const dumb_physics::Body *_body,
-                   components::Inertial *_component);
+                   components::Inertial &_component);
 
       /// \brief Sets component to match internal representation
       /// \param[in] _body External representation of a body
       /// \param[in] _component ECS world velocity component. Both lienar and
       /// angular are handled.
       private: void SyncExternalVelocity(const dumb_physics::Body *_body,
-                   components::WorldVelocity *_component);
+                   components::WorldVelocity &_component);
 
       /// \brief Sets component to match internal representation
       /// \param[in] _body External representation of a body
       /// \param[in] _component ECS world pose component
       private: void SyncExternalPose(const dumb_physics::Body *_body,
-                   components::WorldPose *_component);
+                   components::Pose &_component);
 
       /// \brief Adds a body to the world
       private: dumb_physics::Body *AddBody(const ecs::EntityId _id,

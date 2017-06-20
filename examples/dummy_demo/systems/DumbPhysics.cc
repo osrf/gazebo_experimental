@@ -23,12 +23,9 @@
 #include "dumb_physics/World.hh"
 
 // Internal to Gazebo
-#include "gazebo/components/Inertial.hh"
-#include "gazebo/components/Geometry.hh"
-#include "gazebo/components/WorldPose.hh"
-#include "gazebo/components/WorldVelocity.hh"
 #include "gazebo/ecs/Manager.hh"
 #include "gazebo/ecs/EntityQuery.hh"
+
 #include "DumbPhysics.hh"
 
 using namespace gazebo;
@@ -41,20 +38,16 @@ void DumbPhysics::Init(ecs::QueryRegistrar &_registrar)
 
   this->diagnostics.Init("DumbPhysics");
 
-  // TODO how will systems get info that should apply to everything like
-  //      gravity and solver parameters?
   this->world.Gravity({0.0, 0.0, 0.0});
   this->world.SetSize({10.0, 10.0, 10.0});
 
-  // Add required components
-
   // Entities must have a sphere geometry
-  if (!query.AddComponent("gazebo::components::Geometry"))
+  if (!query.AddComponent<gazebo::components::Geometry>())
     std::cerr << "Undefined component[gazebo::components::Geometry]\n";
 
   // Entities must have a world pose
-  if (!query.AddComponent("gazebo::components::WorldPose"))
-    std::cerr << "Undefined component[gazebo::components::WorldPose]\n";
+  if (!query.AddComponent<gazebo::components::Pose>())
+    std::cerr << "Undefined component[gazebo::components::Pose]\n";
 
   // Note that we add only the required components. This system will also make
   // use of the Mass and WorldVelocity components if present, but these are
@@ -115,13 +108,13 @@ void DumbPhysics::Update(const ecs::EntityQuery &_result)
     }
 
     // Sync other properties in case they've been changed by other systems
-    auto const pose = entity.Component<components::WorldPose>();
+    auto const pose = entity.Component<components::Pose>();
     if (pose)
       this->SyncInternalPose(body, pose);
     else
     {
       std::cerr << "Entity [" << entityId
-                << "] missing required component WorldPose. "
+                << "] missing required component Pose. "
                 << "Removing it from the world." << std::endl;
       this->world.RemoveBody(body->Id());
     }
@@ -163,7 +156,7 @@ void DumbPhysics::Update(const ecs::EntityQuery &_result)
 
     auto &entity = mgr.Entity(entityId);
 
-    auto worldPose = entity.ComponentMutable<components::WorldPose>();
+    auto worldPose = entity.ComponentMutable<components::Pose>();
     this->SyncExternalPose(body, worldPose);
 
     auto worldVel = entity.ComponentMutable<components::WorldVelocity>();
@@ -176,69 +169,68 @@ void DumbPhysics::Update(const ecs::EntityQuery &_result)
 
 /////////////////////////////////////////////////
 void DumbPhysics::SyncInternalGeom(dumb_physics::Body *_body,
-    const components::Geometry *_component)
+    const components::Geometry &_component)
 {
-  if (_component->type != components::Geometry::SPHERE)
+  if (!_component.Shape().HasSphere())
   {
-    std::cerr << "DumbPhysics only supports spheres, failed to sync geometry "
-              << "type [" << _component->type << "]" << std::endl;
+    std::cerr << "DumbPhysics only supports spheres" << std::endl;
     return;
   }
 
-  _body->Radius(_component->sphere.radius);
+  _body->Radius(_component.Shape().Sphere().Radius());
 }
 
 /////////////////////////////////////////////////
 void DumbPhysics::SyncInternalMass(dumb_physics::Body *_body,
-    const components::Inertial *_component)
+    const components::Inertial &_component)
 {
-  _body->Mass(_component->mass);
+  _body->Mass(_component.Mass());
 }
 
 /////////////////////////////////////////////////
 void DumbPhysics::SyncInternalVelocity(dumb_physics::Body *_body,
-    const components::WorldVelocity *_component)
+    const components::WorldVelocity &_component)
 {
-  _body->LinearVelocity(_component->linear);
-  _body->AngularVelocity(_component->angular);
+  _body->LinearVelocity(_component.Linear());
+  _body->AngularVelocity(_component.Angular());
 }
 
 /////////////////////////////////////////////////
 void DumbPhysics::SyncInternalPose(dumb_physics::Body *_body,
-    const components::WorldPose *_component)
+    const components::Pose &_component)
 {
-  _body->Position(_component->position);
-  _body->Rotation(_component->rotation);
+  _body->Position(_component.Origin().Pos());
+  _body->Rotation(_component.Origin().Rot());
 }
 
 /////////////////////////////////////////////////
 void DumbPhysics::SyncExternalGeom(const dumb_physics::Body *_body,
-    components::Geometry *_component)
+    components::Geometry &_component)
 {
-  _component->sphere.radius = _body->Radius();
+  _component.Shape().Sphere().Radius() = _body->Radius();
 }
 
 /////////////////////////////////////////////////
 void DumbPhysics::SyncExternalMass(const dumb_physics::Body *_body,
-    components::Inertial *_component)
+    components::Inertial &_component)
 {
-  _component->mass = _body->Mass();
+  _component.Mass() = _body->Mass();
 }
 
 /////////////////////////////////////////////////
 void DumbPhysics::SyncExternalVelocity(const dumb_physics::Body *_body,
-    components::WorldVelocity *_component)
+    components::WorldVelocity &_component)
 {
-  _component->linear = _body->LinearVelocity();
-  _component->angular = _body->AngularVelocity();
+  _component.Linear() = _body->LinearVelocity();
+  _component.Angular() = _body->AngularVelocity();
 }
 
 /////////////////////////////////////////////////
 void DumbPhysics::SyncExternalPose(const dumb_physics::Body *_body,
-    components::WorldPose *_component)
+    components::Pose &_component)
 {
-  _component->position = _body->Position();
-  _component->rotation = _body->Rotation();
+  _component.Origin().Pos() = _body->Position();
+  _component.Origin().Rot() = _body->Rotation();
 }
 
 /////////////////////////////////////////////////
@@ -251,7 +243,7 @@ dumb_physics::Body *DumbPhysics::AddBody(const ecs::EntityId _id,
 
   // Required components
   auto geom = _entity.Component<components::Geometry>();
-  auto worldPose = _entity.Component<components::WorldPose>();
+  auto worldPose = _entity.Component<components::Pose>();
 
   if (!geom || !worldPose)
   {

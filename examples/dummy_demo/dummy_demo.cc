@@ -26,13 +26,13 @@
 #include <ignition/common/Time.hh>
 #include <ignition/math/Rand.hh>
 
-#include "gazebo/components/Inertial.hh"
-#include "gazebo/components/Geometry.hh"
-#include "gazebo/components/Material.hh"
-#include "gazebo/components/WorldPose.hh"
-#include "gazebo/components/WorldVelocity.hh"
-#include "gazebo/ecs/ComponentFactory.hh"
+#include "gazebo/components/Inertial.api.hh"
+#include "gazebo/components/Geometry.api.hh"
+#include "gazebo/components/Material.api.hh"
+#include "gazebo/components/Pose.api.hh"
+#include "gazebo/components/WorldVelocity.api.hh"
 #include "gazebo/ecs/Manager.hh"
+
 
 // Example of an application with 1 system:
 // * Physics
@@ -41,44 +41,65 @@ int main(int argc, char **argv)
   // Central ECS manager
   gazebo::ecs::Manager manager;
 
-  // TODO Componentizer to register components
-
-  // Register component types
-  gazebo::ecs::ComponentFactory::Register<gazebo::components::Inertial>(
-      "gazebo::components::Inertial");
-  gazebo::ecs::ComponentFactory::Register<gazebo::components::Geometry>(
-      "gazebo::components::Geometry");
-  gazebo::ecs::ComponentFactory::Register<gazebo::components::WorldPose>(
-      "gazebo::components::WorldPose");
-  gazebo::ecs::ComponentFactory::Register<gazebo::components::WorldVelocity>(
-      "gazebo::components::WorldVelocity");
-  gazebo::ecs::ComponentFactory::Register<gazebo::components::Material>(
-      "gazebo::components::Material");
-
   // Plugin loader (plugins are systems)
   ignition::common::PluginLoader pluginLoader;
   ignition::common::SystemPaths sp;
   sp.SetPluginPathEnv("GAZEBO_PLUGIN_PATH");
 
-  std::vector<std::string> libs = {
+  std::vector<std::string> componentLibs = {
+    "gazeboComponentInertial",
+    "gazeboComponentGeometry",
+    "gazeboComponentMaterial",
+    "gazeboComponentPose",
+    "gazeboComponentWorldVelocity",
+  };
+
+  for (auto const &libName : componentLibs)
+  {
+    std::string pathToLibrary = sp.FindSharedLibrary(libName);
+    if (pathToLibrary.empty())
+      std::cerr << "Unable to find " << libName << std::endl;
+    else
+    {
+      std::string pluginName = pluginLoader.LoadLibrary(pathToLibrary);
+      if (pluginName.size())
+      {
+        std::unique_ptr<gazebo::ecs::ComponentFactory> cf;
+        cf = pluginLoader.Instantiate<gazebo::ecs::ComponentFactory>(
+            pluginName);
+        if (!manager.LoadComponentFactory(std::move(cf)))
+          std::cerr << "Failed to load " << pluginName << " from " << libName
+            << std::endl;
+      }
+      else
+        std::cerr << "Failed to load library " << libName << std::endl;
+    }
+  }
+
+  std::vector<std::string> systemLibs = {
     "DumbPhysicsPlugin",
     "DummyRenderingPlugin",
   };
 
-  for (auto const &libName : libs)
+  for (auto const &libName : systemLibs)
   {
     std::string pathToLibrary = sp.FindSharedLibrary(libName);
-    std::string pluginName = pluginLoader.LoadLibrary(pathToLibrary);
-    if (pluginName.size())
-    {
-      std::unique_ptr<gazebo::ecs::System> sys;
-      sys = pluginLoader.Instantiate<gazebo::ecs::System>(pluginName);
-      if (!manager.LoadSystem(pluginName, std::move(sys)))
-        std::cerr << "Failed to load " << pluginName << " from " << libName
-          << std::endl;
-    }
+    if (pathToLibrary.empty())
+      std::cerr << "Unable to find " << libName << std::endl;
     else
-      std::cerr << "Failed to load library " << libName << std::endl;
+    {
+      std::string pluginName = pluginLoader.LoadLibrary(pathToLibrary);
+      if (pluginName.size())
+      {
+        std::unique_ptr<gazebo::ecs::System> sys;
+        sys = pluginLoader.Instantiate<gazebo::ecs::System>(pluginName);
+        if (!manager.LoadSystem(pluginName, std::move(sys)))
+          std::cerr << "Failed to load " << pluginName << " from " << libName
+            << std::endl;
+      }
+      else
+        std::cerr << "Failed to load library " << libName << std::endl;
+    }
   }
 
   // Create 25 sphere entities
@@ -94,7 +115,7 @@ int main(int argc, char **argv)
     auto inertial = entity.AddComponent<gazebo::components::Inertial>();
     if (inertial)
     {
-      inertial->mass = ignition::math::Rand::DblUniform(0.1, 5.0);
+      inertial.Mass() = ignition::math::Rand::DblUniform(0.1, 5.0);
     }
     else
     {
@@ -106,8 +127,7 @@ int main(int argc, char **argv)
     auto geom = entity.AddComponent<gazebo::components::Geometry>();
     if (geom)
     {
-      geom->type = gazebo::components::Geometry::SPHERE;
-      geom->sphere.radius = ignition::math::Rand::DblUniform(0.1, 0.5);
+      geom.Shape().Sphere().Radius() = ignition::math::Rand::DblUniform(0.1, 0.5);
     }
     else
     {
@@ -115,13 +135,13 @@ int main(int argc, char **argv)
                 << std::endl;
     }
 
-    // World pose
-    auto pose = entity.AddComponent<gazebo::components::WorldPose>();
+    // Pose
+    auto pose = entity.AddComponent<gazebo::components::Pose>();
     if (pose)
     {
-      pose->position.X(ignition::math::Rand::DblUniform(-4.0, 4.0));
-      pose->position.Y(ignition::math::Rand::DblUniform(-4.0, 4.0));
-      pose->position.Z(ignition::math::Rand::DblUniform(-4.0, 4.0));
+      pose.Origin().Pos().X(ignition::math::Rand::DblUniform(-4.0, 4.0));
+      pose.Origin().Pos().Y(ignition::math::Rand::DblUniform(-4.0, 4.0));
+      pose.Origin().Pos().Z(ignition::math::Rand::DblUniform(-4.0, 4.0));
     }
     else
     {
@@ -133,9 +153,9 @@ int main(int argc, char **argv)
     auto vel = entity.AddComponent<gazebo::components::WorldVelocity>();
     if (vel)
     {
-      vel->linear.X(ignition::math::Rand::DblUniform(-1.0, 1.0));
-      vel->linear.Y(ignition::math::Rand::DblUniform(-1.0, 1.0));
-      vel->linear.Z(ignition::math::Rand::DblUniform(-1.0, 1.0));
+      vel.Linear().X(ignition::math::Rand::DblUniform(-1.0, 1.0));
+      vel.Linear().Y(ignition::math::Rand::DblUniform(-1.0, 1.0));
+      vel.Linear().Z(ignition::math::Rand::DblUniform(-1.0, 1.0));
     }
     else
     {
@@ -147,10 +167,12 @@ int main(int argc, char **argv)
     auto material = entity.AddComponent<gazebo::components::Material>();
     if (material)
     {
-      material->type = gazebo::components::Material::COLOR;
-      material->color.red = ignition::math::Rand::DblUniform(0.1, 1.0);
-      material->color.green = ignition::math::Rand::DblUniform(0.1, 1.0);
-      material->color.blue = ignition::math::Rand::DblUniform(0.1, 1.0);
+      material.Appearance().Color().Red() =
+        ignition::math::Rand::DblUniform(0.1, 1.0);
+      material.Appearance().Color().Green() =
+        ignition::math::Rand::DblUniform(0.1, 1.0);
+      material.Appearance().Color().Blue() =
+        ignition::math::Rand::DblUniform(0.1, 1.0);
     }
     else
     {

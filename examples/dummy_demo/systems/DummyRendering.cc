@@ -19,9 +19,9 @@
 
 #include "dummy_rendering/Object.hh"
 
-#include "gazebo/components/Geometry.hh"
-#include "gazebo/components/Material.hh"
-#include "gazebo/components/WorldPose.hh"
+#include "gazebo/components/Geometry.api.hh"
+#include "gazebo/components/Material.api.hh"
+#include "gazebo/components/Pose.api.hh"
 #include "gazebo/ecs/Entity.hh"
 #include "gazebo/ecs/Manager.hh"
 #include "gazebo/ecs/EntityQuery.hh"
@@ -36,18 +36,8 @@ void DummyRendering::Init(ecs::QueryRegistrar &_registrar)
 {
   ecs::EntityQuery query;
 
-  if (!query.AddComponent("gazebo::components::Geometry"))
-    std::cerr << "Undefined component[gazebo::components::Geometry]\n";
-  if (!query.AddComponent("gazebo::components::Material"))
-    std::cerr << "Undefined component[gazebo::components::Material]\n";
-  if (!query.AddComponent("gazebo::components::WorldPose"))
-    std::cerr << "Undefined component[gazebo::components::WorldPose]\n";
-
-
   _registrar.Register(query, std::bind(&DummyRendering::Update, this,
         std::placeholders::_1));
-
-  // TODO get camera information with a second query
 
   std::string topic = "/rendering/image";
   this->pub = this->node.Advertise<ignition::msgs::Image>(topic);
@@ -73,7 +63,7 @@ void DummyRendering::Update(const ecs::EntityQuery &_result)
     auto &entity = mgr.Entity(entityId);
     auto difference_material = entity.IsDifferent<components::Material>();
     auto difference_geometry = entity.IsDifferent<components::Geometry>();
-    auto difference_position = entity.IsDifferent<components::WorldPose>();
+    auto difference_position = entity.IsDifferent<components::Pose>();
     dummy_rendering::Object *obj = this->scene.GetById(entityId);
 
     const bool doDelete = ecs::WAS_DELETED == difference_material ||
@@ -117,18 +107,17 @@ void DummyRendering::AddObjectToScene(ecs::Entity &_entity)
   auto material = _entity.Component<components::Material>();
   auto geometry = _entity.Component<components::Geometry>();
 
-  if (geometry->type == components::Geometry::SPHERE
-      && material->type == components::Material::COLOR)
+  if (geometry.Shape().HasSphere() && material.Appearance().HasColor())
   {
-    auto pose = _entity.Component<components::WorldPose>();
+    auto pose = _entity.Component<components::Pose>();
     dummy_rendering::Object obj;
-    obj.scene_x = pose->position.X();
-    obj.scene_y = pose->position.Y();
-    obj.scene_z = pose->position.Z();
-    obj.radius = geometry->sphere.radius;
-    obj.red = material->color.red * 255;
-    obj.green = material->color.green * 255;
-    obj.blue = material->color.blue * 255;
+    obj.scene_x = pose.Origin().Pos().X();
+    obj.scene_y = pose.Origin().Pos().Y();
+    obj.scene_z = pose.Origin().Pos().Z();
+    obj.radius = geometry.Shape().Sphere().Radius();
+    obj.red = material.Appearance().Color().Red() * 255;
+    obj.green = material.Appearance().Color().Green() * 255;
+    obj.blue = material.Appearance().Color().Blue() * 255;
     this->scene.AddObject(_entity.Id(), obj);
   }
 }
@@ -142,19 +131,19 @@ void DummyRendering::RemoveObjectFromScene(ecs::Entity &_entity)
 /////////////////////////////////////////////////
 void DummyRendering::UpdatePosition(ecs::Entity &_entity)
 {
-  auto pose = _entity.Component<components::WorldPose>();
+  auto pose = _entity.Component<components::Pose>();
   if (pose)
   {
     dummy_rendering::Object *obj = this->scene.GetById(_entity.Id());
     if (obj)
     {
-      obj->scene_x = pose->position.X();
-      obj->scene_y = pose->position.Y();
-      obj->scene_z = pose->position.Z();
+      obj->scene_x = pose.Origin().Pos().X();
+      obj->scene_y = pose.Origin().Pos().Y();
+      obj->scene_z = pose.Origin().Pos().Z();
     }
   }
   else
-    std::cerr << "[rendering] WorldPose is null!" << std::endl;
+    std::cerr << "[rendering] Pose is null!" << std::endl;
 }
 
 /////////////////////////////////////////////////
