@@ -27,7 +27,7 @@
 %%ns_indent%%class %%class_name%%Storage;
 
 %%ns_indent%%/// \brief API for interacting with a %%class_name%% component
-%%ns_indent%%class IGNITION_COMMON_VISIBLE %%class_name%% : public ecs::ComponentAPI
+%%ns_indent%%class IGNITION_COMMON_VISIBLE %%class_name%% : public gazebo::ecs::ComponentAPI
 %%ns_indent%%{
 %%ns_indent%%  ////////////////////
 %%ns_indent%%  // Enumerations used by this component
@@ -82,10 +82,10 @@
 %%ns_indent%%  public: virtual const char *ComponentName() const override;
 
 %%ns_indent%%  // Inherited
-%%ns_indent%%  public: virtual ecs::ComponentType ComponentType() const override;
+%%ns_indent%%  public: virtual gazebo::ecs::ComponentType ComponentType() const override;
 
 %%ns_indent%%  // Inherited
-%%ns_indent%%  public: virtual void ComponentType(ecs::ComponentType _type) override;
+%%ns_indent%%  public: virtual void ComponentType(gazebo::ecs::ComponentType _type) override;
 %%ns_indent%%};
 %%ns_end%%
 #endif
