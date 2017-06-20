@@ -19,32 +19,21 @@
 #define GAZEBO_TESTHOOK 1
 
 #include "componentizers/CZPhysicsConfig.hh"
-#include "gazebo/components/PhysicsConfig.hh"
-#include "gazebo/ecs/ComponentFactory.hh"
+#include "gazebo/components/PhysicsConfig.api.hh"
+#include "gazebo/components/PhysicsConfig.factory.hh"
 #include "gazebo/ecs/Manager.hh"
 
 
 namespace gzecs = gazebo::ecs;
 namespace gzcz = gazebo::componentizers;
-
-
-/////////////////////////////////////////////////
-TEST(CZPhysicsConfig, RegisterComponent)
-{
-  gzcz::CZPhysicsConfig cz;
-  cz.Init();
-  gzecs::ComponentType t =
-    gzecs::ComponentFactory::Type<gazebo::components::PhysicsConfig>();
-  ASSERT_NE(gzecs::NO_COMPONENT, t);
-  gzecs::ComponentTypeInfo info = gzecs::ComponentFactory::TypeInfo(t);
-  EXPECT_EQ("gazebo::components::PhysicsConfig", info.name);
-}
+namespace gzc = gazebo::components;
 
 
 /////////////////////////////////////////////////
 TEST(CZPhysicsConfig, SdfOneConfig)
 {
   gzecs::Manager mgr;
+  mgr.LoadComponentFactory<gzc::PhysicsConfigFactory>();
   mgr.LoadComponentizer<gzcz::CZPhysicsConfig>();
 
   std::string world = " \
@@ -69,6 +58,7 @@ TEST(CZPhysicsConfig, SdfOneConfig)
 TEST(CZPhysicsConfig, SdfTwoConfigs)
 {
   gzecs::Manager mgr;
+  mgr.LoadComponentFactory<gzc::PhysicsConfigFactory>();
   mgr.LoadComponentizer<gzcz::CZPhysicsConfig>();
 
   std::string world = " \
@@ -95,6 +85,7 @@ TEST(CZPhysicsConfig, SdfTwoConfigs)
 TEST(CZPhysicsConfig, SdfMaxStepSize)
 {
   gzecs::Manager mgr;
+  mgr.LoadComponentFactory<gzc::PhysicsConfigFactory>();
   mgr.LoadComponentizer<gzcz::CZPhysicsConfig>();
 
   std::string world = " \
@@ -115,7 +106,7 @@ TEST(CZPhysicsConfig, SdfMaxStepSize)
   ASSERT_EQ(1, entities.size());
   gzecs::Entity &e = mgr.Entity(*(entities.begin()));
   auto comp = e.Component<gazebo::components::PhysicsConfig>();
-  EXPECT_DOUBLE_EQ(1.234, comp->maxStepSize);
+  EXPECT_DOUBLE_EQ(1.234, comp.MaxStepSize());
 }
 
 //////////////////////////////////////////////////

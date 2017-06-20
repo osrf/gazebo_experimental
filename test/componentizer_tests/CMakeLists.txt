@@ -65,3 +65,7 @@ target_link_libraries(CZ_CZMaterial_TEST
 target_link_libraries(CZ_CZName_TEST
   gazeboComponentName
 )
+
+target_link_libraries(CZ_CZPhysicsConfig_TEST
+  gazeboComponentPhysicsConfig
+)
