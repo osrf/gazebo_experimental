@@ -19,31 +19,21 @@
 #define GAZEBO_TESTHOOK 1
 
 #include "componentizers/CZName.hh"
-#include "gazebo/components/Name.hh"
-#include "gazebo/ecs/ComponentFactory.hh"
+#include "gazebo/components/Name.api.hh"
+#include "gazebo/components/Name.factory.hh"
 #include "gazebo/ecs/Manager.hh"
 
 
 namespace gzecs = gazebo::ecs;
 namespace gzcz = gazebo::componentizers;
+namespace gzc = gazebo::components;
 
-
-/////////////////////////////////////////////////
-TEST(CZName, RegisterComponent)
-{
-  gzcz::CZName cz;
-  cz.Init();
-  gzecs::ComponentType t =
-    gzecs::ComponentFactory::Type<gazebo::components::Name>();
-  ASSERT_NE(gzecs::NO_COMPONENT, t);
-  gzecs::ComponentTypeInfo info = gzecs::ComponentFactory::TypeInfo(t);
-  EXPECT_EQ("gazebo::components::Name", info.name);
-}
 
 /////////////////////////////////////////////////
 TEST(CZName, SdfEmptyWorld)
 {
   gzecs::Manager mgr;
+  mgr.LoadComponentFactory<gzc::NameFactory>();
   mgr.LoadComponentizer<gzcz::CZName>();
 
   std::string world = " \
@@ -68,6 +58,7 @@ TEST(CZName, SdfEmptyWorld)
 TEST(CZName, SdfWithStuff)
 {
   gzecs::Manager mgr;
+  mgr.LoadComponentFactory<gzc::NameFactory>();
   mgr.LoadComponentizer<gzcz::CZName>();
 
   std::string world = " \

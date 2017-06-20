@@ -61,3 +61,7 @@ target_link_libraries(CZ_CZInertial_TEST
 target_link_libraries(CZ_CZMaterial_TEST
   gazeboComponentMaterial
 )
+
+target_link_libraries(CZ_CZName_TEST
+  gazeboComponentName
+)
