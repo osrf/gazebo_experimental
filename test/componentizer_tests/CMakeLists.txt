@@ -69,3 +69,11 @@ target_link_libraries(CZ_CZName_TEST
 target_link_libraries(CZ_CZPhysicsConfig_TEST
   gazeboComponentPhysicsConfig
 )
+
+target_link_libraries(CZ_CZPose_TEST
+  gazeboComponentPose
+)
+
+target_link_libraries(CZ_CZWorldVelocity_TEST
+  gazeboComponentWorldVelocity
+)

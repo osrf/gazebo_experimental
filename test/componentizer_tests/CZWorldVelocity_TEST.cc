@@ -19,32 +19,21 @@
 #define GAZEBO_TESTHOOK 1
 
 #include "componentizers/CZWorldVelocity.hh"
-#include "gazebo/components/WorldVelocity.hh"
-#include "gazebo/ecs/ComponentFactory.hh"
+#include "gazebo/components/WorldVelocity.api.hh"
+#include "gazebo/components/WorldVelocity.factory.hh"
 #include "gazebo/ecs/Manager.hh"
 
 
 namespace gzecs = gazebo::ecs;
 namespace gzcz = gazebo::componentizers;
-
-
-/////////////////////////////////////////////////
-TEST(CZWorldVelocity, RegisterComponent)
-{
-  gzcz::CZWorldVelocity cz;
-  cz.Init();
-  gzecs::ComponentType t =
-    gzecs::ComponentFactory::Type<gazebo::components::WorldVelocity>();
-  ASSERT_NE(gzecs::NO_COMPONENT, t);
-  gzecs::ComponentTypeInfo info = gzecs::ComponentFactory::TypeInfo(t);
-  EXPECT_EQ("gazebo::components::WorldVelocity", info.name);
-}
+namespace gzc = gazebo::components;
 
 
 /////////////////////////////////////////////////
 TEST(CZWorldVelocity, NoWorldVelocity)
 {
   gzecs::Manager mgr;
+  mgr.LoadComponentFactory<gzc::WorldVelocityFactory>();
   mgr.LoadComponentizer<gzcz::CZWorldVelocity>();
 
   std::string world = " \
@@ -69,6 +58,7 @@ TEST(CZWorldVelocity, NoWorldVelocity)
 TEST(CZWorldVelocity, MovingModel)
 {
   gzecs::Manager mgr;
+  mgr.LoadComponentFactory<gzc::WorldVelocityFactory>();
   mgr.LoadComponentizer<gzcz::CZWorldVelocity>();
 
   std::string world = " \
@@ -96,6 +86,7 @@ TEST(CZWorldVelocity, MovingModel)
 TEST(CZWorldVelocity, StaticModel)
 {
   gzecs::Manager mgr;
+  mgr.LoadComponentFactory<gzc::WorldVelocityFactory>();
   mgr.LoadComponentizer<gzcz::CZWorldVelocity>();
 
   std::string world = " \

@@ -19,34 +19,24 @@
 #define GAZEBO_TESTHOOK 1
 
 #include "componentizers/CZPose.hh"
-#include "gazebo/components/Pose.hh"
-#include "gazebo/ecs/ComponentFactory.hh"
+#include "gazebo/components/Pose.api.hh"
+#include "gazebo/components/Pose.factory.hh"
 #include "gazebo/ecs/Manager.hh"
 
 
 namespace gzecs = gazebo::ecs;
 namespace gzcz = gazebo::componentizers;
+namespace gzc = gazebo::components;
 
 // Euler -> Quaternion -> Euler needs a tiny bit more allowed error
 const double allowedAngularError = 1e-15;
-
-/////////////////////////////////////////////////
-TEST(CZPose, RegisterComponent)
-{
-  gzcz::CZPose cz;
-  cz.Init();
-  gzecs::ComponentType t =
-    gzecs::ComponentFactory::Type<gazebo::components::Pose>();
-  ASSERT_NE(gzecs::NO_COMPONENT, t);
-  gzecs::ComponentTypeInfo info = gzecs::ComponentFactory::TypeInfo(t);
-  EXPECT_EQ("gazebo::components::Pose", info.name);
-}
 
 
 /////////////////////////////////////////////////
 TEST(CZPose, NoPose)
 {
   gzecs::Manager mgr;
+  mgr.LoadComponentFactory<gzc::PoseFactory>();
   mgr.LoadComponentizer<gzcz::CZPose>();
 
   std::string world = " \
@@ -71,6 +61,7 @@ TEST(CZPose, NoPose)
 TEST(CZPose, ModelWithPose)
 {
   gzecs::Manager mgr;
+  mgr.LoadComponentFactory<gzc::PoseFactory>();
   mgr.LoadComponentizer<gzcz::CZPose>();
 
   std::string world = " \
@@ -93,11 +84,11 @@ TEST(CZPose, ModelWithPose)
   ASSERT_EQ(1, entities.size());
   gzecs::Entity &e = mgr.Entity(*(entities.begin()));
   auto comp = e.Component<gazebo::components::Pose>();
-  EXPECT_DOUBLE_EQ(1.1, comp->pose.Pos().X());
-  EXPECT_DOUBLE_EQ(2.2, comp->pose.Pos().Y());
-  EXPECT_DOUBLE_EQ(3.3, comp->pose.Pos().Z());
+  EXPECT_DOUBLE_EQ(1.1, comp.Origin().Pos().X());
+  EXPECT_DOUBLE_EQ(2.2, comp.Origin().Pos().Y());
+  EXPECT_DOUBLE_EQ(3.3, comp.Origin().Pos().Z());
 
-  auto eulerAngles = comp->pose.Rot().Euler();
+  auto eulerAngles = comp.Origin.Rot().Euler();
   EXPECT_NEAR(0.1, eulerAngles.X(), allowedAngularError);
   EXPECT_NEAR(1.2, eulerAngles.Y(), allowedAngularError);
   EXPECT_NEAR(2.3, eulerAngles.Z(), allowedAngularError);
@@ -107,6 +98,7 @@ TEST(CZPose, ModelWithPose)
 TEST(CZPose, ManyPoses)
 {
   gzecs::Manager mgr;
+  mgr.LoadComponentFactory<gzc::PoseFactory>();
   mgr.LoadComponentizer<gzcz::CZPose>();
 
   std::string world = " \
