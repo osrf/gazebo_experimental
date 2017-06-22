@@ -15,13 +15,17 @@
  *
 */
 #include <atomic>
+#include <queue>
 #include <set>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
+#include <ignition/common/Console.hh>
+#include <sdf/sdf.hh>
 #include <ignition/common/WorkerPool.hh>
 
+#include "gazebo/ecs/Componentizer.hh"
 #include "gazebo/ecs/EntityComponentDatabase.hh"
 #include "gazebo/ecs/EntityQuery.hh"
 #include "gazebo/ecs/Manager.hh"
@@ -48,6 +52,9 @@ struct SystemInfo
 /////////////////////////////////////////////////
 class gazebo::ecs::ManagerPrivate
 {
+  /// \brief Componentizers that are added to the manager
+  public: std::vector<std::unique_ptr<Componentizer> > componentizers;
+
   /// \brief Systems that are added to the manager
   public: std::vector<std::unique_ptr<System> > systems;
 
@@ -210,6 +217,58 @@ bool Manager::LoadSystem(const std::string &_name,
   return success;
 }
 
+//////////////////////////////////////////////////
+bool Manager::LoadComponentizer(std::unique_ptr<Componentizer> _cz)
+{
+  bool success = false;
+  if (_cz)
+  {
+    _cz->Init();
+    this->dataPtr->componentizers.push_back(std::move(_cz));
+    success = true;
+  }
+  return success;
+}
+
+/////////////////////////////////////////////////
+bool Manager::LoadWorld(const std::string &_world)
+{
+  bool success = true;
+  sdf::SDF sdfWorld;
+  sdfWorld.SetFromString(_world);
+  std::unordered_map<sdf::Element*, EntityId> ids;
+
+  // breadth-first componentization
+  std::queue<sdf::ElementPtr> elementQueue;
+  elementQueue.push(sdfWorld.Root());
+  while (!elementQueue.empty())
+  {
+    sdf::ElementPtr nextElement = elementQueue.front();
+    elementQueue.pop();
+
+    assert(ids.find(nextElement.get()) == ids.end());
+
+    // An entity makes it easier to group components from different
+    // componentizers. However, they are free to create their own entities
+    EntityId groupId = this->CreateEntity();
+    ids[nextElement.get()] = groupId;
+
+    for (auto &cz : this->dataPtr->componentizers)
+    {
+      cz->FromSDF(*this, *nextElement, ids);
+    }
+
+    sdf::ElementPtr child = nextElement->GetFirstElement();
+    while (child)
+    {
+      elementQueue.push(child);
+      child = child->GetNextElement();
+    }
+  }
+
+  return success;
+}
+
 /////////////////////////////////////////////////
 gazebo::ecs::Entity &Manager::Entity(const EntityId _id) const
 {
@@ -255,4 +314,20 @@ int Manager::EndPause()
 bool Manager::Paused() const
 {
   return this->dataPtr->paused;
+}
+
+//////////////////////////////////////////////////
+std::set<gazebo::ecs::EntityId> Manager::QueryEntities(
+            const std::vector<std::string> &_components)
+{
+  // Make a query from the component names
+  // demand the database to give us the results now
+  EntityQuery q;
+  for (const std::string compName : _components)
+  {
+    q.AddComponent(compName);
+  }
+
+  this->dataPtr->database.InstantQuery(q);
+  return q.EntityIds();
 }

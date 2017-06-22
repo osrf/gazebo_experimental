@@ -24,6 +24,7 @@
 
 #include <ignition/common/Time.hh>
 
+#include "gazebo/ecs/Componentizer.hh"
 #include "gazebo/ecs/Entity.hh"
 #include "gazebo/ecs/System.hh"
 #include "gazebo/ecs/ComponentFactory.hh"
@@ -33,7 +34,7 @@ namespace gazebo
 {
   namespace ecs
   {
-    // Forward declare private data class.
+    /// \brief Forward declare private data class.
     class ManagerPrivate;
 
     class Manager
@@ -83,6 +84,25 @@ namespace gazebo
       public: bool LoadSystem(const std::string &_name,
                   std::unique_ptr<System> _sys);
 
+      /// \brief Convenience function to load a componentizer from a type
+      ///
+      /// Ex: sm->LoadComponentizer<CZFancyClass>();
+      public: template <typename T>
+        bool LoadComponentizer()
+        {
+          return this->LoadComponentizer(
+              std::unique_ptr<Componentizer>(new T()));
+        }
+
+      /// \brief Load a componentizer
+      ///
+      /// Ex: sm->LoadComponentizer(std::move(aUniquePtrInstance))
+      public: bool LoadComponentizer(std::unique_ptr<Componentizer> _cz);
+
+      /// \brief Load a world from sdf string
+      /// \returns true if the sdf is successfully parsed
+      public: bool LoadWorld(const std::string &_world);
+
       /// \brief Update everything once and return immediately
       public: void UpdateOnce();
 
@@ -98,6 +118,17 @@ namespace gazebo
       /// \brief Returns an entity instance with the given ID
       /// \returns Entity with id set to NO_ENTITY if entity does not exist
       public: gazebo::ecs::Entity &Entity(const EntityId _id) const;
+
+      /// \brief Test hook for querying entities
+      /// \remarks must not be called while database is being updated
+      /// \param[in] _components List of component names to query
+#ifdef GAZEBO_TESTHOOK
+      public:
+#else
+      protected:
+#endif
+        std::set<gazebo::ecs::EntityId> QueryEntities(
+            const std::vector<std::string> &_components);
 
       private: Manager(const Manager&) = delete;
 

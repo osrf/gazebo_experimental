@@ -135,6 +135,9 @@ namespace gazebo
       /// \brief Test if a component changed last timestep
       public: Difference IsDifferent(EntityId _id, ComponentType _type) const;
 
+      /// \brief Test hook for instantaneous query results
+      public: void InstantQuery(EntityQuery &_query);
+
       /// \brief Private IMPLementation pointer
       private: std::unique_ptr<EntityComponentDatabasePrivate> dataPtr;
     };

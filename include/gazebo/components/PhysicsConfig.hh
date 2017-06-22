@@ -15,25 +15,18 @@
  *
 */
 
-#ifndef GAZEBO_COMPONENTS_INERTIA_HH_
-#define GAZEBO_COMPONENTS_INERTIA_HH_
-
-#include <ignition/math/Matrix3.hh>
+#ifndef GAZEBO_COMPONENTS_PHYSICSCONFIG_HH_
+#define GAZEBO_COMPONENTS_PHYSICSCONFIG_HH_
 
 namespace gazebo
 {
   namespace components
   {
-    /// \brief Describes the inertial properties of an entity.
-    struct Inertial
+    /// \brief Describes the properties of a physics engine
+    struct PhysicsConfig
     {
-      /// \brief Mass in kilograms
-      double mass = 1.0;
-
-      /// \brief inertial matrix
-      ignition::math::Matrix3d inertia = {1, 0, 0,
-                                          0, 1, 0,
-                                          0, 0, 1};
+      /// \brief Maximum time step size
+      double maxStepSize = 0.001;
     };
   }
 }
