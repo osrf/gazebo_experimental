@@ -87,6 +87,18 @@ foreach(comp_file ${component_files})
     install(TARGETS ${hdr_${comp_name}_${hh_name}} DESTINATION ${INCLUDE_INSTALL_DIR}/gazebo/components/)
   endforeach()
 
+  foreach(generated_header ${GAZEBO_GENERATE_COMPONENT_PRIVATE_HEADERS})
+    # Copy private headers to build folder for use by componentizer tests
+    get_filename_component(hh_name ${generated_header} NAME)
+    set (hh_renamed ${CMAKE_BINARY_DIR}/include/gazebo/components/${hh_name})
+    add_custom_command(OUTPUT ${hh_renamed}
+      COMMAND ${CMAKE_COMMAND} -E copy ${generated_header} ${hh_renamed}
+      DEPENDS ${generated_header} generator_files_target
+      COMMENT Copying ${generated_header} to ${hh_renamed}
+      )
+    add_custom_target(hdr_${comp_name}_${hh_name} ALL DEPENDS ${hh_renamed})
+  endforeach()
+
   # Install library
   gz_install_library(${GAZEBO_GENERATE_COMPONENT_LIBRARY})
 endforeach()
