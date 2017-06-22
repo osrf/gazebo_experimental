@@ -85,7 +85,7 @@ foreach(comp_file ${component_files})
     set (hh_renamed ${CMAKE_BINARY_DIR}/include/gazebo/components/${hh_name})
     add_custom_command(OUTPUT ${hh_renamed}
       COMMAND ${CMAKE_COMMAND} -E copy ${generated_header} ${hh_renamed}
-      DEPENDS ${generated_header} generator_files_target
+      DEPENDS ${generated_header}
       COMMENT Copying ${generated_header} to ${hh_renamed}
       )
     add_custom_target(hdr_${comp_name}_${hh_name} ALL DEPENDS ${hh_renamed})
