@@ -6,9 +6,18 @@
 # Uses PROTOBUF_PROTOC_EXECUTABLE as path to protoc
 # Uses CMAKE_CURRENT_SOURCE_DIR as a protobuf import path
 # Uses GAZEBO_COMPONENT_GENERATOR_DIR is a protobuf import path
-# creates a library called gazeboComponentX where X is protobuf file name
-# creates variable GAZEBO_GENERATE_COMPONENT_LIBRARY, value is gazeobComponentX
-# creates variable GAZEBO_GENERATE_COMPONENT_HEADERS, these headers should be installed
+# creates GAZEBO_GENERATE_COMPONENT_LIBRARY
+#   A library that should be installed
+#   library is called gazeboComponentX where X is protobuf file name
+# creates GAZEBO_GENERATE_COMPONENT_HEADERS
+#   a header that should be installed
+#   X.api.hh where x is protobuf file name
+# creates GAZEBO_GENERATE_COMPONENT_PRIVATE_HEADERS
+#   Private headers that should not be installed or used
+#   Useful for test code that doesn't want to do a dynamic library load
+#   X.storage.hh
+#   X.factory.hh
+
 MACRO (GAZEBO_GENERATE_COMPONENT _protobuf)
   get_filename_component(rel_dir ${_protobuf} DIRECTORY)
   get_filename_component(abs_path ${_protobuf} ABSOLUTE)
@@ -20,10 +29,13 @@ MACRO (GAZEBO_GENERATE_COMPONENT _protobuf)
     ${CMAKE_CURRENT_BINARY_DIR}/${rel_dir}/${comp_name}.api.hh
     )
   # Headers that shouldn't be installed
-  set(gen_hh
-    ${GAZEBO_GENERATE_COMPONENT_HEADERS}
+  set(GAZEBO_GENERATE_COMPONENT_PRIVATE_HEADERS
     ${CMAKE_CURRENT_BINARY_DIR}/${rel_dir}/${comp_name}.storage.hh
     ${CMAKE_CURRENT_BINARY_DIR}/${rel_dir}/${comp_name}.factory.hh
+    )
+  set(gen_hh
+    ${GAZEBO_GENERATE_COMPONENT_HEADERS}
+    ${GAZEBO_GENERATE_COMPONENT_PRIVATE_HEADERS}
     )
   # Source files to get linked into a shared library
   set(gen_cc
