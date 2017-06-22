@@ -2,18 +2,18 @@
 include_directories(.)
 
 
-file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/include")
-include_directories("${CMAKE_CURRENT_BINARY_DIR}/include")
+#Include current binary dir for generated headers
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 set(GAZEBO_GENERATE_COMPONENT_PIMPL-CPP ${CMAKE_SOURCE_DIR}/src/components/protoc-gen-PIMPL-CPP)
 set(GAZEBO_GENERATE_COMPONENT_PROTO_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/src/components)
 
 GAZEBO_GENERATE_COMPONENT(components/Fraction.proto
-    "${CMAKE_CURRENT_BINARY_DIR}/include")
+  ${GAZEBO_COMPONENT_GENERATOR_FILES})
 set(component_libs ${component_libs} ${GAZEBO_GENERATE_COMPONENT_LIBRARY})
 
 GAZEBO_GENERATE_COMPONENT(components/Triplet.proto
-    "${CMAKE_CURRENT_BINARY_DIR}/include")
+  ${GAZEBO_COMPONENT_GENERATOR_FILES})
 set(component_libs ${component_libs} ${GAZEBO_GENERATE_COMPONENT_LIBRARY})
 
 add_subdirectory(systems)
