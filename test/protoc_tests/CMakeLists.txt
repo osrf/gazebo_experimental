@@ -16,7 +16,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 
 foreach(protobuf_file ${protoc_tests})
-  GAZEBO_GENERATE_COMPONENT(${protobuf_file})
+  GAZEBO_GENERATE_COMPONENT(${protobuf_file} ${GAZEBO_COMPONENT_GENERATOR_FILES})
   set(protoc_test_libs ${protoc_test_libs} ${GAZEBO_GENERATE_COMPONENT_LIBRARY})
 endforeach()
 
