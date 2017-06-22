@@ -1,48 +1,55 @@
 ################################################################################
-# GAZEBO_GENERATE_COMPONENT(_protobuf _outputDir)
+# GAZEBO_GENERATE_COMPONENT(_protobuf)
 # Generates a component plugin from a protobuf file
 # _protobuf is a relative path to a protobuf file
 #   It must be a relative path, matching protoc's idea of "cannonical path"
-# Optionally import proto files from GAZEBO_GENERATE_COMPONENT_PROTO_INCLUDE_DIRS
-# Optionally use GAZEBO_GENERATE_COMPONENT_PIMPL-CPP for generator location
-# creates a library called gazeboComponentX where X is protobuf top level message name
-# creates variable GAZEBO_GENERATE_COMPONENT_HEADERS
-# creates variable GAZEBO_GENERATE_COMPONENT_LIBRARY
+# Uses PROTOBUF_PROTOC_EXECUTABLE as path to protoc
+# Uses CMAKE_CURRENT_SOURCE_DIR as a protobuf import path
+# Uses GAZEBO_COMPONENT_GENERATOR_DIR is a protobuf import path
+# creates a library called gazeboComponentX where X is protobuf file name
+# creates variable GAZEBO_GENERATE_COMPONENT_LIBRARY, value is gazeobComponentX
+# creates variable GAZEBO_GENERATE_COMPONENT_HEADERS, these headers should be installed
 MACRO (GAZEBO_GENERATE_COMPONENT _protobuf)
   get_filename_component(rel_dir ${_protobuf} DIRECTORY)
   get_filename_component(abs_path ${_protobuf} ABSOLUTE)
   get_filename_component(abs_dir ${abs_path} DIRECTORY)
   get_filename_component(comp_name ${_protobuf} NAME_WE)
 
+  # Headers that should be installed
   set(GAZEBO_GENERATE_COMPONENT_HEADERS
     ${CMAKE_CURRENT_BINARY_DIR}/${rel_dir}/${comp_name}.api.hh
+    )
+  # Headers that shouldn't be installed
+  set(gen_hh
+    ${GAZEBO_GENERATE_COMPONENT_HEADERS}
     ${CMAKE_CURRENT_BINARY_DIR}/${rel_dir}/${comp_name}.storage.hh
     ${CMAKE_CURRENT_BINARY_DIR}/${rel_dir}/${comp_name}.factory.hh
     )
+  # Source files to get linked into a shared library
   set(gen_cc
     ${CMAKE_CURRENT_BINARY_DIR}/${rel_dir}/${comp_name}.api.cc
     ${CMAKE_CURRENT_BINARY_DIR}/${rel_dir}/${comp_name}.factory.cc
     )
 
-  if(DEFINED GAZEBO_GENERATE_COMPONENT_PIMPL-CPP)
-    set(extra_protobuf_args --plugin=${GAZEBO_GENERATE_COMPONENT_PIMPL-CPP})
-  endif()
-
-  if(DEFINED GAZEBO_GENERATE_COMPONENT_PROTO_INCLUDE_DIRS)
-    set(extra_protobuf_args ${extra_protobuf_args} --proto_path=${GAZEBO_GENERATE_COMPONENT_PROTO_INCLUDE_DIRS})
+  # This variable should be set by FindGazeboConfig.cmake
+  # If it's not set, then this is the gazebo_experimental repo.
+  # Set it to the source directory
+  if(NOT DEFINED GAZEBO_COMPONENT_GENERATOR_DIR)
+    set(GAZEBO_COMPONENT_GENERATOR_DIR ${CMAKE_SOURCE_DIR}/src/components)
   endif()
 
   # Generate code using a protobuf plugin
   add_custom_command(
     OUTPUT
-      ${GAZEBO_GENERATE_COMPONENT_HEADERS}
+      ${gen_hh}
       ${gen_cc}
 
     COMMAND  ${PROTOBUF_PROTOC_EXECUTABLE}
     ARGS
       --PIMPL-CPP_out=${CMAKE_CURRENT_BINARY_DIR}
       --proto_path=${CMAKE_CURRENT_SOURCE_DIR}
-      ${extra_protobuf_args}
+      --proto_path=${GAZEBO_COMPONENT_GENERATOR_DIR}
+      --plugin=${GAZEBO_COMPONENT_GENERATOR_DIR}/protoc-gen-PIMPL-CPP
       ${abs_path}
     DEPENDS ${abs_path}
     COMMENT "Running protubuf to component code generator for ${_protobuf}"

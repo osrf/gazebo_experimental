@@ -11,18 +11,15 @@ set(protoc_tests
 )
 
 include(${CMAKE_SOURCE_DIR}/cmake/GazeboGenerateComponent.cmake)
-set(GAZEBO_GENERATE_COMPONENT_PIMPL-CPP ${CMAKE_SOURCE_DIR}/src/components/protoc-gen-PIMPL-CPP)
-set(GAZEBO_GENERATE_COMPONENT_PROTO_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/src/components)
 
-file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/include")
-include_directories("${CMAKE_CURRENT_BINARY_DIR}/include")
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 
 foreach(protobuf_file ${protoc_tests})
-  GAZEBO_GENERATE_COMPONENT(${protobuf_file}
-    "${CMAKE_CURRENT_BINARY_DIR}/include")
+  GAZEBO_GENERATE_COMPONENT(${protobuf_file})
   set(protoc_test_libs ${protoc_test_libs} ${GAZEBO_GENERATE_COMPONENT_LIBRARY})
 endforeach()
+
 
 set (src_file pimpl-cpp_TEST.cc)
 string(REGEX REPLACE "\\.cc" "" BINARY_NAME ${src_file})

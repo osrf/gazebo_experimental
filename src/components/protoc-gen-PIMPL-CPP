@@ -23,7 +23,7 @@ class Message(object):
         self.fields = []
         self.oneofs = []
         self.nested_enum = []
-        self.nested_msgs = {}
+        self.nested_msgs = []
 
 
 class Oneof(object):
@@ -351,7 +351,7 @@ def generate_api_partial(tmpl_decl, tmpl_def, msg):
     inline_def = []
     hh_includes = class_pieces["hh_includes"]
 
-    for nested_name, nested_msg in msg.nested_msgs.items():
+    for nested_msg in msg.nested_msgs:
         # Recursively generate nested messages
         nested_partial = generate_api_partial(
                 tmpl_class_decl, tmpl_class_def, nested_msg)
@@ -525,7 +525,7 @@ def generate_storage_class(template, msg):
      ns_begin, ns_end) = generate_namespace(msg.package)
 
     inline_storage = []
-    for nested_name, nested_msg in msg.nested_msgs.items():
+    for nested_msg in msg.nested_msgs:
         # Recursively generate code for nested messages
         inline_storage.append(generate_storage_class(tmpl_storage_decl,
                                                      nested_msg))
@@ -611,9 +611,8 @@ def gather_message_info(package, message_descriptor):
     # Recursively get info from nested messages
     for nested_descriptor in message_descriptor.nested_type:
         nested_package = ".".join([package, msg.name])
-        type_name = ".".join([nested_package, nested_descriptor.name])
-        msg.nested_msgs[type_name] = gather_message_info(
-                nested_package, nested_descriptor)
+        msg.nested_msgs.append(gather_message_info(
+                nested_package, nested_descriptor))
 
     # Pull enumerations out of message
     for enum_descriptor in message_descriptor.enum_type:
@@ -714,7 +713,7 @@ def generate_code(request, response):
 
 if __name__ == '__main__':
     # Read request message from stdin
-    data = sys.stdin.read()
+    data = sys.stdin.buffer.read()
 
     # Parse request
     request = plugin.CodeGeneratorRequest()
@@ -730,4 +729,4 @@ if __name__ == '__main__':
     output = response.SerializeToString()
 
     # Write to stdout
-    sys.stdout.write(output)
+    sys.stdout.buffer.write(output)
