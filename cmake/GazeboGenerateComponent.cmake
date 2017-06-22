@@ -53,8 +53,6 @@ MACRO (GAZEBO_GENERATE_COMPONENT _protobuf)
     set(GAZEBO_COMPONENT_GENERATOR_DIR ${CMAKE_SOURCE_DIR}/src/components)
   endif()
 
-  message(" GOT ARG ${ARGN}")
-
   # Generate code using a protobuf plugin
   add_custom_command(
     OUTPUT
