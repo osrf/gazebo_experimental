@@ -9,7 +9,7 @@ set(component_files
   # gazebo/components/Geometry.proto
 )
 
-set(generator_templates
+set(generator_files
   templates/Api.cc.in
   templates/ApiComplexDecl.hh.in
   templates/ApiComplexDef.cc.in
@@ -40,32 +40,24 @@ set(generator_templates
   templates/Storage.hh.in
   templates/UnionFieldCopy.hh.in
   templates/UnionFieldDestruct.hh.in
-)
-
-set(generator_scripts
   protoc-gen-PIMPL-CPP
 )
 
-set(generator_files
-  ${generator_scripts}
-  ${generator_templates}
-)
+foreach(generator_file ${generator_files})
+  get_filename_component(abs_path ${generator_file} ABSOLUTE)
+  set(abs_path_generator_files ${abs_path} ${abs_path_generator_files})
+endforeach()
+
+# Set this globally so protoc unit tests are rebuilt when generator changes
+set(GAZEBO_COMPONENT_GENERATOR_FILES ${abs_path_generator_files} CACHE INTERNAL "")
 
 # Use a cmake macro that turns protobuf into generated code for components
 include(${PROJECT_CMAKE_DIR}/GazeboGenerateComponent.cmake)
 
-
-# Make a target containing the generator files
-add_custom_command(OUTPUT ${generator_files})
-add_custom_target(generator_files_target ALL DEPENDS ${generator_files} VERBATIM)
-
-
 # Generate code for all of the protobuf files
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/include/gazebo/components)
 foreach(comp_file ${component_files})
-  GAZEBO_GENERATE_COMPONENT(${comp_file})
-
-  add_dependencies(${GAZEBO_GENERATE_COMPONENT_LIBRARY} generator_files_target)
+  GAZEBO_GENERATE_COMPONENT(${comp_file} ${GAZEBO_COMPONENT_GENERATOR_FILES})
 
   foreach(generated_header ${GAZEBO_GENERATE_COMPONENT_HEADERS})
     # Copy headers to build folder
@@ -73,7 +65,7 @@ foreach(comp_file ${component_files})
     set (hh_renamed ${CMAKE_BINARY_DIR}/include/gazebo/components/${hh_name})
     add_custom_command(OUTPUT ${hh_renamed}
       COMMAND ${CMAKE_COMMAND} -E copy ${generated_header} ${hh_renamed}
-      DEPENDS ${generated_header} generator_files_target
+      DEPENDS ${generated_header}
       COMMENT Copying ${generated_header} to ${hh_renamed}
       )
     add_custom_target(hdr_${comp_name}_${hh_name} ALL DEPENDS ${hh_renamed})
