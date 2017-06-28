@@ -713,7 +713,10 @@ def generate_code(request, response):
 
 if __name__ == '__main__':
     # Read request message from stdin
-    data = sys.stdin.buffer.read()
+    try:
+        data = sys.stdin.buffer.read()
+    except AttributeError:
+        data = sys.stdin.read()
 
     # Parse request
     request = plugin.CodeGeneratorRequest()
@@ -729,4 +732,7 @@ if __name__ == '__main__':
     output = response.SerializeToString()
 
     # Write to stdout
-    sys.stdout.buffer.write(output)
+    try:
+        sys.stdout.buffer.write(output)
+    except AttributeError:
+        sys.stdout.write(output)
