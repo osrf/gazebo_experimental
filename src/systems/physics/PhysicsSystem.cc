@@ -44,6 +44,9 @@ class ComponentMotionState : public btMotionState
   /// \brief entity id with pose this motion state should track
   public: ecs::EntityId id;
 
+  /// \brief Inital transform
+  public: ignition::math::Pose3d initialPose;
+
   /// \brief constructor
   public: ComponentMotionState(ecs::EntityId _id, ecs::Manager *_mgr)
           : id(_id), mgr(_mgr)
@@ -56,16 +59,13 @@ class ComponentMotionState : public btMotionState
 
     virtual void getWorldTransform(btTransform &worldTrans) const
     {
-      auto &e = this->mgr->Entity(this->id);
-      auto pose = e.Component<components::Pose>();
-      assert(pose);
-
-      auto &pos = pose.Origin().Pos();
-      auto &rot = pose.Origin().Rot();
+      auto &pos = this->initialPose.Pos();
+      auto &rot = this->initialPose.Rot();
 
       worldTrans.setOrigin(btVector3(pos.X(), pos.Y(), pos.Z()));
       worldTrans.setRotation(btQuaternion(rot.X(), rot.Y(), rot.Z(), rot.W()));
 
+      igndbg << "get transform called " << pos.X() << std::endl;
       // TODO update velocity component here too
     }
 
@@ -79,6 +79,8 @@ class ComponentMotionState : public btMotionState
       btVector3 pos = worldTrans.getOrigin();
       auto &pos_ign = pose.Origin().Pos();
       auto &rot_ign = pose.Origin().Rot();
+
+      igndbg << "Set transform called " << pos.z() << std::endl;
 
       pos_ign.X() = pos.x();
       pos_ign.Y() = pos.y();
@@ -138,6 +140,8 @@ void PhysicsSystem::InitBullet()
   this->dynamicsWorld.reset(new btDiscreteDynamicsWorld(
         this->dispatcher.get(), this->broadPhase.get(), this->solver.get(),
         this->collisionConfig.get()));
+
+  this->dynamicsWorld->setGravity(btVector3(0, 0, -9.81));
 }
 
 /////////////////////////////////////////////////
@@ -203,11 +207,12 @@ void PhysicsSystem::CreateRigidBody(ecs::Entity &_entity)
   }
   // TODO else velocity means kinematic
 
-  std::unique_ptr<btMotionState> myMotionState(
+  std::unique_ptr<ComponentMotionState> motionState(
       new ComponentMotionState(_entity.Id(), &(this->Manager())));
+  motionState->initialPose = pose.Origin();
 
   btRigidBody::btRigidBodyConstructionInfo rbInfo(
-    mass, myMotionState.get(), colShape.get(), localInertia);
+    mass, motionState.get(), colShape.get(), localInertia);
   std::unique_ptr<btRigidBody> body(new btRigidBody(rbInfo));
 
   this->dynamicsWorld->addRigidBody(body.get());
@@ -221,7 +226,7 @@ void PhysicsSystem::CreateRigidBody(ecs::Entity &_entity)
 
   this->collisionShapes[id] = std::move(colShape);
   this->rigidBodies[id] = std::move(body);
-  this->motionStates[id] = std::move(myMotionState);
+  this->motionStates[id] = std::move(motionState);
 }
 
 /////////////////////////////////////////////////
