@@ -43,7 +43,7 @@ TEST(CZCollidable, SdfNoCollisions)
         </physics> \
       </world> \
     </sdf>";
-  mgr.LoadWorld(world);
+  mgr.LoadWorldFromString(world);
   mgr.UpdateOnce();
 
   auto entities = mgr.QueryEntities({
@@ -79,7 +79,7 @@ TEST(CZCollidable, SdfOneCollision)
       </model> \
       </world> \
     </sdf>";
-  mgr.LoadWorld(world);
+  mgr.LoadWorldFromString(world);
   mgr.UpdateOnce();
 
   auto entities = mgr.QueryEntities({
@@ -121,7 +121,7 @@ TEST(CZCollidable, SdfTwoCollisions)
       </model> \
       </world> \
     </sdf>";
-  mgr.LoadWorld(world);
+  mgr.LoadWorldFromString(world);
   mgr.UpdateOnce();
 
   auto entities = mgr.QueryEntities({

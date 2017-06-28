@@ -80,6 +80,9 @@ class gazebo::ecs::ManagerPrivate
 
   /// \brief Updates the state and systems once
   public: void UpdateOnce();
+
+  /// \brief Invokes componentizers on SDF
+  public: void Componentize(Manager *_mgr, sdf::SDF &_sdf);
 };
 
 /////////////////////////////////////////////////
@@ -232,16 +235,12 @@ bool Manager::LoadComponentFactory(std::unique_ptr<ComponentFactory> _cf)
 }
 
 /////////////////////////////////////////////////
-bool Manager::LoadWorld(const std::string &_world)
+void ManagerPrivate::Componentize(Manager *_mgr, sdf::SDF &_sdf)
 {
-  bool success = true;
-  sdf::SDF sdfWorld;
-  sdfWorld.SetFromString(_world);
   std::unordered_map<sdf::Element*, EntityId> ids;
-
   // breadth-first componentization
   std::queue<sdf::ElementPtr> elementQueue;
-  elementQueue.push(sdfWorld.Root());
+  elementQueue.push(_sdf.Root());
   while (!elementQueue.empty())
   {
     sdf::ElementPtr nextElement = elementQueue.front();
@@ -251,12 +250,12 @@ bool Manager::LoadWorld(const std::string &_world)
 
     // An entity makes it easier to group components from different
     // componentizers. However, they are free to create their own entities
-    EntityId groupId = this->CreateEntity();
+    EntityId groupId = this->database.CreateEntity();
     ids[nextElement.get()] = groupId;
 
-    for (auto &cz : this->dataPtr->componentizers)
+    for (auto &cz : this->componentizers)
     {
-      cz->FromSDF(*this, *nextElement, ids);
+      cz->FromSDF(*_mgr, *nextElement, ids);
     }
 
     sdf::ElementPtr child = nextElement->GetFirstElement();
@@ -265,6 +264,35 @@ bool Manager::LoadWorld(const std::string &_world)
       elementQueue.push(child);
       child = child->GetNextElement();
     }
+  }
+}
+
+bool Manager::LoadWorldFromPath(const std::string &_path)
+{
+  bool success = false;
+  sdf::SDFPtr sdfWorld(new sdf::SDF());
+  sdf::init(sdfWorld);
+
+  if (sdf::readFile(_path, sdfWorld))
+  {
+    success = true;
+    this->dataPtr->Componentize(this, *sdfWorld);
+  }
+
+  return success;
+}
+
+/////////////////////////////////////////////////
+bool Manager::LoadWorldFromString(const std::string &_world)
+{
+  bool success = false;
+  sdf::SDFPtr sdfWorld(new sdf::SDF());
+  sdf::init(sdfWorld);
+
+  if (sdf::readString(_world, sdfWorld))
+  {
+    success = true;
+    this->dataPtr->Componentize(this, *sdfWorld);
   }
 
   return success;

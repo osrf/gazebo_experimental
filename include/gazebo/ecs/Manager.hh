@@ -112,9 +112,13 @@ namespace gazebo
       /// Ex: sm->LoadComponent(std::move(aUniquePtrInstance))
       public: bool LoadComponentFactory(std::unique_ptr<ComponentFactory> _cf);
 
-      /// \brief Load a world from sdf string
+      /// \brief Load a world from a file path
       /// \returns true if the sdf is successfully parsed
-      public: bool LoadWorld(const std::string &_world);
+      public: bool LoadWorldFromPath(const std::string &_path);
+
+      /// \brief Load a world from a string
+      /// \returns true if the sdf is successfully parsed
+      public: bool LoadWorldFromString(const std::string &_world);
 
       /// \brief Update everything once and return immediately
       public: void UpdateOnce();
