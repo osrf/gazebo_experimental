@@ -54,7 +54,7 @@ TEST(CZInertial, NoInertial)
         </physics> \
       </world> \
     </sdf>";
-  mgr.LoadWorld(world);
+  mgr.LoadWorldFromString(world);
   mgr.UpdateOnce();
 
   auto entities = mgr.QueryEntities({
@@ -93,7 +93,7 @@ TEST(CZInertial, LinkWithInertial)
         </model> \
       </world> \
     </sdf>";
-  mgr.LoadWorld(world);
+  mgr.LoadWorldFromString(world);
   mgr.UpdateOnce();
 
   auto entities = mgr.QueryEntities({
