@@ -53,7 +53,7 @@ namespace gazebo
       private: void InitBullet();
 
       /// \brief Creates a Sphere in the bullet world
-      private: void CreateRigidBody(ecs::Entity _entity);
+      private: void CreateRigidBody(ecs::Entity &_entity);
 
       private: std::unique_ptr<btDefaultCollisionConfiguration> collisionConfig;
       private: std::unique_ptr<btCollisionDispatcher> dispatcher;

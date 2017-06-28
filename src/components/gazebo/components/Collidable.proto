@@ -25,9 +25,9 @@ message Collidable
   /// \brief A grouping entity iff multiple geometry form one rigid body
   /// \description this entity is where group properties will be. These
   ///     include Inertial and WorldVelocity properties. If the group
-  ///     is set to NO_ENTITY than the properties are on the same entity
-  ///     as this component.
-  optional int64 GroupId = 1;
+  ///     is set to NO_ENTITY then there is only one geometry in this
+  ///     rigid body
+  optional int64 GroupId = 1 [default = -1];
 
   // TODO Surface properties
 }

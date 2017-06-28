@@ -16,10 +16,12 @@
 */
 
 #include <iostream>
+#include <ignition/common/Console.hh>
 #include <ignition/common/PluginMacros.hh>
 
 #include <gazebo/components/Inertial.api.hh>
 #include <gazebo/components/Geometry.api.hh>
+#include <gazebo/components/Collidable.api.hh>
 #include <gazebo/components/PhysicsConfig.api.hh>
 #include <gazebo/components/Pose.api.hh>
 #include <gazebo/components/WorldVelocity.api.hh>
@@ -30,6 +32,65 @@
 namespace gzsys = gazebo::systems;
 using namespace gzsys;
 using namespace gazebo;
+
+
+//////////////////////////////////////////////////
+/// \brief Class updates pose and velocity info for bodies that move
+class ComponentMotionState : public btMotionState
+{
+  /// \brief pointer to a manager
+  public: ecs::Manager *mgr;
+
+  /// \brief entity id with pose this motion state should track
+  public: ecs::EntityId id;
+
+  /// \brief constructor
+  public: ComponentMotionState(ecs::EntityId _id, ecs::Manager *_mgr)
+          : id(_id), mgr(_mgr)
+    {
+    }
+
+    virtual ~ComponentMotionState()
+    {
+    }
+
+    virtual void getWorldTransform(btTransform &worldTrans) const
+    {
+      auto &e = this->mgr->Entity(this->id);
+      auto pose = e.Component<components::Pose>();
+      assert(pose);
+
+      auto &pos = pose.Origin().Pos();
+      auto &rot = pose.Origin().Rot();
+
+      worldTrans.setOrigin(btVector3(pos.X(), pos.Y(), pos.Z()));
+      worldTrans.setRotation(btQuaternion(rot.X(), rot.Y(), rot.Z(), rot.W()));
+
+      // TODO update velocity component here too
+    }
+
+    virtual void setWorldTransform(const btTransform &worldTrans)
+    {
+      auto &e = this->mgr->Entity(this->id);
+      auto pose = e.ComponentMutable<components::Pose>();
+      assert(pose);
+
+      btQuaternion rot = worldTrans.getRotation();
+      btVector3 pos = worldTrans.getOrigin();
+      auto &pos_ign = pose.Origin().Pos();
+      auto &rot_ign = pose.Origin().Rot();
+
+      pos_ign.X() = pos.x();
+      pos_ign.Y() = pos.y();
+      pos_ign.Z() = pos.z();
+      rot_ign.W() = rot.w();
+      rot_ign.X() = rot.x();
+      rot_ign.Y() = rot.y();
+      rot_ign.Z() = rot.z();
+
+      // TODO update velocity component here too
+    }
+};
 
 
 /////////////////////////////////////////////////
@@ -50,13 +111,14 @@ void PhysicsSystem::Init(ecs::QueryRegistrar &_registrar)
   // Query for bodies to simulate
   ecs::EntityQuery query;
   if (!query.AddComponent<gazebo::components::Geometry>())
-    std::cerr << "Undefined component[gazebo::components::Geometry]\n";
+    ignerr << "Undefined component[gazebo::components::Geometry]\n";
   if (!query.AddComponent<gazebo::components::Pose>())
-    std::cerr << "Undefined component[gazebo::components::Pose]\n";
-  // TODO require component with contact or surface properies
+    ignerr << "Undefined component[gazebo::components::Pose]\n";
+  if (!query.AddComponent<gazebo::components::Collidable>())
+    ignerr << "Undefined component[gazebo::components::Collidable]\n";
 
   // Note that we add only the required components. This system will also make
-  // use of the Mass and WorldVelocity components if present, but these are
+  // use of the Inertial and WorldVelocity components if present, but these are
   // optional
 
   this->InitBullet();
@@ -97,24 +159,26 @@ void PhysicsSystem::UpdateConfig(const ecs::EntityQuery &_result)
 }
 
 //////////////////////////////////////////////////
-void PhysicsSystem::CreateRigidBody(ecs::Entity _entity)
+void PhysicsSystem::CreateRigidBody(ecs::Entity &_entity)
 {
-  // Stuffing the entity id into user_data, make sure it fits
-  static_assert(sizeof(void*) >= sizeof(ecs::EntityId),
-      "Bullet userdata is too small");
+  auto collidable = _entity.Component<components::Collidable>();
+  auto geom = _entity.Component<components::Geometry>();
+  auto inertial = _entity.Component<components::Inertial>();
+  auto velocity = _entity.Component<components::WorldVelocity>();
+  auto pose = _entity.Component<components::Pose>();
 
-  auto &geom = _entity.Component<components::Geometry>();
-  auto &inertial = _entity.Component<components::Inertial>();
-  auto &velocity = _entity.Component<components::WorldVelocity>();
-  auto &pose = _entity.Component<components::Pose>();
+  // Todo support multiple collisions on the same link
+  if (collidable.GroupId() != ecs::NO_ENTITY)
+    return;
 
+  // Todo support more than just spheres
   if (!geom.Shape().HasSphere())
     return;
 
-  auto &shape = geom.Shape().Sphere();
+  const double radius = geom.Shape().Sphere().Radius();
 
   std::unique_ptr<btCollisionShape> colShape(
-      new btSphereShape(btScalar(shape.Radius())));
+      new btSphereShape(radius));
 
   /// Create Dynamic Objects
   btTransform startTransform;
@@ -133,17 +197,22 @@ void PhysicsSystem::CreateRigidBody(ecs::Entity _entity)
   }
   // TODO else velocity means kinematic
 
-  auto &pos = pose.Origin().Pos();
-  startTransform.setOrigin(btVector3(pos.X(), pos.Y(), pos.Z()));
+  std::unique_ptr<btMotionState> myMotionState(
+      new ComponentMotionState(_entity.Id(), &(this->Manager())));
 
-  std::unique_ptr<btDefaultMotionState> myMotionState(new btDefaultMotionState(startTransform));
-
-  btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState.get(), colShape.get(), localInertia);
+  btRigidBody::btRigidBodyConstructionInfo rbInfo(
+    mass, myMotionState.get(), colShape.get(), localInertia);
   std::unique_ptr<btRigidBody> body(new btRigidBody(rbInfo));
 
   this->dynamicsWorld->addRigidBody(body.get());
 
   auto id = _entity.Id();
+
+  // Stuffing the entity id into user data pointer, make sure it fits
+  static_assert(sizeof(void*) >= sizeof(decltype(id)),
+      "Bullet userdata is too small for an entity id");
+  body->setUserPointer(reinterpret_cast<void *>(id));
+
   this->collisionShapes[id] = std::move(colShape);
   this->rigidBodies[id] = std::move(body);
   this->motionStates[id] = std::move(myMotionState);
@@ -165,19 +234,26 @@ void PhysicsSystem::UpdateBodies(const ecs::EntityQuery &_result)
     // Check for changes since last time step
     auto diffGeometry = entity.IsDifferent<components::Geometry>();
     auto diffPose = entity.IsDifferent<components::Geometry>();
+    auto diffCollidable = entity.IsDifferent<components::Collidable>();
 
     auto doDelete = (diffGeometry == ecs::WAS_DELETED)
-      || (diffPose == ecs::WAS_DELETED);
+      || (diffPose == ecs::WAS_DELETED)
+      || (diffCollidable == ecs::WAS_DELETED);
     auto doCreate = (!doDelete) && (diffGeometry == ecs::WAS_CREATED
-        || diffPose == ecs::WAS_CREATED);
+        || diffPose == ecs::WAS_CREATED
+        || diffCollidable == ecs::WAS_CREATED);
+
+    // TODO modify only if diffPose was modified by a different system
     auto doModify = (!doDelete) && (!doCreate) && (
-        diffGeometry == ecs::WAS_CREATED || diffPose == ecs::WAS_CREATED);
+        diffGeometry == ecs::WAS_MODIFIED
+        || diffPose == ecs::WAS_MODIFIED
+        || diffCollidable == ecs::WAS_MODIFIED);
 
     // Another system created a new geometry we don't know about yet, so
     // create it internally
     if (doCreate)
     {
-      // TODO Add a new body to the physics engine world
+      this->CreateRigidBody(entity);
     }
     else if (doDelete)
     {
@@ -190,7 +266,7 @@ void PhysicsSystem::UpdateBodies(const ecs::EntityQuery &_result)
   }
 
   // STEP 2 Update the world
-  // TODO Step the world once
+  this->dynamicsWorld->stepSimulation(this->maxStepSize, 0, this->maxStepSize);
 
   // STEP 3 Update the simulation time
   // Physics controls simulation time because engines with a variable time step
@@ -201,9 +277,11 @@ void PhysicsSystem::UpdateBodies(const ecs::EntityQuery &_result)
 
   // STEP 4
   // TODO Publish contacts on an ignition transport topic?
+  // If contacts are put into components, systems can't use them until the next
+  // time step.
 
   // STEP 5 update the components
-  // TODO Update with results from the physics engine
+  // Components are updated via btMotionState
 }
 
 
