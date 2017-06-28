@@ -94,14 +94,21 @@ std::vector<std::string> LoadLibraries(std::vector<std::string> _libs,
   for (auto const &libName : _libs)
   {
     std::string pathToLibrary = _sp.FindSharedLibrary(libName);
-    std::string pluginName = _pl.LoadLibrary(pathToLibrary);
-    if (!pluginName.empty())
+    if (pathToLibrary.empty())
     {
-      pluginNames.push_back(pluginName);
+      ignerr << "Failed to find library " << pathToLibrary << std::endl;
     }
     else
     {
-      ignerr << "Failed to load library " << libName << std::endl;
+      std::string pluginName = _pl.LoadLibrary(pathToLibrary);
+      if (!pluginName.empty())
+      {
+        pluginNames.push_back(pluginName);
+      }
+      else
+      {
+        ignerr << "Failed to load library " << libName << std::endl;
+      }
     }
   }
   return pluginNames;
