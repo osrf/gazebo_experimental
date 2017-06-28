@@ -79,7 +79,7 @@ void RenderSystem::Update(const ecs::EntityQuery &_result)
   this->camera->SetLocalPosition(offset, offset, offset);
   offset += 0.0001;
 
-  // rendering system should not be doing controlling the framerate
+  // rendering system should not be controlling the framerate
   // Most of the logic below should be moved to sensors and gui
 
   // throttle framerate
