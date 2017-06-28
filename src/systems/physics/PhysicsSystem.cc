@@ -169,11 +169,17 @@ void PhysicsSystem::CreateRigidBody(ecs::Entity &_entity)
 
   // Todo support multiple collisions on the same link
   if (collidable.GroupId() != ecs::NO_ENTITY)
+  {
+    ignwarn << "Compound geometries not yet supported " << collidable.GroupId() << std::endl;
     return;
+  }
 
   // Todo support more than just spheres
   if (!geom.Shape().HasSphere())
+  {
+    ignwarn << "Geometry not supported" << std::endl;
     return;
+  }
 
   const double radius = geom.Shape().Sphere().Radius();
 
