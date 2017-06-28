@@ -77,3 +77,19 @@ if (NOT SDFormat_FOUND)
 else()
   message (STATUS "Looking for SDFormat - found")
 endif()
+
+#################################################
+# Find bullet
+# First and preferred option is to look for bullet standard pkgconfig,
+# so check it first. if it is not present, check for the OSRF
+# custom bullet2.82.pc file
+pkg_check_modules(BULLET bullet>=2.83)
+
+if (BULLET_FOUND)
+  set (HAVE_BULLET TRUE)
+  add_definitions( -DLIBBULLET_VERSION=${BULLET_VERSION} )
+else()
+  set (HAVE_BULLET FALSE)
+  add_definitions( -DLIBBULLET_VERSION=0.0 )
+  BUILD_WARNING ("Bullet > 2.83 not found, for bullet physics engine option, please install libbullet-dev.")
+endif()

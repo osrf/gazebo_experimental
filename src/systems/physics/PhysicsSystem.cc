@@ -59,8 +59,23 @@ void PhysicsSystem::Init(ecs::QueryRegistrar &_registrar)
   // use of the Mass and WorldVelocity components if present, but these are
   // optional
 
+  this->InitBullet();
+
   _registrar.Register(query,
       std::bind(&PhysicsSystem::UpdateBodies, this, std::placeholders::_1));
+}
+
+/////////////////////////////////////////////////
+void PhysicsSystem::InitBullet()
+{
+  this->collisionConfig.reset(new btDefaultCollisionConfiguration());
+  this->dispatcher.reset(new btCollisionDispatcher(
+        this->collisionConfig.get()));
+  this->broadPhase.reset(new btDbvtBroadphase());
+  this->solver.reset(new btSequentialImpulseConstraintSolver);
+  this->dynamicsWorld.reset(new btDiscreteDynamicsWorld(
+        this->dispatcher.get(), this->broadPhase.get(), this->solver.get(),
+        this->collisionConfig.get()));
 }
 
 /////////////////////////////////////////////////
@@ -79,6 +94,59 @@ void PhysicsSystem::UpdateConfig(const ecs::EntityQuery &_result)
       this->maxStepSize = config.MaxStepSize();
     }
   }
+}
+
+//////////////////////////////////////////////////
+void PhysicsSystem::CreateRigidBody(ecs::Entity _entity)
+{
+  // Stuffing the entity id into user_data, make sure it fits
+  static_assert(sizeof(void*) >= sizeof(ecs::EntityId),
+      "Bullet userdata is too small");
+
+  auto &geom = _entity.Component<components::Geometry>();
+  auto &inertial = _entity.Component<components::Inertial>();
+  auto &velocity = _entity.Component<components::WorldVelocity>();
+  auto &pose = _entity.Component<components::Pose>();
+
+  if (!geom.Shape().HasSphere())
+    return;
+
+  auto &shape = geom.Shape().Sphere();
+
+  std::unique_ptr<btCollisionShape> colShape(
+      new btSphereShape(btScalar(shape.Radius())));
+
+  /// Create Dynamic Objects
+  btTransform startTransform;
+  startTransform.setIdentity();
+
+  double mass = 0;
+  btVector3 localInertia(0, 0, 0);
+
+  if (velocity && inertial)
+  {
+    mass = inertial.Mass();
+    // Dynamic
+    // TODO Inertia
+    //  http://www.bulletphysics.org/Bullet/phpBB3/viewtopic.php?f=9&t=3667
+    colShape->calculateLocalInertia(mass, localInertia);
+  }
+  // TODO else velocity means kinematic
+
+  auto &pos = pose.Origin().Pos();
+  startTransform.setOrigin(btVector3(pos.X(), pos.Y(), pos.Z()));
+
+  std::unique_ptr<btDefaultMotionState> myMotionState(new btDefaultMotionState(startTransform));
+
+  btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState.get(), colShape.get(), localInertia);
+  std::unique_ptr<btRigidBody> body(new btRigidBody(rbInfo));
+
+  this->dynamicsWorld->addRigidBody(body.get());
+
+  auto id = _entity.Id();
+  this->collisionShapes[id] = std::move(colShape);
+  this->rigidBodies[id] = std::move(body);
+  this->motionStates[id] = std::move(myMotionState);
 }
 
 /////////////////////////////////////////////////

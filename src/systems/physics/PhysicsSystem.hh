@@ -21,6 +21,10 @@
 #include "gazebo/ecs/Entity.hh"
 #include "gazebo/ecs/System.hh"
 
+#include <btBulletDynamicsCommon.h>
+#include <btBulletCollisionCommon.h>
+#include <BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h>
+#include <BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h>
 
 namespace gazebo
 {
@@ -43,6 +47,28 @@ namespace gazebo
 
       /// \brief max time in seconds to step the world
       protected: double maxStepSize = 0.001;
+
+      /// \brief Initialize physics world
+      /// \returns true if initialization succeeded
+      private: void InitBullet();
+
+      /// \brief Creates a Sphere in the bullet world
+      private: void CreateRigidBody(ecs::Entity _entity);
+
+      private: std::unique_ptr<btDefaultCollisionConfiguration> collisionConfig;
+      private: std::unique_ptr<btCollisionDispatcher> dispatcher;
+      private: std::unique_ptr<btBroadphaseInterface> broadPhase;
+      private: std::unique_ptr<btSequentialImpulseConstraintSolver> solver;
+      private: std::unique_ptr<btDiscreteDynamicsWorld> dynamicsWorld;
+      private: std::unordered_map<
+                ecs::EntityId,
+                std::unique_ptr<btCollisionShape> > collisionShapes;
+      private: std::unordered_map<
+                ecs::EntityId,
+                std::unique_ptr<btRigidBody> > rigidBodies;
+      private: std::unordered_map<
+                ecs::EntityId,
+                std::unique_ptr<btMotionState> > motionStates;
     };
   }
 }
