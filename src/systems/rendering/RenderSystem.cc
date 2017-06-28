@@ -63,15 +63,31 @@ void RenderSystem::Update(const ecs::EntityQuery &_result)
         this->camera->CreateImage());
   }
 
+  // the render engine should only be responsible for updating the scene tree.
+  // we shouldn't be throttling the update rate based on sim time
+  // because objects can move when simulation is paused!
+  // This is just for demo only
   auto &mgr = this->Manager();
-  auto const &currentTime = mgr.SimulationTime();
-  if (currentTime < this->nextRenderTime)
-  {
-    // Too early to publish
+  auto const &currentSimTime = mgr.SimulationTime();
+  double updateRate = 1000.0;
+  if ((currentSimTime - this->prevUpdateTime).Double() < 1.0/updateRate)
     return;
-  }
-  double framerate = 30.0;
-  this->nextRenderTime += ignition::common::Time(1.0 / framerate);
+  this->prevUpdateTime = currentSimTime;
+  // for demo only
+  // move the camera slowly in x, y, and z
+  static double offset = 0.0;
+  this->camera->SetLocalPosition(offset, offset, offset);
+  offset += 0.0001;
+
+  // rendering system should not be doing controlling the framerate
+  // Most of the logic below should be moved to sensors and gui
+
+  // throttle framerate
+  double framerate = 60.0;
+  auto const &currentTime = ignition::common::Time::SystemTime();
+  if ((currentTime - prevRenderTime).Double() < 1.0/framerate)
+    return;
+  this->prevRenderTime = currentTime;
 
   this->camera->Capture(*this->image);
   unsigned char *data = this->image->Data<unsigned char>();
@@ -89,11 +105,6 @@ void RenderSystem::Update(const ecs::EntityQuery &_result)
   this->pub.Publish(img);
 
 
-  // for demo only
-  // move the camera slowing in x, y, and z
-  static double offset = 0.0;
-  this->camera->SetLocalPosition(offset, offset, offset);
-  offset += 0.001;
 }
 
 /////////////////////////////////////////////////

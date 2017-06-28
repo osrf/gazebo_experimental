@@ -57,8 +57,11 @@ namespace gazebo
       /// \brief Publisher to the image toipc
       public: ignition::transport::Node::Publisher pub;
 
-      /// \brief accumulator that counts up current sim time
-      public: ignition::common::Time nextRenderTime;
+      /// \brief previous update sim time
+      public: ignition::common::Time prevUpdateTime;
+
+      /// \brief previous render time
+      public: ignition::common::Time prevRenderTime;
 
       /// \brief Rendering camera
       public: ignition::rendering::CameraPtr camera;
