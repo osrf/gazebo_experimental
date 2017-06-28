@@ -43,7 +43,7 @@ TEST(CZGeometry, SdfNoGeometry)
         </physics> \
       </world> \
     </sdf>";
-  mgr.LoadWorld(world);
+  mgr.LoadWorldFromString(world);
   mgr.UpdateOnce();
 
   auto entities = mgr.QueryEntities({
@@ -79,7 +79,7 @@ TEST(CZGeometry, SdfSphereGeometry)
         </model> \
       </world> \
     </sdf>";
-  mgr.LoadWorld(world);
+  mgr.LoadWorldFromString(world);
   mgr.UpdateOnce();
 
   auto entities = mgr.QueryEntities({
@@ -118,7 +118,7 @@ TEST(CZGeometry, SdfBoxGeometry)
         </model> \
       </world> \
     </sdf>";
-  mgr.LoadWorld(world);
+  mgr.LoadWorldFromString(world);
   mgr.UpdateOnce();
 
   auto entities = mgr.QueryEntities({
@@ -160,7 +160,7 @@ TEST(CZGeometry, SdfCylinderGeometry)
         </model> \
       </world> \
     </sdf>";
-  mgr.LoadWorld(world);
+  mgr.LoadWorldFromString(world);
   mgr.UpdateOnce();
 
   auto entities = mgr.QueryEntities({

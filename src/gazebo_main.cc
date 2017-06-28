@@ -185,22 +185,7 @@ bool LoadWorld(gzecs::Manager &_mgr, std::string _file)
   else
   {
     igndbg << "Loading world [" << fullPath << "]" << std::endl;
-
-    std::ifstream fin;
-    std::stringstream buffer;
-    std::string fileContents;
-    fin.open(fullPath, std::fstream::in);
-
-    if (!fin)
-    {
-      ignwarn << "Failed to open [" << fullPath << "]" << std::endl;
-      success = false;
-    }
-    else
-    {
-      buffer << fin.rdbuf();
-      success = _mgr.LoadWorld(buffer.str());
-    }
+    success = _mgr.LoadWorldFromPath(fullPath);
   }
 
   return success;

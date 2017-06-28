@@ -43,7 +43,7 @@ TEST(CZWorldVelocity, NoWorldVelocity)
         </physics> \
       </world> \
     </sdf>";
-  mgr.LoadWorld(world);
+  mgr.LoadWorldFromString(world);
   mgr.UpdateOnce();
 
   auto entities = mgr.QueryEntities({
@@ -72,7 +72,7 @@ TEST(CZWorldVelocity, MovingModel)
         </model> \
       </world> \
     </sdf>";
-  mgr.LoadWorld(world);
+  mgr.LoadWorldFromString(world);
   mgr.UpdateOnce();
 
   auto entities = mgr.QueryEntities({
@@ -101,7 +101,7 @@ TEST(CZWorldVelocity, StaticModel)
         </model> \
       </world> \
     </sdf>";
-  mgr.LoadWorld(world);
+  mgr.LoadWorldFromString(world);
   mgr.UpdateOnce();
 
   auto entities = mgr.QueryEntities({
