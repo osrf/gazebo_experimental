@@ -52,7 +52,12 @@ void CZCollidable::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
     }
     else
     {
-      ecs::EntityId groupId = _ids.at(parent.get());
+      ecs::EntityId groupId = ecs::NO_ENTITY;
+      if (_elem.GetNextElement("collision"))
+      {
+        // Multiple collisions, group them
+        groupId = _ids.at(parent.get());
+      }
       ecs::EntityId id = _ids.at(&_elem);
       ecs::Entity &entity = _mgr.Entity(id);
 
