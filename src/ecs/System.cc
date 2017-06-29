@@ -31,12 +31,6 @@ System::System()
 {
 }
 
-//////////////////////////////////////////////////
-System::~System()
-{
-  // Pure virtual destructors still have to be defined
-}
-
 /// \brief Get the manager this system is a part of
 ecs::Manager &System::Manager()
 {
@@ -52,4 +46,5 @@ void System::Manager(ecs::Manager *_mgr)
 /////////////////////////////////////////////////
 System::~System()
 {
+  // Pure virtual destructors still have to be defined
 }
