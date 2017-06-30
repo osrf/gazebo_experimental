@@ -84,11 +84,11 @@ TEST(CZPose, ModelWithPose)
   ASSERT_EQ(1, entities.size());
   gzecs::Entity &e = mgr.Entity(*(entities.begin()));
   auto comp = e.Component<gazebo::components::Pose>();
-  EXPECT_DOUBLE_EQ(1.1, comp.Origin().Pos().X());
-  EXPECT_DOUBLE_EQ(2.2, comp.Origin().Pos().Y());
-  EXPECT_DOUBLE_EQ(3.3, comp.Origin().Pos().Z());
+  EXPECT_DOUBLE_EQ(1.1, comp.Transform().Pos().X());
+  EXPECT_DOUBLE_EQ(2.2, comp.Transform().Pos().Y());
+  EXPECT_DOUBLE_EQ(3.3, comp.Transform().Pos().Z());
 
-  auto eulerAngles = comp.Origin().Rot().Euler();
+  auto eulerAngles = comp.Transform().Rot().Euler();
   EXPECT_NEAR(0.1, eulerAngles.X(), allowedAngularError);
   EXPECT_NEAR(1.2, eulerAngles.Y(), allowedAngularError);
   EXPECT_NEAR(2.3, eulerAngles.Z(), allowedAngularError);
@@ -124,6 +124,78 @@ TEST(CZPose, ManyPoses)
       });
 
   ASSERT_EQ(4, entities.size());
+}
+
+/////////////////////////////////////////////////
+TEST(CZPose, RelativePoses)
+{
+  gzecs::Manager mgr;
+  mgr.LoadComponentFactory<gzc::PoseFactory>();
+  mgr.LoadComponentizer<gzcz::CZPose>();
+
+  std::string world = " \
+    <sdf version='1.6'> \
+      <world name='default'> \
+        <physics name='asdf' type='ode'> \
+        </physics> \
+        <model name='m1'> \
+          <pose>1 0 0 0 0 0</pose> \
+          <link name='l1'> \
+            <pose>0 1 0 0 0 0</pose> \
+            <collision name='c1'> \
+              <pose>0 0 1 0 0 0</pose> \
+            </collision> \
+            <visual name='v1'> \
+              <pose>0 0 2 0 0 0</pose> \
+            </visual> \
+            <inertial> \
+            <pose>0 0 3 0 0 0</pose> \
+            </inertial> \
+          </link> \
+        </model> \
+      </world> \
+    </sdf>";
+  mgr.LoadWorldFromString(world);
+  mgr.UpdateOnce();
+
+  auto entities = mgr.QueryEntities({
+      "gazebo::components::Pose",
+      });
+  ASSERT_EQ(5, entities.size());
+
+  auto iter = entities.begin();
+  // Postfix increment intentional
+  gazebo::ecs::EntityId modelId = *iter++;
+  gazebo::ecs::EntityId linkId = *iter++;
+  gazebo::ecs::EntityId collisionId = *iter++;
+  gazebo::ecs::EntityId visualId = *iter++;
+  gazebo::ecs::EntityId inertialId = *iter++;
+
+  auto &modelEntity = mgr.Entity(modelId);
+  auto modelPose = modelEntity.Component<gazebo::components::Pose>();
+  EXPECT_EQ(ignition::math::Pose3d(0, -1, 0, 0, 0, 0), modelPose.Transform());
+  EXPECT_EQ(linkId, modelPose.AttachedTo());
+
+  auto &linkEntity = mgr.Entity(linkId);
+  auto linkPose = linkEntity.Component<gazebo::components::Pose>();
+  EXPECT_EQ(ignition::math::Pose3d(1, 1, 0, 0, 0, 0), linkPose.Transform());
+  EXPECT_EQ(gazebo::ecs::NO_ENTITY, linkPose.AttachedTo());
+
+  auto &collisionEntity = mgr.Entity(collisionId);
+  auto collisionPose = collisionEntity.Component<gazebo::components::Pose>();
+  EXPECT_EQ(ignition::math::Pose3d(0, 0, 1, 0, 0, 0),
+      collisionPose.Transform());
+  EXPECT_EQ(linkId, collisionPose.AttachedTo());
+
+  auto &visualEntity = mgr.Entity(visualId);
+  auto visualPose = visualEntity.Component<gazebo::components::Pose>();
+  EXPECT_EQ(ignition::math::Pose3d(0, 0, 2, 0, 0, 0), visualPose.Transform());
+  EXPECT_EQ(linkId, visualPose.AttachedTo());
+
+  auto &inertialEntity = mgr.Entity(inertialId);
+  auto inertialPose = inertialEntity.Component<gazebo::components::Pose>();
+  EXPECT_EQ(ignition::math::Pose3d(0, 0, 3, 0, 0, 0), inertialPose.Transform());
+  EXPECT_EQ(linkId, inertialPose.AttachedTo());
 }
 
 //////////////////////////////////////////////////

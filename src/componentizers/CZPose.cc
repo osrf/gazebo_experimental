@@ -39,64 +39,56 @@ void CZPose::Init()
 void CZPose::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
     const std::unordered_map<sdf::Element*, ecs::EntityId> &_ids)
 {
-  // Create frame names according to gazebo 9 document
-  //
-  // Give things poses and unique frame ids
-  // Model - child of world: pose in frame "/"
-  //       - child of another model: pose in parent model frame
-  // Link - pose in model "[parent model]/model/modelName"
-  // Collision - pose in link "[parent model]/model/modelName/link/linkName"
-  // Visual - pose in link "[parent model]/model/modelName/link/linkName"
-
   std::string tag = _elem.GetName();
 
-  if (tag == "model" || tag == "link" || tag == "visual" || tag == "collision")
+  // Links are attached to NO_ENTITY
+
+  if (tag != "model" && tag != "link" && tag != "inertial" && tag != "visual"
+      && tag != "collision")
   {
-    // Figure out parent frame
-    std::string parentFrame = "/";
-    sdf::ElementPtr parent = _elem.GetParent();
-    if (parent && parent->GetName() != "world")
-    {
-      parentFrame = this->frames.at(parent.get());
-    }
-    assert(!parentFrame.empty());
-
-
-    // Figure out what frame this defines
-    std::string definesFrame;
-    std::string name = _elem.GetAttribute("name")->GetAsString();
-    if (parentFrame[parentFrame.size()-1] == '/')
-      definesFrame = parentFrame + tag + '/' + name;
-    else
-      definesFrame = parentFrame + '/' + tag + '/' + name;
-
-    // Remember the frame this element defines
-    this->frames[&_elem] = definesFrame;
-
-    //figure out the pose
-    ignition::math::Pose3d pose;
-    if (_elem.HasElement("pose"))
-    {
-      pose = _elem.Get<ignition::math::Pose3d>("pose");
-    }
-
-    // create component
-    ecs::EntityId id = _ids.at(&_elem);
-    ecs::Entity &entity = _mgr.Entity(id);
-    auto comp = entity.AddComponent<components::Pose>();
-    comp.ParentFrame() = parentFrame;
-    comp.DefinesFrame() = definesFrame;
-    comp.Origin() = pose;
-    igndbg << "Pose " << pose << " in frame " << parentFrame << " on "
-      << id << std::endl;
+    // Other tags are unsupported
+    return;
   }
-  else if (tag == "inertial")
+
+  ecs::EntityId id = _ids.at(&_elem);
+  sdf::ElementPtr parent = _elem.GetParent();
+  ecs::EntityId parentId = _ids.at(parent.get());
+  ecs::EntityId attachedTo = ecs::NO_ENTITY;
+  ignition::math::Pose3d transform;
+  if (_elem.HasElement("pose"))
   {
-    if (_elem.HasElement("pose"))
-    {
-      ignwarn << "pose on <inertial> not yet supported" << std::endl;
-    }
+    transform = _elem.Get<ignition::math::Pose3d>("pose");
   }
+
+  if (tag == "link")
+  {
+    if (!_elem.GetNextElement("link")
+        && parent->GetElement("link").get() == &_elem)
+    {
+      // Cannonical link, attach model to it
+      ecs::Entity &entity = _mgr.Entity(parentId);
+      auto comp = entity.AddComponent<components::Pose>();
+      assert(comp);
+      comp.AttachedTo() = id;
+      // Set the model's pose relative to the cannonical link
+      comp.Transform() = transform.Inverse();
+    }
+
+    // Set the Link pose in world frame
+    transform = transform + this->transforms[parentId];
+  }
+  else if (tag == "visual" || tag == "inertial" || tag == "collision")
+  {
+    // Collisions, visuals, inertials are attached to the link
+    attachedTo = parentId;
+  }
+
+  this->transforms[id] = transform;
+
+  ecs::Entity &entity = _mgr.Entity(id);
+  auto comp = entity.AddComponent<components::Pose>();
+  comp.AttachedTo() = attachedTo;
+  comp.Transform() = transform;
 }
 
 //////////////////////////////////////////////////

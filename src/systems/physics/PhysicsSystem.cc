@@ -77,8 +77,8 @@ class ComponentMotionState : public btMotionState
 
       btQuaternion rot = worldTrans.getRotation();
       btVector3 pos = worldTrans.getOrigin();
-      auto &pos_ign = pose.Origin().Pos();
-      auto &rot_ign = pose.Origin().Rot();
+      auto &pos_ign = pose.Transform().Pos();
+      auto &rot_ign = pose.Transform().Rot();
 
       igndbg << "Set transform called " << pos.z() << std::endl;
 
@@ -209,7 +209,7 @@ void PhysicsSystem::CreateRigidBody(ecs::Entity &_entity)
 
   std::unique_ptr<ComponentMotionState> motionState(
       new ComponentMotionState(_entity.Id(), &(this->Manager())));
-  motionState->initialPose = pose.Origin();
+  motionState->initialPose = pose.Transform();
 
   btRigidBody::btRigidBodyConstructionInfo rbInfo(
     mass, motionState.get(), colShape.get(), localInertia);

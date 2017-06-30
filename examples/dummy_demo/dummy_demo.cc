@@ -139,9 +139,9 @@ int main(int argc, char **argv)
     auto pose = entity.AddComponent<gazebo::components::Pose>();
     if (pose)
     {
-      pose.Origin().Pos().X(ignition::math::Rand::DblUniform(-4.0, 4.0));
-      pose.Origin().Pos().Y(ignition::math::Rand::DblUniform(-4.0, 4.0));
-      pose.Origin().Pos().Z(ignition::math::Rand::DblUniform(-4.0, 4.0));
+      pose.Transform().Pos().X(ignition::math::Rand::DblUniform(-4.0, 4.0));
+      pose.Transform().Pos().Y(ignition::math::Rand::DblUniform(-4.0, 4.0));
+      pose.Transform().Pos().Z(ignition::math::Rand::DblUniform(-4.0, 4.0));
     }
     else
     {

@@ -277,13 +277,23 @@ bool EntityComponentDatabase::AddComponent(EntityId _id, ComponentAPI &_api)
   bool success = false;
   gazebo::ecs::ComponentType type = _api.ComponentType();
   StorageKey key = std::make_pair(_id, type);
+  if (type < 0 or type >= this->dataPtr->componentFactories.size())
+  {
+    // Invalid type, do nothing
+  }
+  else if (this->dataPtr->toAddComponents.find(key)
+      != this->dataPtr->toAddComponents.end())
+  {
+    // TODO only do this if the system who added the componenent
+    // is requesting it again
+    auto &cf = this->dataPtr->componentFactories[type];
+    char *storage = this->dataPtr->toAddComponents[key];
+    cf->ConstructAPI(static_cast<void*>(&_api), static_cast<void*>(storage));
+    success = true;
+  }
   // if component has not been added already
-  if (this->dataPtr->componentIndices.find(key) ==
-      this->dataPtr->componentIndices.end() &&
-      this->dataPtr->toAddComponents.find(key) ==
-      this->dataPtr->toAddComponents.end() &&
-      type >= 0 &&
-      type < this->dataPtr->componentFactories.size())
+  else if (this->dataPtr->componentIndices.find(key) ==
+      this->dataPtr->componentIndices.end())
   {
     auto &cf = this->dataPtr->componentFactories[type];
     // Allocate memory and call constructor
@@ -297,7 +307,7 @@ bool EntityComponentDatabase::AddComponent(EntityId _id, ComponentAPI &_api)
     success = true;
   }
 
-  return success;;
+  return success;
 }
 
 /////////////////////////////////////////////////

@@ -20,6 +20,7 @@
 
 #include <unordered_map>
 
+#include <ignition/math/Pose3.hh>
 #include "gazebo/ecs/Componentizer.hh"
 #include "gazebo/ecs/Manager.hh"
 
@@ -41,7 +42,8 @@ namespace gazebo
                   const std::unordered_map<sdf::Element*, ecs::EntityId> &_ids);
 
       /// \brief map of elements to their frame names
-      private: std::unordered_map<sdf::Element*, std::string> frames;
+      private: std::unordered_map<ecs::EntityId, ignition::math::Pose3d>
+               transforms;
     };
   }
 }

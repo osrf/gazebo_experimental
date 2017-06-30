@@ -199,8 +199,8 @@ void DumbPhysics::SyncInternalVelocity(dumb_physics::Body *_body,
 void DumbPhysics::SyncInternalPose(dumb_physics::Body *_body,
     const components::Pose &_component)
 {
-  _body->Position(_component.Origin().Pos());
-  _body->Rotation(_component.Origin().Rot());
+  _body->Position(_component.Transform().Pos());
+  _body->Rotation(_component.Transform().Rot());
 }
 
 /////////////////////////////////////////////////
@@ -229,8 +229,8 @@ void DumbPhysics::SyncExternalVelocity(const dumb_physics::Body *_body,
 void DumbPhysics::SyncExternalPose(const dumb_physics::Body *_body,
     components::Pose &_component)
 {
-  _component.Origin().Pos() = _body->Position();
-  _component.Origin().Rot() = _body->Rotation();
+  _component.Transform().Pos() = _body->Position();
+  _component.Transform().Rot() = _body->Rotation();
 }
 
 /////////////////////////////////////////////////

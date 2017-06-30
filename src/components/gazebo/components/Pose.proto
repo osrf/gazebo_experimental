@@ -20,18 +20,15 @@ package gazebo.components;
 
 import "gazebo/components/Pose3d.proto";
 
+/// \brief A Pose of something
 message Pose
 {
-  /// \brief What frame is this pose defined in
-  /// \remarks "" is invalid
-  /// \remarks "/" means it's defined in the world frame
-  optional string ParentFrame = 1 [default = "/"];
-
-  /// \brief Name of the frame cooresponding to this pose
-  /// \remarks "" means this does not define a frame
-  optional string DefinesFrame = 2;
+  /// \brief What Entity is this attached to?
+  /// \remarks NO_ENTITY means the pose is in world frame, otherwise the pose
+  ///          Is relative to the entity this is attached to.
+  optional int64 AttachedTo = 1 [default = -1];
 
   // Can't call this Pose because it conflicts with API class constructor
   /// \brief pose in parent frame
-  optional Pose3d Origin = 3;
+  optional Pose3d Transform = 3;
 }

@@ -111,9 +111,9 @@ void DummyRendering::AddObjectToScene(ecs::Entity &_entity)
   {
     auto pose = _entity.Component<components::Pose>();
     dummy_rendering::Object obj;
-    obj.scene_x = pose.Origin().Pos().X();
-    obj.scene_y = pose.Origin().Pos().Y();
-    obj.scene_z = pose.Origin().Pos().Z();
+    obj.scene_x = pose.Transform().Pos().X();
+    obj.scene_y = pose.Transform().Pos().Y();
+    obj.scene_z = pose.Transform().Pos().Z();
     obj.radius = geometry.Shape().Sphere().Radius();
     obj.red = material.Appearance().Color().Red() * 255;
     obj.green = material.Appearance().Color().Green() * 255;
@@ -137,9 +137,9 @@ void DummyRendering::UpdatePosition(ecs::Entity &_entity)
     dummy_rendering::Object *obj = this->scene.GetById(_entity.Id());
     if (obj)
     {
-      obj->scene_x = pose.Origin().Pos().X();
-      obj->scene_y = pose.Origin().Pos().Y();
-      obj->scene_z = pose.Origin().Pos().Z();
+      obj->scene_x = pose.Transform().Pos().X();
+      obj->scene_y = pose.Transform().Pos().Y();
+      obj->scene_z = pose.Transform().Pos().Z();
     }
   }
   else
