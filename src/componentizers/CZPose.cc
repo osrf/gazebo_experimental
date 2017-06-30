@@ -89,6 +89,9 @@ void CZPose::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
   auto comp = entity.AddComponent<components::Pose>();
   comp.AttachedTo() = attachedTo;
   comp.Transform() = transform;
+
+  igndbg << "Added pose to " << id << " attached to " << comp.AttachedTo()
+    << " transform " << comp.Transform() << std::endl;
 }
 
 //////////////////////////////////////////////////

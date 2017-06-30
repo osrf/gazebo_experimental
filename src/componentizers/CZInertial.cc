@@ -74,7 +74,8 @@ void CZInertial::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
                            ixy, iyy, iyz,
                            ixz, iyz, izz);
       }
-      igndbg << "Added Inertial to " << parentId << std::endl;
+      igndbg << "Added Inertial with mass [" << comp.Mass() << "] to "
+        << parentId << std::endl;
     }
   }
 }
