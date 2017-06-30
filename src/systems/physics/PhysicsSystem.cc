@@ -96,7 +96,7 @@ class ComponentMotionState : public btMotionState
       rot_ign.X() = rot.x();
       rot_ign.Y() = rot.y();
       rot_ign.Z() = rot.z();
-
+      igndbg << this->id << " pose " << pos_ign << "\n";
       // TODO update velocity component here too
     }
 };
@@ -174,29 +174,30 @@ void PhysicsSystem::CreateRigidBody(ecs::Entity &_entity)
 {
   auto collidable = _entity.Component<components::Collidable>();
   auto geom = _entity.Component<components::Geometry>();
-  auto pose = _entity.Component<components::Pose>();
-
   auto inertial = _entity.Component<components::Inertial>();
+  auto pose = _entity.Component<components::Pose>();
   auto velocity = _entity.Component<components::WorldVelocity>();
 
-  // Todo support multiple collisions on the same link
-  if (collidable.GroupId() != ecs::NO_ENTITY)
-  {
-    ignwarn << "Compound geometries not yet supported " << collidable.GroupId() << std::endl;
-    return;
-  }
+  std::unique_ptr<btCollisionShape> colShape;
 
-  // Todo support more than just spheres
-  if (!geom.Shape().HasSphere())
+  if (geom.Shape().HasSphere())
   {
+    const double radius = geom.Shape().Sphere().Radius();
+    colShape.reset(new btSphereShape(radius));
+  }
+  else if (geom.Shape().HasBox())
+  {
+    const double x = geom.Shape().Box().X();
+    const double y = geom.Shape().Box().Y();
+    const double z = geom.Shape().Box().Z();
+    colShape.reset(new btBoxShape(btVector3(x / 2.0, y / 2.0, z / 2.0)));
+  }
+  else
+  {
+    // Todo support more shapes
     ignwarn << "Geometry not supported" << std::endl;
     return;
   }
-
-  const double radius = geom.Shape().Sphere().Radius();
-
-  std::unique_ptr<btCollisionShape> colShape(
-      new btSphereShape(radius));
 
   /// Create Dynamic Objects
   btTransform startTransform;
