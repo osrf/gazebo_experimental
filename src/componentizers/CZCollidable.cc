@@ -53,7 +53,8 @@ void CZCollidable::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
     else
     {
       ecs::EntityId groupId = ecs::NO_ENTITY;
-      if (_elem.GetNextElement("collision"))
+      if (_elem.GetNextElement("collision")
+          || parent->GetElement("collision").get() != &_elem)
       {
         // Multiple collisions, group them
         groupId = _ids.at(parent.get());
