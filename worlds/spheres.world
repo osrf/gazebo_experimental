@@ -1,0 +1,688 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <world name="default">
+    <physics type="bullet">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+    </physics>
+    <model name="ground">
+      <pose>0 0 -1 0 0 0</pose>
+      <static>true</static>
+      <link name="link">
+        <pose>0 0 0 0 0 0</pose>
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>20 20 0.1</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>20 20 0.1</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <specular>1 1 1 1</specular>
+            <emissive>1 1 1 1</emissive>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="sphere_1">
+      <pose>1.1 0 0 0 0 0</pose>
+      <link name="link_1">
+        <pose>0 0 0 0 0 0</pose>
+        <collision name="collision1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </collision>
+        <visual name="visual1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </visual>
+        <inertial>
+          <mass>5.0</mass>
+          <inertia>
+            <ixx>0.5</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.5</iyy>
+            <iyz>0</iyz>
+            <izz>0.5</izz>
+          </inertia>
+        </inertial>
+      </link>
+    </model>
+    <model name="sphere_2">
+      <pose>2.1 0 0 0 0 0</pose>
+      <link name="link_1">
+        <pose>0 0 0 0 0 0</pose>
+        <collision name="collision1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </collision>
+        <visual name="visual1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </visual>
+        <inertial>
+          <mass>5.0</mass>
+          <inertia>
+            <ixx>0.5</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.5</iyy>
+            <iyz>0</iyz>
+            <izz>0.5</izz>
+          </inertia>
+        </inertial>
+      </link>
+    </model>
+    <model name="sphere_3">
+      <pose>3.1 0 0 0 0 0</pose>
+      <link name="link_1">
+        <pose>0 0 0 0 0 0</pose>
+        <collision name="collision1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </collision>
+        <visual name="visual1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </visual>
+        <inertial>
+          <mass>5.0</mass>
+          <inertia>
+            <ixx>0.5</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.5</iyy>
+            <iyz>0</iyz>
+            <izz>0.5</izz>
+          </inertia>
+        </inertial>
+      </link>
+    </model>
+    <model name="sphere_4">
+      <pose>4.1 0 0 0 0 0</pose>
+      <link name="link_1">
+        <pose>0 0 0 0 0 0</pose>
+        <collision name="collision1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </collision>
+        <visual name="visual1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </visual>
+        <inertial>
+          <mass>5.0</mass>
+          <inertia>
+            <ixx>0.5</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.5</iyy>
+            <iyz>0</iyz>
+            <izz>0.5</izz>
+          </inertia>
+        </inertial>
+      </link>
+    </model>
+    <model name="sphere_5">
+      <pose>5.1 0 0 0 0 0</pose>
+      <link name="link_1">
+        <pose>0 0 0 0 0 0</pose>
+        <collision name="collision1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </collision>
+        <visual name="visual1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </visual>
+        <inertial>
+          <mass>5.0</mass>
+          <inertia>
+            <ixx>0.5</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.5</iyy>
+            <iyz>0</iyz>
+            <izz>0.5</izz>
+          </inertia>
+        </inertial>
+      </link>
+    </model>
+    <model name="sphere_6">
+      <pose>5.1 1 0 0 0 0</pose>
+      <link name="link_1">
+        <pose>0 0 0 0 0 0</pose>
+        <collision name="collision1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </collision>
+        <visual name="visual1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </visual>
+        <inertial>
+          <mass>5.0</mass>
+          <inertia>
+            <ixx>0.5</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.5</iyy>
+            <iyz>0</iyz>
+            <izz>0.5</izz>
+          </inertia>
+        </inertial>
+      </link>
+    </model>
+    <model name="sphere_7">
+      <pose>5.1 2 0 0 0 0</pose>
+      <link name="link_1">
+        <pose>0 0 0 0 0 0</pose>
+        <collision name="collision1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </collision>
+        <visual name="visual1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </visual>
+        <inertial>
+          <mass>5.0</mass>
+          <inertia>
+            <ixx>0.5</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.5</iyy>
+            <iyz>0</iyz>
+            <izz>0.5</izz>
+          </inertia>
+        </inertial>
+      </link>
+    </model>
+    <model name="sphere_8">
+      <pose>5.1 3 0 0 0 0</pose>
+      <link name="link_1">
+        <pose>0 0 0 0 0 0</pose>
+        <collision name="collision1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </collision>
+        <visual name="visual1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </visual>
+        <inertial>
+          <mass>5.0</mass>
+          <inertia>
+            <ixx>0.5</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.5</iyy>
+            <iyz>0</iyz>
+            <izz>0.5</izz>
+          </inertia>
+        </inertial>
+      </link>
+    </model>
+    <model name="sphere_9">
+      <pose>5.1 4 0 0 0 0</pose>
+      <link name="link_1">
+        <pose>0 0 0 0 0 0</pose>
+        <collision name="collision1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </collision>
+        <visual name="visual1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </visual>
+        <inertial>
+          <mass>5.0</mass>
+          <inertia>
+            <ixx>0.5</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.5</iyy>
+            <iyz>0</iyz>
+            <izz>0.5</izz>
+          </inertia>
+        </inertial>
+      </link>
+    </model>
+    <model name="sphere_10">
+      <pose>5.1 5 0 0 0 0</pose>
+      <link name="link_1">
+        <pose>0 0 0 0 0 0</pose>
+        <collision name="collision1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </collision>
+        <visual name="visual1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </visual>
+        <inertial>
+          <mass>5.0</mass>
+          <inertia>
+            <ixx>0.5</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.5</iyy>
+            <iyz>0</iyz>
+            <izz>0.5</izz>
+          </inertia>
+        </inertial>
+      </link>
+    </model>
+    <model name="sphere_11">
+      <pose>5 5 2 0 0 0</pose>
+      <link name="link_1">
+        <pose>0 0 0 0 0 0</pose>
+        <collision name="collision1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </collision>
+        <visual name="visual1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </visual>
+        <inertial>
+          <mass>5.0</mass>
+          <inertia>
+            <ixx>0.5</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.5</iyy>
+            <iyz>0</iyz>
+            <izz>0.5</izz>
+          </inertia>
+        </inertial>
+      </link>
+    </model>
+    <model name="sphere_12">
+      <pose>5 4 2 0 0 0</pose>
+      <link name="link_1">
+        <pose>0 0 0 0 0 0</pose>
+        <collision name="collision1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </collision>
+        <visual name="visual1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </visual>
+        <inertial>
+          <mass>5.0</mass>
+          <inertia>
+            <ixx>0.5</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.5</iyy>
+            <iyz>0</iyz>
+            <izz>0.5</izz>
+          </inertia>
+        </inertial>
+      </link>
+    </model>
+    <model name="sphere_13">
+      <pose>5 3 2 0 0 0</pose>
+      <link name="link_1">
+        <pose>0 0 0 0 0 0</pose>
+        <collision name="collision1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </collision>
+        <visual name="visual1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </visual>
+        <inertial>
+          <mass>5.0</mass>
+          <inertia>
+            <ixx>0.5</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.5</iyy>
+            <iyz>0</iyz>
+            <izz>0.5</izz>
+          </inertia>
+        </inertial>
+      </link>
+    </model>
+    <model name="sphere_14">
+      <pose>5 2 2 0 0 0</pose>
+      <link name="link_1">
+        <pose>0 0 0 0 0 0</pose>
+        <collision name="collision1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </collision>
+        <visual name="visual1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </visual>
+        <inertial>
+          <mass>5.0</mass>
+          <inertia>
+            <ixx>0.5</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.5</iyy>
+            <iyz>0</iyz>
+            <izz>0.5</izz>
+          </inertia>
+        </inertial>
+      </link>
+    </model>
+    <model name="sphere_15">
+      <pose>5 1 2 0 0 0</pose>
+      <link name="link_1">
+        <pose>0 0 0 0 0 0</pose>
+        <collision name="collision1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </collision>
+        <visual name="visual1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </visual>
+        <inertial>
+          <mass>5.0</mass>
+          <inertia>
+            <ixx>0.5</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.5</iyy>
+            <iyz>0</iyz>
+            <izz>0.5</izz>
+          </inertia>
+        </inertial>
+      </link>
+    </model>
+    <model name="sphere_16">
+      <pose>5 0 2 0 0 0</pose>
+      <link name="link_1">
+        <pose>0 0 0 0 0 0</pose>
+        <collision name="collision1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </collision>
+        <visual name="visual1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </visual>
+        <inertial>
+          <mass>5.0</mass>
+          <inertia>
+            <ixx>0.5</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.5</iyy>
+            <iyz>0</iyz>
+            <izz>0.5</izz>
+          </inertia>
+        </inertial>
+      </link>
+    </model>
+    <model name="sphere_17">
+      <pose>4 0 2 0 0 0</pose>
+      <link name="link_1">
+        <pose>0 0 0 0 0 0</pose>
+        <collision name="collision1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </collision>
+        <visual name="visual1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </visual>
+        <inertial>
+          <mass>5.0</mass>
+          <inertia>
+            <ixx>0.5</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.5</iyy>
+            <iyz>0</iyz>
+            <izz>0.5</izz>
+          </inertia>
+        </inertial>
+      </link>
+    </model>
+    <model name="sphere_18">
+      <pose>3 0 2 0 0 0</pose>
+      <link name="link_1">
+        <pose>0 0 0 0 0 0</pose>
+        <collision name="collision1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </collision>
+        <visual name="visual1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </visual>
+        <inertial>
+          <mass>5.0</mass>
+          <inertia>
+            <ixx>0.5</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.5</iyy>
+            <iyz>0</iyz>
+            <izz>0.5</izz>
+          </inertia>
+        </inertial>
+      </link>
+    </model>
+    <model name="sphere_19">
+      <pose>2 0 2 0 0 0</pose>
+      <link name="link_1">
+        <pose>0 0 0 0 0 0</pose>
+        <collision name="collision1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </collision>
+        <visual name="visual1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </visual>
+        <inertial>
+          <mass>5.0</mass>
+          <inertia>
+            <ixx>0.5</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.5</iyy>
+            <iyz>0</iyz>
+            <izz>0.5</izz>
+          </inertia>
+        </inertial>
+      </link>
+    </model>
+    <model name="sphere_20">
+      <pose>1 0 2 0 0 0</pose>
+      <link name="link_1">
+        <pose>0 0 0 0 0 0</pose>
+        <collision name="collision1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </collision>
+        <visual name="visual1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </visual>
+        <inertial>
+          <mass>5.0</mass>
+          <inertia>
+            <ixx>0.5</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.5</iyy>
+            <iyz>0</iyz>
+            <izz>0.5</izz>
+          </inertia>
+        </inertial>
+      </link>
+    </model>
+    <model name="sphere_21">
+      <pose>0 0 2 0 0 0</pose>
+      <link name="link_1">
+        <pose>0 0 0 0 0 0</pose>
+        <collision name="collision1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </collision>
+        <visual name="visual1">
+          <geometry>
+            <sphere>
+              <radius>0.5</radius>
+            </sphere>
+          </geometry>
+        </visual>
+        <inertial>
+          <mass>5.0</mass>
+          <inertia>
+            <ixx>0.5</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.5</iyy>
+            <iyz>0</iyz>
+            <izz>0.5</izz>
+          </inertia>
+        </inertial>
+      </link>
+    </model>
+  </world>
+</sdf>
