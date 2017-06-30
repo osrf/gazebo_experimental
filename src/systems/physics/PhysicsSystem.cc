@@ -65,7 +65,6 @@ class ComponentMotionState : public btMotionState
       worldTrans.setOrigin(btVector3(pos.X(), pos.Y(), pos.Z()));
       worldTrans.setRotation(btQuaternion(rot.X(), rot.Y(), rot.Z(), rot.W()));
 
-      igndbg << "get transform called " << pos.X() << std::endl;
       // TODO update velocity component here too
     }
 
@@ -75,12 +74,20 @@ class ComponentMotionState : public btMotionState
       auto pose = e.ComponentMutable<components::Pose>();
       assert(pose);
 
+      // Pose is attached to something else, move that instead
+      if (pose.AttachedTo() != ecs::NO_ENTITY)
+      {
+        auto &e2 = this->mgr->Entity(pose.AttachedTo());
+        pose = e2.ComponentMutable<components::Pose>();
+        // Assume only one level of attachment. Any more and there's a risk of
+        // getting into a graph-like situation with infinite loops
+        assert(pose.AttachedTo() == ecs::NO_ENTITY);
+      }
+
       btQuaternion rot = worldTrans.getRotation();
       btVector3 pos = worldTrans.getOrigin();
       auto &pos_ign = pose.Transform().Pos();
       auto &rot_ign = pose.Transform().Rot();
-
-      igndbg << "Set transform called " << pos.z() << std::endl;
 
       pos_ign.X() = pos.x();
       pos_ign.Y() = pos.y();
@@ -167,9 +174,10 @@ void PhysicsSystem::CreateRigidBody(ecs::Entity &_entity)
 {
   auto collidable = _entity.Component<components::Collidable>();
   auto geom = _entity.Component<components::Geometry>();
+  auto pose = _entity.Component<components::Pose>();
+
   auto inertial = _entity.Component<components::Inertial>();
   auto velocity = _entity.Component<components::WorldVelocity>();
-  auto pose = _entity.Component<components::Pose>();
 
   // Todo support multiple collisions on the same link
   if (collidable.GroupId() != ecs::NO_ENTITY)
@@ -209,8 +217,40 @@ void PhysicsSystem::CreateRigidBody(ecs::Entity &_entity)
 
   std::unique_ptr<ComponentMotionState> motionState(
       new ComponentMotionState(_entity.Id(), &(this->Manager())));
-  motionState->initialPose = pose.Transform();
 
+  // TODO make a helper function for getting world pose from a relative one
+  if (pose.AttachedTo() == ecs::NO_ENTITY)
+  {
+    // Pose is in world frame
+    motionState->initialPose = pose.Transform();
+  }
+  else
+  {
+    auto &entity = this->Manager().Entity(pose.AttachedTo());
+    if (entity.Id() == ecs::NO_ENTITY)
+    {
+      ignerr << "Pose [" << _entity.Id()
+        << "] is relative to a nonexistant entity [" << entity.Id() << "]\n";
+      return;
+    }
+    auto basePose = entity.Component<gazebo::components::Pose>();
+    if (!basePose)
+    {
+      ignerr << "Pose [" << _entity.Id()
+        << "] is relative to an entity [" << entity.Id() << "] with no pose\n";
+      return;
+    }
+    else if (basePose.AttachedTo() != ecs::NO_ENTITY)
+    {
+      ignerr << "Pose [" << _entity.Id()
+        << "] is relative to an entity [" << entity.Id()
+        << "] with a relative pose\n";
+      return;
+    }
+    motionState->initialPose = pose.Transform() + basePose.Transform();
+  }
+
+  igndbg << "Adding body with mass " << mass << std::endl;
   btRigidBody::btRigidBodyConstructionInfo rbInfo(
     mass, motionState.get(), colShape.get(), localInertia);
   std::unique_ptr<btRigidBody> body(new btRigidBody(rbInfo));
