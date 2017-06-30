@@ -27,6 +27,7 @@ target_link_libraries(gazeboGuiDisplayImage
 add_library(gazeboGuiDiagnostics SHARED GuiDiagnostics.cc)
 
 target_link_libraries(gazeboGuiDiagnostics
+  ${IGNITION-COMMON_LIBRARIES}
   ${IGNITION-MSGS_LIBRARIES}
   ${IGNITION-TRANSPORT_LIBRARIES}
   ${IGNITION-GUI_LIBRARIES}
