@@ -20,6 +20,7 @@
 
 
 #include <sdf/sdf.hh>
+#include <gazebo/components/Geometry.api.hh>
 #include "gazebo/ecs/Componentizer.hh"
 #include "gazebo/ecs/Manager.hh"
 
@@ -42,18 +43,29 @@ namespace gazebo
 
       /// \brief Populate geometry component with box data
       /// \param[in] _elem the sdf element <geometry> to get data from
-      /// \param[in] _entity the entity to put a geometry component on to
-      protected: void AttachBox(sdf::ElementPtr &_elem, ecs::Entity &_entity);
+      /// \param[in] _box Part of geometry component where box data goes
+      protected: void PopulateBox(sdf::ElementPtr &_elem,
+                     components::Geometry::BoxGeometry _box);
 
       /// \brief Populate geometry component with sphere data
       /// \param[in] _elem the sdf element <geometry> to get data from
-      /// \param[in] _entity the entity to put a geometry component on to
-      protected: void AttachSphere(sdf::ElementPtr &_elem, ecs::Entity &_entity);
+      /// \param[in] _sphere Part of geometry component where sphere data goes
+      protected: void PopulateSphere(sdf::ElementPtr &_elem,
+                     components::Geometry::SphereGeometry _sphere);
 
       /// \brief Populate geometry component with cylinder data
       /// \param[in] _elem the sdf element <geometry> to get data from
-      /// \param[in] _entity the entity to put a geometry component on to
-      protected: void AttachCylinder(sdf::ElementPtr &_elem, ecs::Entity &_entity);
+      /// \param[in] _cylinder Part of geometry component where cylinder data goes
+      protected: void PopulateCylinder(sdf::ElementPtr &_elem,
+                     components::Geometry::CylinderGeometry _cylinder);
+
+      /// \brief Populate simple geometry (not compound)
+      /// \param[in] _elem the sdf element <geometry> to get data from
+      /// \param[in] _geom the component to populate
+      protected: void PopulateSimpleGeometry(sdf::ElementPtr &_elem,
+                     components::Geometry &_geom);
+
+
     };
   }
 }

@@ -16,7 +16,6 @@
 */
 #include <ignition/common/Console.hh>
 #include <ignition/common/PluginMacros.hh>
-#include <gazebo/components/Geometry.api.hh>
 #include "CZGeometry.hh"
 
 namespace gzcompz = gazebo::componentizers;
@@ -39,28 +38,45 @@ void CZGeometry::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
 {
   if (_elem.GetName() == "geometry")
   {
-    // Look for a parent element. The geometry component will be grouped with
-    // the other components created for it.
     sdf::ElementPtr parent = _elem.GetParent();
-    if (parent &&
-        (parent->GetName() == "visual" || parent->GetName() == "collision"))
+    if (!parent)
     {
+      return;
+    }
+    else if (parent->GetName() == "visual")
+    {
+      // Populate geometry to entity associated with visual
       ecs::EntityId parentId = _ids.at(parent.get());
       ecs::Entity &parentEntity = _mgr.Entity(parentId);
+      auto geom = parentEntity.AddComponent<components::Geometry>();
 
       // Make sure there is a child with some actual data
       sdf::ElementPtr childElement = _elem.GetFirstElement();
-      if (childElement)
+      this->PopulateSimpleGeometry(childElement, geom);
+    }
+    else if (parent->GetName() == "collision")
+    {
+      // Geometry component gets added to link
+      sdf::ElementPtr superParent = parent->GetParent();
+      if (superParent->GetName() != "link")
       {
-        if (childElement->GetName() == "box")
-          this->AttachBox(childElement, parentEntity);
-        else if (childElement->GetName() == "sphere")
-          this->AttachSphere(childElement, parentEntity);
-        else if (childElement->GetName() == "cylinder")
-          this->AttachCylinder(childElement, parentEntity);
-        else
-          ignwarn << "Unsupported geometry [" << childElement->GetName() << "]"
-            << std::endl;
+        return;
+      }
+
+      ecs::EntityId superParentId = _ids.at(superParent.get());
+      ecs::Entity &superParentEntity = _mgr.Entity(superParentId);
+      auto geom = superParentEntity.AddComponent<components::Geometry>();
+
+      // If there are multiple collisions, geometry type will be compound
+      if (superParent->GetElement("collision") != parent
+          || parent->GetNextElement("collision"))
+      {
+        ignerr << "TODO support compound geometry\n";
+      }
+      else
+      {
+        sdf::ElementPtr childElement = _elem.GetFirstElement();
+        this->PopulateSimpleGeometry(childElement, geom);
       }
     }
     else
@@ -75,31 +91,46 @@ void CZGeometry::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
 }
 
 //////////////////////////////////////////////////
-void CZGeometry::AttachBox(sdf::ElementPtr &_elem, ecs::Entity &_entity)
+void CZGeometry::PopulateSimpleGeometry(sdf::ElementPtr &_elem,
+    components::Geometry &_geom)
 {
-  auto geom = _entity.AddComponent<components::Geometry>();
+  if (_elem)
+  {
+    if (_elem->GetName() == "box")
+      this->PopulateBox(_elem, _geom.Shape().Box());
+    else if (_elem->GetName() == "sphere")
+      this->PopulateSphere(_elem, _geom.Shape().Sphere());
+    else if (_elem->GetName() == "cylinder")
+      this->PopulateCylinder(_elem, _geom.Shape().Cylinder());
+    else
+      ignwarn << "Unsupported geometry [" << _elem->GetName() << "]"
+        << std::endl;
+  }
+}
+
+//////////////////////////////////////////////////
+void CZGeometry::PopulateBox(sdf::ElementPtr &_elem,
+    components::Geometry::BoxGeometry _box)
+{
   auto size = _elem->Get<ignition::math::Vector3d>("size");
-  geom.Shape().Box().X() = size.X();
-  geom.Shape().Box().Y() = size.Y();
-  geom.Shape().Box().Z() = size.Z();
-  igndbg << "Added box to " << _entity.Id() << std::endl;
+  _box.X() = size.X();
+  _box.Y() = size.Y();
+  _box.Z() = size.Z();
 }
 
 //////////////////////////////////////////////////
-void CZGeometry::AttachSphere(sdf::ElementPtr &_elem, ecs::Entity &_entity)
+void CZGeometry::PopulateSphere(sdf::ElementPtr &_elem,
+    components::Geometry::SphereGeometry _sphere)
 {
-  auto geom = _entity.AddComponent<components::Geometry>();
-  geom.Shape().Sphere().Radius() = _elem->Get<double>("radius");
-  igndbg << "Added Sphere to " << _entity.Id() << std::endl;
+  _sphere.Radius() = _elem->Get<double>("radius");
 }
 
 //////////////////////////////////////////////////
-void CZGeometry::AttachCylinder(sdf::ElementPtr &_elem, ecs::Entity &_entity)
+void CZGeometry::PopulateCylinder(sdf::ElementPtr &_elem,
+    components::Geometry::CylinderGeometry _cylinder)
 {
-  auto geom = _entity.AddComponent<components::Geometry>();
-  geom.Shape().Cylinder().Radius() = _elem->Get<double>("radius");
-  geom.Shape().Cylinder().Length() = _elem->Get<double>("length");
-  igndbg << "Added Cylinder to " << _entity.Id() << std::endl;
+  _cylinder.Radius() = _elem->Get<double>("radius");
+  _cylinder.Length() = _elem->Get<double>("length");
 }
 
 //////////////////////////////////////////////////

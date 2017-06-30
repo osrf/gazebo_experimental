@@ -16,9 +16,9 @@
 */
 syntax = "proto2";
 
-
 package gazebo.components;
 
+import "gazebo/components/Pose3d.proto";
 
 message Geometry
 {
@@ -46,10 +46,36 @@ message Geometry
     optional double Length = 2 [default = 1.0];
   }
 
+  message BoxWithPose
+  {
+    optional BoxGeometry Box = 1;
+    optional Pose3d Pose = 2;
+  }
+
+  message SphereWithPose
+  {
+    optional SphereGeometry Sphere = 1;
+    optional Pose3d Pose = 2;
+  }
+
+  message CylinderWithPose
+  {
+    optional CylinderGeometry Cylinder = 1;
+    optional Pose3d Pose = 2;
+  }
+
+  message CompoundGeometry
+  {
+    repeated BoxWithPose Boxes = 1;
+    repeated SphereWithPose Spheres = 2;
+    repeated CylinderWithPose Cylinders = 3;
+  }
+
   oneof Shape
   {
     BoxGeometry Box = 1;
     SphereGeometry Sphere = 2;
     CylinderGeometry Cylinder = 3;
+    CompoundGeometry Compound = 4;
   }
 }

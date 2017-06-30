@@ -52,23 +52,22 @@ void CZCollidable::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
     }
     else
     {
-      ecs::EntityId groupId = ecs::NO_ENTITY;
       if (_elem.GetNextElement("collision")
           || parent->GetElement("collision").get() != &_elem)
       {
-        // Multiple collisions, group them
-        groupId = _ids.at(parent.get());
+        // Multiple collisions on a link, TODO 
       }
-      ecs::EntityId id = _ids.at(&_elem);
-      ecs::Entity &entity = _mgr.Entity(id);
+      else
+      {
+        // Mark the link itself as collidable.
+        // The collision geometry is there too
+        ecs::EntityId parentId = _ids.at(parent.get());
+        ecs::Entity &parentEntity = _mgr.Entity(parentId);
 
-      auto comp = entity.AddComponent<components::Collidable>();
-      // Group all collissions on a link together
-      comp.GroupId() = groupId;
+        auto comp = parentEntity.AddComponent<components::Collidable>();
+      }
 
-      igndbg << "Group " << groupId << " member " << id << std::endl;
-
-      // TODO surface properties should be on components::Collidable
+      // TODO surface properties?
     }
   }
 }

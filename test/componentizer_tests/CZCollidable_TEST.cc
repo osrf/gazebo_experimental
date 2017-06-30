@@ -90,52 +90,52 @@ TEST(CZCollidable, SdfOneCollision)
 }
 
 /////////////////////////////////////////////////
-TEST(CZCollidable, SdfTwoCollisions)
-{
-  gzecs::Manager mgr;
-  mgr.LoadComponentFactory<gzc::CollidableFactory>();
-  mgr.LoadComponentizer<gzcz::CZCollidable>();
-
-  std::string world = " \
-    <sdf version='1.6'> \
-      <world name='default'> \
-        <physics name='asdf' type='ode'> \
-        </physics> \
-      <model name='m1'> \
-        <link name='l1'> \
-          <collision name='c1'> \
-            <geometry> \
-              <sphere> \
-                <radius>0.5</radius> \
-              </sphere> \
-            </geometry> \
-          </collision> \
-          <collision name='c2'> \
-            <geometry> \
-              <sphere> \
-                <radius>0.5</radius> \
-              </sphere> \
-            </geometry> \
-          </collision> \
-        </link> \
-      </model> \
-      </world> \
-    </sdf>";
-  mgr.LoadWorldFromString(world);
-  mgr.UpdateOnce();
-
-  auto entities = mgr.QueryEntities({
-      "gazebo::components::Collidable",
-      });
-
-  ASSERT_EQ(2, entities.size());
-  gzecs::Entity &e1 = mgr.Entity(*(entities.begin()));
-  gzecs::Entity &e2 = mgr.Entity(*(++entities.begin()));
-  auto comp1 = e1.Component<gazebo::components::Collidable>();
-  auto comp2 = e2.Component<gazebo::components::Collidable>();
-  EXPECT_NE(gzecs::NO_ENTITY, comp1.GroupId());
-  EXPECT_EQ(comp1.GroupId(), comp2.GroupId());
-}
+// TEST(CZCollidable, SdfTwoCollisions)
+// {
+//   gzecs::Manager mgr;
+//   mgr.LoadComponentFactory<gzc::CollidableFactory>();
+//   mgr.LoadComponentizer<gzcz::CZCollidable>();
+// 
+//   std::string world = " \
+//     <sdf version='1.6'> \
+//       <world name='default'> \
+//         <physics name='asdf' type='ode'> \
+//         </physics> \
+//       <model name='m1'> \
+//         <link name='l1'> \
+//           <collision name='c1'> \
+//             <geometry> \
+//               <sphere> \
+//                 <radius>0.5</radius> \
+//               </sphere> \
+//             </geometry> \
+//           </collision> \
+//           <collision name='c2'> \
+//             <geometry> \
+//               <sphere> \
+//                 <radius>0.5</radius> \
+//               </sphere> \
+//             </geometry> \
+//           </collision> \
+//         </link> \
+//       </model> \
+//       </world> \
+//     </sdf>";
+//   mgr.LoadWorldFromString(world);
+//   mgr.UpdateOnce();
+// 
+//   auto entities = mgr.QueryEntities({
+//       "gazebo::components::Collidable",
+//       });
+// 
+//   ASSERT_EQ(2, entities.size());
+//   gzecs::Entity &e1 = mgr.Entity(*(entities.begin()));
+//   gzecs::Entity &e2 = mgr.Entity(*(++entities.begin()));
+//   auto comp1 = e1.Component<gazebo::components::Collidable>();
+//   auto comp2 = e2.Component<gazebo::components::Collidable>();
+//   EXPECT_NE(gzecs::NO_ENTITY, comp1.GroupId());
+//   EXPECT_EQ(comp1.GroupId(), comp2.GroupId());
+// }
 
 //////////////////////////////////////////////////
 int main(int argc, char **argv)
