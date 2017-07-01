@@ -335,7 +335,7 @@ int main(int _argc, char **_argv)
     // Load ECS systems
     if (!LoadSystems(manager, {
         "gazeboPhysicsSystem",
-        "gazeboRenderSystem",
+        //"gazeboRenderSystem",
         }))
     {
       return 1;
@@ -355,6 +355,7 @@ int main(int _argc, char **_argv)
     // the window
     ignition::gui::loadPlugin("gazeboGuiDisplayImage");
     ignition::gui::loadPlugin("gazeboGuiDiagnostics");
+    ignition::gui::loadPlugin("gazeboGuiRenderWidget");
 
     // Create main window
     ignition::gui::createMainWindow();
