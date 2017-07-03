@@ -1,4 +1,5 @@
 set(sources
+  Component.cc
   Entity.cc
   EntityComponentDatabase.cc
   EntityQuery.cc
