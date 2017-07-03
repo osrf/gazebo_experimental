@@ -8,6 +8,7 @@ set(unit_tests
   Entity_TEST.cc
   EntityComponentDatabase_TEST.cc
   EntityQuery_TEST.cc
+  PoseHelper_TEST.cc
   QueryRegistrar_TEST.cc
   # SystemManager_TEST.cc
   Manager_TEST.cc
@@ -36,3 +37,12 @@ foreach (src_file ${unit_tests})
   add_test(${BINARY_NAME} ${CMAKE_CURRENT_BINARY_DIR}/${BINARY_NAME}
     --gtest_output=xml:${CMAKE_BINARY_DIR}/test_results/${BINARY_NAME}.xml)
 endforeach()
+
+
+target_include_directories(UNIT_PoseHelper_TEST PRIVATE
+  ${CMAKE_BINARY_DIR}/include
+)
+target_link_libraries(UNIT_PoseHelper_TEST
+  gazeboPoseHelper
+  gazeboComponentPose
+)

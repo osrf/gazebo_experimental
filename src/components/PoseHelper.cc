@@ -29,7 +29,12 @@ bool gzcomp::WorldPose(const ecs::Manager &_mgr, const ecs::Entity &_entity,
   bool success = true;
   auto pose = _entity.Component<components::Pose>();
 
-  if (pose.AttachedTo() == ecs::NO_ENTITY)
+  if (!pose)
+  {
+    ignerr << "No Pose on [" << _entity.Id() << "]\n";
+    success = false;
+  }
+  else if (pose.AttachedTo() == ecs::NO_ENTITY)
   {
     // Pose is in world frame
     _pose = pose.Transform();
@@ -44,23 +49,26 @@ bool gzcomp::WorldPose(const ecs::Manager &_mgr, const ecs::Entity &_entity,
         << "] is relative to a nonexistant entity [" << entity.Id() << "]\n";
       success = false;
     }
-    auto basePose = entity.Component<gazebo::components::Pose>();
-    if (!basePose)
-    {
-      ignerr << "Pose on [" << _entity.Id()
-        << "] is relative to an entity [" << entity.Id() << "] with no pose\n";
-      success = false;
-    }
-    else if (basePose.AttachedTo() != ecs::NO_ENTITY)
-    {
-      ignerr << "Pose on [" << _entity.Id()
-        << "] is relative to an entity [" << entity.Id()
-        << "] with a relative pose\n";
-      success = false;
-    }
     else
     {
-      _pose = pose.Transform() + basePose.Transform();
+      auto basePose = entity.Component<gazebo::components::Pose>();
+      if (!basePose)
+      {
+        ignerr << "Pose on [" << _entity.Id()
+          << "] is relative to entity [" << entity.Id() << "] with no pose\n";
+        success = false;
+      }
+      else if (basePose.AttachedTo() != ecs::NO_ENTITY)
+      {
+        ignerr << "Pose on [" << _entity.Id()
+          << "] is relative to an entity [" << entity.Id()
+          << "] with a relative pose\n";
+        success = false;
+      }
+      else
+      {
+        _pose = pose.Transform() + basePose.Transform();
+      }
     }
   }
   return success;
@@ -74,7 +82,12 @@ bool gzcomp::SetWorldPose(const ecs::Manager &_mgr, const ecs::Entity &_entity,
 
   auto pose = _entity.ComponentMutable<components::Pose>();
 
-  if (pose.AttachedTo() == ecs::NO_ENTITY)
+  if (!pose)
+  {
+    ignerr << "No Pose on [" << _entity.Id() << "]\n";
+    success = false;
+  }
+  else if (pose.AttachedTo() == ecs::NO_ENTITY)
   {
     // Pose is in world frame
     pose.Transform() = _pose;
@@ -89,23 +102,26 @@ bool gzcomp::SetWorldPose(const ecs::Manager &_mgr, const ecs::Entity &_entity,
         << "] is relative to a nonexistant entity [" << entity.Id() << "]\n";
       success = false;
     }
-    auto basePose = entity.ComponentMutable<gazebo::components::Pose>();
-    if (!basePose)
-    {
-      ignerr << "Pose on [" << _entity.Id()
-        << "] is relative to an entity [" << entity.Id() << "] with no pose\n";
-      success = false;
-    }
-    else if (basePose.AttachedTo() != ecs::NO_ENTITY)
-    {
-      ignerr << "Pose on [" << _entity.Id()
-        << "] is relative to an entity [" << entity.Id()
-        << "] with a relative pose\n";
-      success = false;
-    }
     else
     {
-      basePose.Transform() = pose.Transform().Inverse() + _pose;
+      auto basePose = entity.ComponentMutable<gazebo::components::Pose>();
+      if (!basePose)
+      {
+        ignerr << "Pose on [" << _entity.Id()
+          << "] is relative to entity [" << entity.Id() << "] with no pose\n";
+        success = false;
+      }
+      else if (basePose.AttachedTo() != ecs::NO_ENTITY)
+      {
+        ignerr << "Pose on [" << _entity.Id()
+          << "] is relative to an entity [" << entity.Id()
+          << "] with a relative pose\n";
+        success = false;
+      }
+      else
+      {
+        basePose.Transform() = pose.Transform().Inverse() + _pose;
+      }
     }
   }
   return success;
