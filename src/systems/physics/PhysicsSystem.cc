@@ -71,24 +71,12 @@ class ComponentMotionState : public btMotionState
 
     virtual void setWorldTransform(const btTransform &worldTrans)
     {
-      auto &e = this->mgr->Entity(this->id);
-      auto pose = e.ComponentMutable<components::Pose>();
-      assert(pose);
-
-      // Pose is attached to something else, move that instead
-      if (pose.AttachedTo() != ecs::NO_ENTITY)
-      {
-        auto &e2 = this->mgr->Entity(pose.AttachedTo());
-        pose = e2.ComponentMutable<components::Pose>();
-        // Assume only one level of attachment. Any more and there's a risk of
-        // getting into a graph-like situation with infinite loops
-        assert(pose.AttachedTo() == ecs::NO_ENTITY);
-      }
 
       btQuaternion rot = worldTrans.getRotation();
       btVector3 pos = worldTrans.getOrigin();
-      auto &pos_ign = pose.Transform().Pos();
-      auto &rot_ign = pose.Transform().Rot();
+      ignition::math::Pose3d pose;
+      auto &pos_ign = pose.Pos();
+      auto &rot_ign = pose.Rot();
 
       pos_ign.X() = pos.x();
       pos_ign.Y() = pos.y();
@@ -97,6 +85,10 @@ class ComponentMotionState : public btMotionState
       rot_ign.X() = rot.x();
       rot_ign.Y() = rot.y();
       rot_ign.Z() = rot.z();
+
+      auto &e = this->mgr->Entity(this->id);
+      assert(components::SetWorldPose(*(this->mgr), e, pose));
+
       // TODO update velocity component here too
     }
 };
