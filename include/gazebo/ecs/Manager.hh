@@ -107,7 +107,7 @@ namespace gazebo
       /// \brief Load a world from a string
       /// \param[in] A string containing an SDF xml document with a world tag
       /// \returns true if the sdf is successfully parsed
-      public: bool LoadWorldFromString(const std::string &_world);
+      public: bool LoadWorldFromSDFString(const std::string &_world);
 
       /// \brief Update everything once and return immediately
       public: void UpdateOnce();
