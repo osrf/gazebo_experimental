@@ -51,9 +51,6 @@ namespace gazebo
       public: virtual void FromSDF(Manager &_mgr, sdf::Element &_elem,
                   const std::unordered_map<sdf::Element*, EntityId> &_ids) = 0;
     };
-
-    /// \brief Pure vitual destructors require function bodies
-    Componentizer::~Componentizer() { }
   }
 }
 
