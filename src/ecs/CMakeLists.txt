@@ -1,5 +1,6 @@
 set(sources
   Component.cc
+  Componentizer.cc
   Entity.cc
   EntityComponentDatabase.cc
   EntityQuery.cc
