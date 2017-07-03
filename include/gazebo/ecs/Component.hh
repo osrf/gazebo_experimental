@@ -41,9 +41,7 @@ namespace gazebo
     class ComponentAPI
     {
       /// \brief virtual destructor
-      public: virtual ~ComponentAPI()
-      {
-      }
+      public: virtual ~ComponentAPI();
 
       /// \returns true if the component api is fully functional
       public: virtual operator bool() const = 0;
@@ -77,9 +75,7 @@ namespace gazebo
     class ComponentFactory
     {
       /// \brief virtual destructor
-      public: virtual ~ComponentFactory()
-      {
-      }
+      public: virtual ~ComponentFactory();
 
       /// \brief Returns the unique name of the component
       public: const char *ComponentName() const
