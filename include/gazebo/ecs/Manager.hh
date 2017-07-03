@@ -105,6 +105,7 @@ namespace gazebo
       public: bool LoadWorldFromPath(const std::string &_path);
 
       /// \brief Load a world from a string
+      /// \param[in] A string containing an SDF xml document with a world tag
       /// \returns true if the sdf is successfully parsed
       public: bool LoadWorldFromString(const std::string &_world);
 
