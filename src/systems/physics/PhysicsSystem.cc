@@ -96,7 +96,6 @@ class ComponentMotionState : public btMotionState
       rot_ign.X() = rot.x();
       rot_ign.Y() = rot.y();
       rot_ign.Z() = rot.z();
-      igndbg << this->id << " pose " << pos_ign << "\n";
       // TODO update velocity component here too
     }
 };
