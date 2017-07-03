@@ -102,3 +102,10 @@ install(FILES ${PROJECT_CMAKE_DIR}/GazeboGenerateComponent.cmake
 install(DIRECTORY gazebo DESTINATION ${SHARE_INSTALL_DIR}/component_generator)
 install(FILES ${generator_scripts} DESTINATION ${SHARE_INSTALL_DIR}/component_generator)
 install(FILES ${generator_templates} DESTINATION ${SHARE_INSTALL_DIR}/component_generator/templates)
+
+# Make helper libraries
+add_library(gazeboPoseHelper PoseHelper.cc)
+target_link_libraries(gazeboPoseHelper
+  GazeboECS
+  gazeboComponentPose)
+gz_install_library(gazeboPoseHelper)

@@ -7,6 +7,7 @@ set(sources
 add_library(gazeboPhysicsSystem SHARED ${sources})
 target_link_libraries(gazeboPhysicsSystem
   GazeboECS
+  gazeboPoseHelper
   ${BULLET_LIBRARIES}
 )
 target_include_directories(gazeboPhysicsSystem

@@ -24,6 +24,7 @@
 #include <gazebo/components/Collidable.api.hh>
 #include <gazebo/components/PhysicsConfig.api.hh>
 #include <gazebo/components/Pose.api.hh>
+#include <gazebo/components/PoseHelper.hh>
 #include <gazebo/components/WorldVelocity.api.hh>
 #include <gazebo/ecs/Manager.hh>
 #include <gazebo/ecs/EntityQuery.hh>
@@ -218,36 +219,10 @@ void PhysicsSystem::CreateRigidBody(ecs::Entity &_entity)
   std::unique_ptr<ComponentMotionState> motionState(
       new ComponentMotionState(_entity.Id(), &(this->Manager())));
 
-  // TODO make a helper function for getting world pose from a relative one
-  if (pose.AttachedTo() == ecs::NO_ENTITY)
+  if (!components::WorldPose(
+        this->Manager(), _entity, motionState->initialPose))
   {
-    // Pose is in world frame
-    motionState->initialPose = pose.Transform();
-  }
-  else
-  {
-    auto &entity = this->Manager().Entity(pose.AttachedTo());
-    if (entity.Id() == ecs::NO_ENTITY)
-    {
-      ignerr << "Pose [" << _entity.Id()
-        << "] is relative to a nonexistant entity [" << entity.Id() << "]\n";
-      return;
-    }
-    auto basePose = entity.Component<gazebo::components::Pose>();
-    if (!basePose)
-    {
-      ignerr << "Pose [" << _entity.Id()
-        << "] is relative to an entity [" << entity.Id() << "] with no pose\n";
-      return;
-    }
-    else if (basePose.AttachedTo() != ecs::NO_ENTITY)
-    {
-      ignerr << "Pose [" << _entity.Id()
-        << "] is relative to an entity [" << entity.Id()
-        << "] with a relative pose\n";
-      return;
-    }
-    motionState->initialPose = pose.Transform() + basePose.Transform();
+    return;
   }
 
   igndbg << "Adding body with mass " << mass << std::endl;
