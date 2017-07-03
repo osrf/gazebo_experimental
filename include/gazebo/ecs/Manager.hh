@@ -100,6 +100,7 @@ namespace gazebo
       public: bool LoadComponentizer(std::unique_ptr<Componentizer> _cz);
 
       /// \brief Load a world from a file path
+      /// \param[in] A path to a world file on the file system
       /// \returns true if the sdf is successfully parsed
       public: bool LoadWorldFromPath(const std::string &_path);
 
