@@ -13,9 +13,9 @@ Most of the important features come from [Ignition Robotics](http://ignitionrobo
 Build and install the Ignition projects from source in this order:
 
 * [ign-common](https://bitbucket.org/ignitionrobotics/ign-common) `default` branch
-* [ign-gui](https://bitbucket.org/ignitionrobotics/ign-gui) `default` branch
 * [ign-msgs](https://bitbucket.org/ignitionrobotics/ign-msgs) `default` branch
 * [ign-transport](https://bitbucket.org/ignitionrobotics/ign-transport) `ign-transport3` branch
+* [ign-gui](https://bitbucket.org/ignitionrobotics/ign-gui) `default` branch
 * [sdformat](https://bitbucket.org/osrf/sdformat) `default` branch
 
 Other dependencies include
