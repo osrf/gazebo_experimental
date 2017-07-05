@@ -17,6 +17,7 @@ Build and install the Ignition projects from source in this order:
 * [ign-msgs](https://bitbucket.org/ignitionrobotics/ign-msgs)
 * [ign-transport](https://bitbucket.org/ignitionrobotics/ign-transport)
 * [ign-gui](https://bitbucket.org/ignitionrobotics/ign-gui)
+* [ign-rendering](https://bitbucket.org/ignitionrobotics/ign-rendering)
 
 Other dependencies include
 
