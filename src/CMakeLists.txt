@@ -4,6 +4,8 @@ add_subdirectory(ecs)
 add_subdirectory(systems)
 add_subdirectory(gui)
 
+include_directories(${SDFormat_INCLUDE_DIRS})
+
 add_executable(gazebo gazebo_main.cc)
 target_link_libraries(gazebo
   GazeboECS

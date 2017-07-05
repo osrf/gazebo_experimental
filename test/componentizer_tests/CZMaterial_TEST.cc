@@ -54,7 +54,7 @@ TEST(CZMaterial, NoMaterial)
         </physics> \
       </world> \
     </sdf>";
-  mgr.LoadWorld(world);
+  mgr.LoadWorldFromSDFString(world);
   mgr.UpdateOnce();
 
   auto entities = mgr.QueryEntities({
@@ -87,7 +87,7 @@ TEST(CZMaterial, VisualWithMaterial)
         </model> \
       </world> \
     </sdf>";
-  mgr.LoadWorld(world);
+  mgr.LoadWorldFromSDFString(world);
   mgr.UpdateOnce();
 
   auto entities = mgr.QueryEntities({
