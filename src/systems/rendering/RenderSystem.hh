@@ -18,8 +18,8 @@
 #ifndef GAZEBO_SYSTEMS_RENDERING_RENDERSYSTEM_HH_
 #define GAZEBO_SYSTEMS_RENDERING_RENDERSYSTEM_HH_
 
-#include <ignition/transport.hh>
-#include <ignition/rendering.hh>
+#include <ignition/transport/Node.hh>
+#include <ignition/rendering/RenderTypes.hh>
 
 #include "gazebo/ecs/System.hh"
 
@@ -42,9 +42,10 @@ namespace gazebo
       /// \param[in] _result EntityQuery with results fromm a registered query
       public: void Update(const ecs::EntityQuery &_result);
 
-      /// \brief Create a camera for rendering
+      /// \brief Load render engine and create a scene
       /// \param[in] _engineName Name of rendering engine
-      private: ignition::rendering::CameraPtr CreateCamera(
+      /// \return a camera for rendering
+      private: ignition::rendering::CameraPtr LoadEngine(
           const std::string &_engineName);
 
       /// \brief Helper function to build a scene

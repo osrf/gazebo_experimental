@@ -18,6 +18,14 @@
 #include <iostream>
 #include <ignition/common/PluginMacros.hh>
 
+#include <ignition/rendering/Camera.hh>
+#include <ignition/rendering/Light.hh>
+#include <ignition/rendering/Material.hh>
+#include <ignition/rendering/RenderingIface.hh>
+#include <ignition/rendering/RenderEngine.hh>
+#include <ignition/rendering/Scene.hh>
+#include <ignition/rendering/Visual.hh>
+
 #include "gazebo/ecs/Entity.hh"
 #include "gazebo/ecs/Manager.hh"
 #include "gazebo/ecs/EntityQuery.hh"
@@ -58,7 +66,7 @@ void RenderSystem::Update(const ecs::EntityQuery &_result)
 {
   if (!this->camera)
   {
-    this->camera = this->CreateCamera("ogre");
+    this->camera = this->LoadEngine("ogre");
     this->image = std::make_shared<ignition::rendering::Image>(
         this->camera->CreateImage());
   }
@@ -108,7 +116,7 @@ void RenderSystem::Update(const ecs::EntityQuery &_result)
 }
 
 /////////////////////////////////////////////////
-ignition::rendering::CameraPtr RenderSystem::CreateCamera(
+ignition::rendering::CameraPtr RenderSystem::LoadEngine(
     const std::string &_engineName)
 {
   // create and populate scene
