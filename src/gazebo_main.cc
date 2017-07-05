@@ -85,8 +85,9 @@ static bool VerbosityValidator(const char */*_flagname*/, int _value)
   return _value >= 0 && _value <= 4;
 }
 
+
 //////////////////////////////////////////////////
-std::vector<std::string> LoadLibraries(std::vector<std::string> _libs,
+std::vector<std::string> LoadLibraries(const std::vector<std::string> &_libs,
     ignition::common::PluginLoader _pl,
     ignition::common::SystemPaths &_sp)
 {
@@ -115,7 +116,8 @@ std::vector<std::string> LoadLibraries(std::vector<std::string> _libs,
 }
 
 //////////////////////////////////////////////////
-void LoadSystems(gzecs::Manager &_mgr, std::vector<std::string> _libs)
+void LoadSystems(gzecs::Manager &_mgr,
+    const std::vector<std::string> &_libs)
 {
   ignition::common::PluginLoader pluginLoader;
   ignition::common::SystemPaths sp;
@@ -135,7 +137,8 @@ void LoadSystems(gzecs::Manager &_mgr, std::vector<std::string> _libs)
 }
 
 //////////////////////////////////////////////////
-void LoadComponentizers(gzecs::Manager &_mgr, std::vector<std::string> _libs)
+void LoadComponentizers(gzecs::Manager &_mgr,
+    const std::vector<std::string> &_libs)
 {
   ignition::common::PluginLoader pluginLoader;
   ignition::common::SystemPaths sp;
@@ -156,7 +159,7 @@ void LoadComponentizers(gzecs::Manager &_mgr, std::vector<std::string> _libs)
 
 //////////////////////////////////////////////////
 void LoadComponentFactories(gzecs::Manager &_mgr,
-    std::vector<std::string> _libs)
+    const std::vector<std::string> &_libs)
 {
   ignition::common::PluginLoader pluginLoader;
   ignition::common::SystemPaths sp;
@@ -176,7 +179,7 @@ void LoadComponentFactories(gzecs::Manager &_mgr,
 }
 
 //////////////////////////////////////////////////
-bool LoadWorld(gzecs::Manager &_mgr, std::string _file)
+bool LoadWorld(gzecs::Manager &_mgr, const std::string &_file)
 {
   bool success = true;
   ignition::common::SystemPaths sp;
