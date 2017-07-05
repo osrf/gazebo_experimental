@@ -134,7 +134,7 @@ TEST(Manager, LoadComponentizer)
   mgr.LoadComponentizer(std::move(cz));
   EXPECT_EQ(std::string("Init Ran"), raw->sentinel);
 
-  mgr.LoadWorldFromString(
+  mgr.LoadWorldFromSDFString(
       "<sdf version='1.6'><world name='default'></world></sdf>");
   EXPECT_EQ(std::string("FromSDF Ran"), raw->sentinel);
 }

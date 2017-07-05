@@ -261,6 +261,7 @@ void ManagerPrivate::Componentize(Manager *_mgr, sdf::SDF &_sdf)
   }
 }
 
+//////////////////////////////////////////////////
 bool Manager::LoadWorldFromPath(const std::string &_path)
 {
   bool success = false;
@@ -277,7 +278,7 @@ bool Manager::LoadWorldFromPath(const std::string &_path)
 }
 
 /////////////////////////////////////////////////
-bool Manager::LoadWorldFromString(const std::string &_world)
+bool Manager::LoadWorldFromSDFString(const std::string &_world)
 {
   bool success = false;
   sdf::SDFPtr sdfWorld(new sdf::SDF());
