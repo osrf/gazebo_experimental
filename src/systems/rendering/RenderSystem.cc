@@ -16,6 +16,7 @@
 */
 
 #include <iostream>
+#include <ignition/common/Console.hh>
 #include <ignition/common/PluginMacros.hh>
 
 #include <ignition/rendering/Camera.hh>
@@ -57,7 +58,7 @@ void RenderSystem::Init(ecs::QueryRegistrar &_registrar)
   this->pub =
       this->node.Advertise<ignition::msgs::Image>(topic);
   if (!this->pub)
-    std::cerr << "Error advertising topic [" << topic << "]" << std::endl;
+    ignerr << "Error advertising topic [" << topic << "]" << std::endl;
 }
 
 
