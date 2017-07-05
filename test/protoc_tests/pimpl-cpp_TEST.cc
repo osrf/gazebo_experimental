@@ -120,7 +120,9 @@ class ComponentLoader
 TEST(PIMPLCPP, SimpleHaveRightTypes)
 {
   ComponentLoader<gazebo::components::test::SimpleTypes> cl;
-  ASSERT_TRUE(cl.LoadComponent("SimpleTypes"));
+  ASSERT_TRUE(cl.LoadComponent("SimpleTypes")) << "test must be run from"
+                                                  " the directory that"
+                                                  " contains it.";
   auto st = cl.Instance();
 
   double DoubleField;
@@ -176,7 +178,9 @@ TEST(PIMPLCPP, SimpleHaveRightTypes)
 TEST(PIMPLCPP, SimpleTypesModifyable)
 {
   ComponentLoader<gazebo::components::test::SimpleTypes> cl;
-  ASSERT_TRUE(cl.LoadComponent("SimpleTypes"));
+  ASSERT_TRUE(cl.LoadComponent("SimpleTypes")) << "test must be run from"
+                                                  " the directory that"
+                                                  " contains it.";
   auto st = cl.Instance();
 
   st.DoubleField() = 5.0;
@@ -216,7 +220,9 @@ TEST(PIMPLCPP, SimpleTypesModifyable)
 TEST(PIMPLCPP, MathTypesAreSubstituted)
 {
   ComponentLoader<gazebo::components::test::SubstitutedTypes> cl;
-  ASSERT_TRUE(cl.LoadComponent("SubstitutedTypes"));
+  ASSERT_TRUE(cl.LoadComponent("SubstitutedTypes")) << "test must be run from"
+                                                       " the directory that"
+                                                       " contains it.";
   auto st = cl.Instance();
 
   ignition::math::Vector3d VectorField;
@@ -239,7 +245,9 @@ TEST(PIMPLCPP, MathTypesAreSubstituted)
 TEST(PIMPLCPP, MathTypesModifyable)
 {
   ComponentLoader<gazebo::components::test::SubstitutedTypes> cl;
-  ASSERT_TRUE(cl.LoadComponent("SubstitutedTypes"));
+  ASSERT_TRUE(cl.LoadComponent("SubstitutedTypes")) << "test must be run from"
+                                                       " the directory that"
+                                                       " contains it.";
   auto st = cl.Instance();
 
   st.Vector().X(5);
@@ -257,7 +265,9 @@ TEST(PIMPLCPP, MathTypesModifyable)
 TEST(PIMPLCPP, EnumTypesModifyable)
 {
   ComponentLoader<gazebo::components::test::EnumType> cl;
-  ASSERT_TRUE(cl.LoadComponent("EnumType"));
+  ASSERT_TRUE(cl.LoadComponent("EnumType")) << "test must be run from"
+                                               " the directory that"
+                                               " contains it.";
   auto et = cl.Instance();
 
   // default is always zero
@@ -270,7 +280,9 @@ TEST(PIMPLCPP, EnumTypesModifyable)
 TEST(PIMPLCPP, OperatorBool)
 {
   ComponentLoader<gazebo::components::test::EnumType> cl;
-  ASSERT_TRUE(cl.LoadComponent("EnumType"));
+  ASSERT_TRUE(cl.LoadComponent("EnumType")) << "test must be run from"
+                                               " the directory that"
+                                               " contains it.";
 
   gazebo::components::test::EnumType et1;
 
@@ -289,7 +301,9 @@ TEST(PIMPLCPP, OperatorBool)
 TEST(PIMPLCPP, DefaultValues)
 {
   ComponentLoader<gazebo::components::test::DefaultValues> cl;
-  ASSERT_TRUE(cl.LoadComponent("DefaultValues"));
+  ASSERT_TRUE(cl.LoadComponent("DefaultValues")) << "test must be run from"
+                                                    " the directory that"
+                                                    " contains it.";
   auto dv = cl.Instance();
 
   EXPECT_EQ(26, dv.SomeInt());
@@ -303,7 +317,9 @@ TEST(PIMPLCPP, DefaultValues)
 TEST(PIMPLCPP, NestedMessages)
 {
   ComponentLoader<gazebo::components::test::NestedMessage> cl;
-  ASSERT_TRUE(cl.LoadComponent("NestedMessage"));
+  ASSERT_TRUE(cl.LoadComponent("NestedMessage")) << "test must be run from"
+                                                    " the directory that"
+                                                    " contains it.";
   auto nm = cl.Instance();
 
   // Check imported message works correclty
@@ -334,7 +350,9 @@ TEST(PIMPLCPP, NestedMessages)
 TEST(PIMPLCPP, RepeatedFields)
 {
   ComponentLoader<gazebo::components::test::RepeatedMessage> cl;
-  ASSERT_TRUE(cl.LoadComponent("RepeatedMessage"));
+  ASSERT_TRUE(cl.LoadComponent("RepeatedMessage")) << "test must be run from"
+                                                      " the directory that"
+                                                      " contains it.";
   auto rm = cl.Instance();
 
   // Check imported message works correclty
@@ -373,7 +391,9 @@ TEST(PIMPLCPP, RepeatedFields)
 TEST(PIMPLCPP, OneofMessage)
 {
   ComponentLoader<gazebo::components::test::OneofMessage> cl;
-  ASSERT_TRUE(cl.LoadComponent("OneofMessage"));
+  ASSERT_TRUE(cl.LoadComponent("OneofMessage")) << "test must be run from"
+                                                   " the directory that"
+                                                   " contains it.";
   auto comp = cl.Instance();
 
   // Initially no member is set
@@ -410,7 +430,9 @@ TEST(PIMPLCPP, OneofDeepCopy)
   sp.AddPluginPaths("./");
   std::string pathToLibrary = sp.FindSharedLibrary(
       "gazeboComponentOneofMessage");
-  ASSERT_FALSE(pathToLibrary.empty());
+  ASSERT_FALSE(pathToLibrary.empty()) << "test must be run from"
+                                         " the directory that"
+                                         " contains it.";
   std::string pluginName = pl.LoadLibrary(pathToLibrary);
   ASSERT_EQ("::gazebo::components::test::OneofMessageFactory", pluginName);
 
@@ -448,7 +470,9 @@ TEST(PIMPLCPP, OneofDeepCopy)
 TEST(PIMPLCPP, NestedOneof)
 {
   ComponentLoader<gazebo::components::test::NestedOneof> cl;
-  ASSERT_TRUE(cl.LoadComponent("NestedOneof"));
+  ASSERT_TRUE(cl.LoadComponent("NestedOneof")) << "test must be run from"
+                                                  " the directory that"
+                                                  " contains it.";
   auto comp = cl.Instance();
 
   // First level oneof
@@ -474,7 +498,9 @@ TEST(PIMPLCPP, NestedOneof)
 TEST(PIMPLCPP, EmptyNested)
 {
   ComponentLoader<gazebo::components::test::EmptyNested> cl;
-  ASSERT_TRUE(cl.LoadComponent("EmptyNested"));
+  ASSERT_TRUE(cl.LoadComponent("EmptyNested")) << "test must be run from"
+                                                  " the directory that"
+                                                  " contains it.";
   auto comp = cl.Instance();
 
   comp.Msg().SomeInt() = 747576;
@@ -482,6 +508,7 @@ TEST(PIMPLCPP, EmptyNested)
   EXPECT_EQ(747576, comp.Msg().SomeInt());
 }
 
+//////////////////////////////////////////////////
 int main(int argc, char **argv)
 {
   ::testing::InitGoogleTest(&argc, argv);

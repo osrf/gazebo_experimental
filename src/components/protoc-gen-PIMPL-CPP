@@ -146,12 +146,7 @@ known_complex_types = {
 
 
 # Known complex types get swapped out, no need to include api files for them
-ignore_dependencies = [
-        "gazebo/components/Vector3d.proto",
-        "gazebo/components/Quaterniond.proto",
-        "gazebo/components/Pose3d.proto",
-        "gazebo/components/Matrix3d.proto",
-        ]
+ignore_dependencies = [kct["type"] for kct in known_complex_types.values()]
 
 
 # Map protobuf simple types to c++ types
