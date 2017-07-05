@@ -15,36 +15,11 @@
  *
 */
 
-#include "gazebo/ecs/System.hh"
+#include <gazebo/ecs/Componentizer.hh>
 
-using namespace gazebo;
-using namespace ecs;
+using namespace gazebo::ecs;
 
-class gazebo::ecs::SystemPrivate
+//////////////////////////////////////////////////
+Componentizer::~Componentizer()
 {
-  public: ecs::Manager *_mgr;
-};
-
-/////////////////////////////////////////////////
-System::System()
-: dataPtr(new SystemPrivate())
-{
-}
-
-/// \brief Get the manager this system is a part of
-ecs::Manager &System::Manager()
-{
-  return *(this->dataPtr->_mgr);
-}
-
-/// \brief Set the manager this system is a part of
-void System::Manager(ecs::Manager *_mgr)
-{
-  this->dataPtr->_mgr = _mgr;
-}
-
-/////////////////////////////////////////////////
-System::~System()
-{
-  // Pure virtual destructors still have to be defined
 }

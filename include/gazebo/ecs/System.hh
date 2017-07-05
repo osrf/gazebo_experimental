@@ -41,7 +41,7 @@ namespace gazebo
     class System
     {
       public: System();
-      public: ~System();
+      public: virtual ~System() = 0;
 
       /// \brief Initialize the system so it can register queries and callbacks
       public: virtual void Init(QueryRegistrar &_registrar) = 0;
