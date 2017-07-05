@@ -46,7 +46,7 @@ TEST(CZPose, NoPose)
         </physics> \
       </world> \
     </sdf>";
-  mgr.LoadWorldFromString(world);
+  mgr.LoadWorldFromSDFString(world);
   mgr.UpdateOnce();
 
   auto entities = mgr.QueryEntities({
@@ -74,7 +74,7 @@ TEST(CZPose, ModelWithPose)
         </model> \
       </world> \
     </sdf>";
-  mgr.LoadWorldFromString(world);
+  mgr.LoadWorldFromSDFString(world);
   mgr.UpdateOnce();
 
   auto entities = mgr.QueryEntities({
@@ -116,7 +116,7 @@ TEST(CZPose, ManyPoses)
         </model> \
       </world> \
     </sdf>";
-  mgr.LoadWorldFromString(world);
+  mgr.LoadWorldFromSDFString(world);
   mgr.UpdateOnce();
 
   auto entities = mgr.QueryEntities({
