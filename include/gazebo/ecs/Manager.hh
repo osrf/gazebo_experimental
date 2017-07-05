@@ -99,9 +99,15 @@ namespace gazebo
       /// Ex: sm->LoadComponentizer(std::move(aUniquePtrInstance))
       public: bool LoadComponentizer(std::unique_ptr<Componentizer> _cz);
 
-      /// \brief Load a world from sdf string
+      /// \brief Load a world from a file path
+      /// \param[in] A path to a world file on the file system
       /// \returns true if the sdf is successfully parsed
-      public: bool LoadWorld(const std::string &_world);
+      public: bool LoadWorldFromPath(const std::string &_path);
+
+      /// \brief Load a world from a string
+      /// \param[in] A string containing an SDF xml document with a world tag
+      /// \returns true if the sdf is successfully parsed
+      public: bool LoadWorldFromSDFString(const std::string &_world);
 
       /// \brief Update everything once and return immediately
       public: void UpdateOnce();
