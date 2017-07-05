@@ -12,11 +12,11 @@ This project uses [CMake](https://cmake.org/).
 Most of the important features come from [Ignition Robotics](http://ignitionrobotics.org/).
 Build and install the Ignition projects from source in this order:
 
-* [ign-common](https://bitbucket.org/ignitionrobotics/ign-common)
-* [ign-tools](https://bitbucket.org/ignitionrobotics/ign-tools) *optional*
-* [ign-msgs](https://bitbucket.org/ignitionrobotics/ign-msgs)
-* [ign-transport](https://bitbucket.org/ignitionrobotics/ign-transport)
-* [ign-gui](https://bitbucket.org/ignitionrobotics/ign-gui)
+* [ign-common](https://bitbucket.org/ignitionrobotics/ign-common) `default` branch
+* [ign-gui](https://bitbucket.org/ignitionrobotics/ign-gui) `default` branch
+* [ign-msgs](https://bitbucket.org/ignitionrobotics/ign-msgs) `default` branch
+* [ign-transport](https://bitbucket.org/ignitionrobotics/ign-transport) `ign-transport3` branch
+* [sdformat](https://bitbucket.org/osrf/sdformat) `default` branch
 
 Other dependencies include
 
