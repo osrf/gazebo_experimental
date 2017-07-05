@@ -157,10 +157,12 @@ namespace gazebo
       public: virtual void DestructStorage(void *_location) const = 0;
 
       /// \brief Shallow copy storage from one location to another
-      public: virtual void ShallowCopyStorage(void const *_from, void *_to) const = 0;
+      public: virtual void ShallowCopyStorage(void const *_from, void *_to)
+              const = 0;
 
       /// \brief Deep copy storage from one location to another
-      public: virtual void DeepCopyStorage(void const *_from, void *_to) const = 0;
+      public: virtual void DeepCopyStorage(void const *_from, void *_to)
+              const = 0;
     };
 
 
@@ -201,7 +203,7 @@ namespace gazebo
         // Cast void to STORAGE*
         STORAGE *storage = static_cast<STORAGE*>(_storage);
         // placement new operator so this doesn't allocate memory
-        new (_location) API(storage);
+        new(_location) API(storage);
       }
 
       public: virtual void DestructAPI(void *_location) const override
@@ -222,8 +224,8 @@ namespace gazebo
         static_cast<STORAGE*>(_location)->~STORAGE();
       }
 
-      public: virtual void ShallowCopyStorage(void const *_from, void *_to) const
-              override
+      public: virtual void ShallowCopyStorage(void const *_from, void *_to)
+              const override
       {
         // Copy each byte from one location to another
         // The compiler should unroll this loop completely
