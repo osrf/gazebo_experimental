@@ -22,6 +22,8 @@ Other dependencies include
 
 * gflags
     * sudo apt install libgflags-dev
+* python-protobuf
+    * sudo apt install python-protobuf
 
 ## Get the source code
 ```
