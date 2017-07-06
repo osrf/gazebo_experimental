@@ -48,6 +48,21 @@ namespace gazebo
       /// \brief Destructor
       public: ~EntityComponentDatabase();
 
+      /// \brief Blocks or unblocks the updating of the database
+      /// \param[in] _doBlock True if the database should be blocked
+      /// \remarks for each call to BlockUpdate(true), there must be a matching
+      ///          call to BlockUpdate(false) before the update will continue
+      /// \remarks if _doBlock is True this function may block until database
+      ///          finishes updating.
+      /// \returns true if the update is blocked
+      public: bool BlockUpdate(bool _doBlock);
+
+      /// \brief Get the current simulation time
+      public: const ignition::common::Time &SimulationTime() const;
+
+      /// \brief Set the simulation time of the next update
+      public: void SimulationTime(const ignition::common::Time &_newTime);
+
       /// \brief Add a query for entities
       /// \param[in] _query The query to add
       /// \returns The index of the query and boolean in a pair. The boolean

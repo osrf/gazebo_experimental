@@ -63,12 +63,6 @@ class gazebo::ecs::ManagerPrivate
   /// \brief Handles storage and quering of components
   public: EntityComponentDatabase database;
 
-  /// \brief Holds the current simulation time
-  public: ignition::common::Time simTime;
-
-  /// \brief Holds the next simulation time
-  public: ignition::common::Time nextSimTime;
-
   /// \brief count of how many things want simulation time paused
   public: std::atomic<int> pauseCount;
 
@@ -98,22 +92,18 @@ Manager::~Manager()
 {
 }
 
-/////////////////////////////////////////////////
-EntityId Manager::CreateEntity()
+//////////////////////////////////////////////////
+std::unique_ptr<DataHandle> Handle()
 {
-  return this->dataPtr->database.CreateEntity();
-}
-
-/////////////////////////////////////////////////
-bool Manager::DeleteEntity(EntityId _id)
-{
-  return this->dataPtr->database.DeleteEntity(_id);
+  return std::unique_ptr<DataHandle>(new DataHandle(
+        *this, this->dataPtr->database));
 }
 
 /////////////////////////////////////////////////
 void Manager::UpdateOnce()
 {
-  this->dataPtr->diagnostics.UpdateBegin(this->dataPtr->simTime);
+  this->dataPtr->diagnostics.UpdateBegin(
+      this->dataPtr->database.SimulationTime());
   this->dataPtr->UpdateOnce();
   this->dataPtr->diagnostics.UpdateEnd();
 }
@@ -121,14 +111,16 @@ void Manager::UpdateOnce()
 /////////////////////////////////////////////////
 void Manager::UpdateOnce(double _real_time_factor)
 {
-  this->dataPtr->diagnostics.UpdateBegin(this->dataPtr->simTime);
+  this->dataPtr->diagnostics.UpdateBegin(
+      this->dataPtr->database.SimulationTime());
 
   ignition::common::Time startWallTime = ignition::common::Time::SystemTime();
-  ignition::common::Time startSimTime = this->dataPtr->simTime;
+  ignition::common::Time startSimTime =
+    this->dataPtr->database.SImulationTime();
 
   this->dataPtr->UpdateOnce();
 
-  ignition::common::Time endSimTime = this->dataPtr->simTime;
+  ignition::common::Time endSimTime = this->dataPtr->database.SimulationTime();
   ignition::common::Time endWallTime = ignition::common::Time::SystemTime();
 
   this->dataPtr->diagnostics.StartTimer("sleep");
@@ -184,9 +176,6 @@ void ManagerPrivate::UpdateOnce()
     }
     this->diagnostics.StopTimer(sysInfo.name);
   }
-
-  // Advance sim time according to what was set last update
-  this->simTime = this->nextSimTime;
 }
 
 /////////////////////////////////////////////////
@@ -297,29 +286,6 @@ bool Manager::LoadWorldFromSDFString(const std::string &_world)
   }
 
   return success;
-}
-
-/////////////////////////////////////////////////
-gazebo::ecs::Entity &Manager::Entity(const EntityId _id) const
-{
-  return this->dataPtr->database.Entity(_id);
-}
-
-/////////////////////////////////////////////////
-const ignition::common::Time &Manager::SimulationTime() const
-{
-  return this->dataPtr->simTime;
-}
-
-/////////////////////////////////////////////////
-bool Manager::SimulationTime(const ignition::common::Time &_newTime)
-{
-  if (!this->Paused())
-  {
-    this->dataPtr->nextSimTime = _newTime;
-    return true;
-  }
-  return false;
 }
 
 /////////////////////////////////////////////////

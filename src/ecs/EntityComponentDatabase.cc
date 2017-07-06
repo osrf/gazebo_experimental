@@ -17,6 +17,8 @@
 
 #include <algorithm>
 #include <assert.h>
+#include <atomic>
+#include <condition_variable>
 #include <map>
 #include <set>
 #include <utility>
@@ -81,6 +83,21 @@ class gazebo::ecs::EntityComponentDatabasePrivate
 
   /// \brief Queries on this manager
   public: std::vector<EntityQuery> queries;
+
+  /// \brief Holds the current simulation time
+  public: ignition::common::Time simTime;
+
+  /// \brief Holds the next simulation time
+  public: ignition::common::Time nextSimTime;
+
+  /// \brief count of how many things want update blocked
+  public: std::atomic<int> blockCount;
+
+  /// \brief A mutex used to block updates
+  public: std::mutex updateMutex;
+
+  /// \brief a condition variable to wake the ecs up when it's time to update
+  public: std::condition_variable updateCondVar;
 };
 
 /////////////////////////////////////////////////
@@ -129,6 +146,44 @@ EntityComponentDatabase::~EntityComponentDatabase()
     cf->DestructStorage(data);
     delete [] storage;
   }
+}
+
+//////////////////////////////////////////////////
+bool BlockUpdate(bool _doBlock)
+{
+  if (_doBlock)
+  {
+    // This blocks while the database is updating
+    std::lock_guard<std::mutex> updateLock(this->dataPtr->updateMutex);
+    return ++(this->dataPtr->blockCount);
+  }
+
+  // decrease block count if it's greater than zero
+  int currentCount = this->dataPtr->blockCount;
+  while (currentCount && !this->dataPtr->blockCount.compare_exchange_weak(
+        currentCount, currentCount - 1))
+  {
+    // Intentionally do nothing, compare_exchange_weak modifies currentCount
+  }
+  assert(currentCount >= 0);
+  if (currentCount == 0)
+  {
+    // Notify update loop that it can proceed
+    this->dataPtr->updateCondVar.notify_one();
+  }
+  return currentCount;
+}
+
+//////////////////////////////////////////////////
+const ignition::common::Time &SimulationTime() const
+{
+  return this->dataPtr->simTime;
+}
+
+//////////////////////////////////////////////////
+void SimulationTime(const ignition::common::Time &_newTime)
+{
+  this->dataPtr->nextSimTime = _newTime;
 }
 
 /////////////////////////////////////////////////
@@ -459,6 +514,11 @@ Difference EntityComponentDatabase::IsDifferent(EntityId _id,
 /////////////////////////////////////////////////
 void EntityComponentDatabase::Update()
 {
+  // Wait here if something wants to block the update
+  std::lock_guard<std::mutex> updateLock(this->dataPtr->updateMutex);
+  this->dataPtr->updateCondVar.wait_for(updateLock,
+      []{return this->dataPtr->blockCount == 0});
+
   // Deleted ids can be reused after one update.
   this->dataPtr->freeIds.insert(this->dataPtr->deletedIds.begin(),
       this->dataPtr->deletedIds.end());
@@ -550,4 +610,7 @@ void EntityComponentDatabase::Update()
 
   assert(this->dataPtr->componentIndices.size()
       == this->dataPtr->components.size());
+
+  // Advance sim time according to what was set last update
+  this->simTime = this->nextSimTime;
 }
