@@ -124,21 +124,25 @@ class EnumField(object):
 known_complex_types = {
         ".gazebo.components.Vector3d": {
             "type": "ignition::math::Vector3d",
+            "file": "gazebo/components/Vector3d.proto",
             "include": set(["ignition/math/Vector3.hh"]),
             "default": None,
             },
         ".gazebo.components.Quaterniond": {
             "type": "ignition::math::Quaterniond",
+            "file": "gazebo/components/Quaterniond.proto",
             "include": set(["ignition/math/Quaternion.hh"]),
             "default": None,
             },
         ".gazebo.components.Pose3d": {
             "type": "ignition::math::Pose3d",
+            "file": "gazebo/components/Pose3d.proto",
             "include": set(["ignition/math/Pose3.hh"]),
             "default": None,
             },
         ".gazebo.components.Matrix3d": {
             "type": "ignition::math::Matrix3d",
+            "file": "gazebo/components/Matrix3d.proto",
             "include": set(["ignition/math/Matrix3.hh"]),
             "default": None,
             },
@@ -146,7 +150,7 @@ known_complex_types = {
 
 
 # Known complex types get swapped out, no need to include api files for them
-ignore_dependencies = [kct["type"] for kct in known_complex_types.values()]
+ignore_dependencies = [kct["file"] for kct in known_complex_types.values()]
 
 
 # Map protobuf simple types to c++ types
