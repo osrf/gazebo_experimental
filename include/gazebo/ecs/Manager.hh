@@ -22,9 +22,9 @@
 #include <iostream>
 #include <set>
 
-#include <ignition/common/Time.hh>
 
 #include "gazebo/ecs/Componentizer.hh"
+#include "gazebo/ecs/DataHandle.hh"
 #include "gazebo/ecs/Entity.hh"
 #include "gazebo/ecs/System.hh"
 #include "gazebo/ecs/Component.hh"

@@ -19,6 +19,7 @@
 #define GAZEBO_ECS_ENTITYCOMPONENTDATABASE_HH_
 
 #include <memory>
+#include <ignition/common/Time.hh>
 
 #include "gazebo/ecs/Entity.hh"
 #include "gazebo/ecs/Component.hh"

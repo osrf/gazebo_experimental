@@ -93,7 +93,7 @@ Manager::~Manager()
 }
 
 //////////////////////////////////////////////////
-std::unique_ptr<DataHandle> Handle()
+std::unique_ptr<DataHandle> Manager::Handle()
 {
   return std::unique_ptr<DataHandle>(new DataHandle(
         *this, this->dataPtr->database));
@@ -116,7 +116,7 @@ void Manager::UpdateOnce(double _real_time_factor)
 
   ignition::common::Time startWallTime = ignition::common::Time::SystemTime();
   ignition::common::Time startSimTime =
-    this->dataPtr->database.SImulationTime();
+    this->dataPtr->database.SimulationTime();
 
   this->dataPtr->UpdateOnce();
 

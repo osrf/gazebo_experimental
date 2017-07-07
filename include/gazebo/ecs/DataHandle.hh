@@ -19,6 +19,7 @@
 #define GAZEBO_ECS_DATAHANDLE_HH_
 
 #include <memory>
+#include <ignition/common/Time.hh>
 
 #include "gazebo/ecs/Entity.hh"
 #include "gazebo/ecs/Component.hh"
@@ -66,6 +67,8 @@ namespace gazebo
 
       /// \brief private implementation pointer
       private: std::unique_ptr<DataHandlePrivate> dataPtr;
+
+      friend class Manager;
     };
   }
 }

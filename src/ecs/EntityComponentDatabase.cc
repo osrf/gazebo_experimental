@@ -149,7 +149,7 @@ EntityComponentDatabase::~EntityComponentDatabase()
 }
 
 //////////////////////////////////////////////////
-bool BlockUpdate(bool _doBlock)
+bool EntityComponentDatabase::BlockUpdate(bool _doBlock)
 {
   if (_doBlock)
   {
@@ -175,13 +175,13 @@ bool BlockUpdate(bool _doBlock)
 }
 
 //////////////////////////////////////////////////
-const ignition::common::Time &SimulationTime() const
+const ignition::common::Time &EntityComponentDatabase::SimulationTime() const
 {
   return this->dataPtr->simTime;
 }
 
 //////////////////////////////////////////////////
-void SimulationTime(const ignition::common::Time &_newTime)
+void EntityComponentDatabase::SimulationTime(const ignition::common::Time &_newTime)
 {
   this->dataPtr->nextSimTime = _newTime;
 }
@@ -515,9 +515,9 @@ Difference EntityComponentDatabase::IsDifferent(EntityId _id,
 void EntityComponentDatabase::Update()
 {
   // Wait here if something wants to block the update
-  std::lock_guard<std::mutex> updateLock(this->dataPtr->updateMutex);
-  this->dataPtr->updateCondVar.wait_for(updateLock,
-      []{return this->dataPtr->blockCount == 0});
+  std::unique_lock<std::mutex> updateLock(this->dataPtr->updateMutex);
+  this->dataPtr->updateCondVar.wait(updateLock,
+      [this]{return this->dataPtr->blockCount == 0;});
 
   // Deleted ids can be reused after one update.
   this->dataPtr->freeIds.insert(this->dataPtr->deletedIds.begin(),
@@ -612,5 +612,5 @@ void EntityComponentDatabase::Update()
       == this->dataPtr->components.size());
 
   // Advance sim time according to what was set last update
-  this->simTime = this->nextSimTime;
+  this->dataPtr->simTime = this->dataPtr->nextSimTime;
 }

@@ -16,6 +16,8 @@
 */
 
 #include "gazebo/ecs/DataHandle.hh"
+#include "gazebo/ecs/EntityComponentDatabase.hh"
+#include "gazebo/ecs/Manager.hh"
 
 namespace gzecs = gazebo::ecs;
 using namespace gazebo;
@@ -32,7 +34,7 @@ class gazebo::ecs::DataHandlePrivate
 };
 
 //////////////////////////////////////////////////
-DataHandle(Manager &_manager, EntityComponentDatabase &_database)
+DataHandle::DataHandle(Manager &_manager, EntityComponentDatabase &_database)
   : dataPtr(new DataHandlePrivate)
 {
   this->dataPtr->manager = &_manager;
@@ -41,7 +43,7 @@ DataHandle(Manager &_manager, EntityComponentDatabase &_database)
 }
 
 //////////////////////////////////////////////////
-~DataHandle()
+DataHandle::~DataHandle()
 {
   this->dataPtr->database->BlockUpdate(false);
 }
@@ -75,7 +77,7 @@ bool DataHandle::SimulationTime(const ignition::common::Time &_newTime)
 {
   if (!this->dataPtr->manager->Paused())
   {
-    this->dataPtr->database->SimulationTime(nextSimTime);
+    this->dataPtr->database->SimulationTime(_newTime);
     return true;
   }
   return false;
