@@ -56,40 +56,13 @@ class TestHookComponentizer : public gzecs::Componentizer
       this->sentinel = "Init Ran";
     }
 
-  public: virtual void FromSDF(gzecs::Manager &_mgr, sdf::Element &_elem,
+  public: virtual void FromSDF(std::unique_ptr<gzecs::DataHandle> _handle,
+              sdf::Element &_elem,
               const std::unordered_map<sdf::Element*, gzecs::EntityId> &_ids)
      {
        this->sentinel = "FromSDF Ran";
      }
 };
-
-/////////////////////////////////////////////////
-TEST(Manager, CreateEntity)
-{
-  gzecs::Manager mgr;
-  gzecs::EntityId id = mgr.CreateEntity();
-  EXPECT_NE(gzecs::NO_ENTITY, id);
-}
-
-/////////////////////////////////////////////////
-TEST(Manager, GetEntity)
-{
-  gzecs::Manager mgr;
-  gzecs::EntityId id = mgr.CreateEntity();
-  gzecs::Entity &entity = mgr.Entity(id);
-  EXPECT_EQ(id, entity.Id());
-}
-
-/////////////////////////////////////////////////
-TEST(Manager, DeleteEntity)
-{
-  gzecs::Manager mgr;
-  gzecs::EntityId id = mgr.CreateEntity();
-  mgr.UpdateOnce();
-  mgr.DeleteEntity(id);
-  mgr.UpdateOnce();
-  EXPECT_EQ(gzecs::NO_ENTITY, mgr.Entity(id).Id());
-}
 
 /////////////////////////////////////////////////
 TEST(Manager, LoadSystem)
@@ -160,60 +133,6 @@ TEST(Manager, PauseUnpause)
 }
 
 /////////////////////////////////////////////////
-TEST(Manager, InitialTimeZero)
-{
-  gzecs::Manager mgr;
-  ignition::common::Time simTime = mgr.SimulationTime();
-  EXPECT_EQ(0, simTime.sec);
-  EXPECT_EQ(0, simTime.nsec);
-}
-
-/////////////////////////////////////////////////
-TEST(Manager, SetTimeNotPaused)
-{
-  gzecs::Manager mgr;
-  ignition::common::Time simTime(1234, 5678);
-  EXPECT_TRUE(mgr.SimulationTime(simTime));
-
-  mgr.UpdateOnce();
-  simTime = mgr.SimulationTime();
-  EXPECT_EQ(1234, simTime.sec);
-  EXPECT_EQ(5678, simTime.nsec);
-}
-
-/////////////////////////////////////////////////
-TEST(Manager, SetTimeNextUpdate)
-{
-  gzecs::Manager mgr;
-  ignition::common::Time simTime(1234, 5678);
-  EXPECT_TRUE(mgr.SimulationTime(simTime));
-
-  simTime = mgr.SimulationTime();
-  EXPECT_EQ(0, simTime.sec);
-  EXPECT_EQ(0, simTime.nsec);
-
-  mgr.UpdateOnce();
-  simTime = mgr.SimulationTime();
-  EXPECT_EQ(1234, simTime.sec);
-  EXPECT_EQ(5678, simTime.nsec);
-}
-
-/////////////////////////////////////////////////
-TEST(Manager, SetTimePaused)
-{
-  gzecs::Manager mgr;
-  mgr.BeginPause();
-  mgr.UpdateOnce();
-
-  ignition::common::Time simTime(1234, 5678);
-  EXPECT_FALSE(mgr.SimulationTime(simTime));
-
-  mgr.UpdateOnce();
-  simTime = mgr.SimulationTime();
-  EXPECT_EQ(0, simTime.sec);
-  EXPECT_EQ(0, simTime.nsec);
-}
-
 int main(int argc, char **argv)
 {
   ::testing::InitGoogleTest(&argc, argv);
