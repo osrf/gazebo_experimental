@@ -67,11 +67,12 @@ void PhysicsSystem::Init(ecs::QueryRegistrar &_registrar)
 void PhysicsSystem::UpdateConfig(const ecs::EntityQuery &_result)
 {
   ecs::Manager &mgr = this->Manager();
+  auto handle = mgr.Handle();
   auto const &entityIds = _result.EntityIds();
   if (!entityIds.empty())
   {
     // only consider the first entity
-    auto &entity = mgr.Entity(*entityIds.begin());
+    auto &entity = handle->Entity(*entityIds.begin());
     auto difference = entity.IsDifferent<components::PhysicsConfig>();
     if (difference == ecs::WAS_CREATED || difference == ecs::WAS_MODIFIED)
     {
@@ -85,6 +86,7 @@ void PhysicsSystem::UpdateConfig(const ecs::EntityQuery &_result)
 void PhysicsSystem::UpdateBodies(const ecs::EntityQuery &_result)
 {
   ecs::Manager &mgr = this->Manager();
+  auto handle = mgr.Handle();
 
   // STEP 1 Loop through entities and update internal representation
   // This is where the effects of other systems get propagated to this one,
@@ -92,7 +94,7 @@ void PhysicsSystem::UpdateBodies(const ecs::EntityQuery &_result)
   for (auto const &entityId : _result.EntityIds())
   {
     // Get entity (should check if exists?)
-    auto &entity = mgr.Entity(entityId);
+    auto &entity = handle->Entity(entityId);
 
     // Check for changes since last time step
     auto diffGeometry = entity.IsDifferent<components::Geometry>();
@@ -129,7 +131,7 @@ void PhysicsSystem::UpdateBodies(const ecs::EntityQuery &_result)
   // will update at an unknown rate
   const double changeInTime = this->maxStepSize;
   ignition::common::Time delta(changeInTime);
-  mgr.SimulationTime(mgr.SimulationTime() + delta);
+  handle->SimulationTime(handle->SimulationTime() + delta);
 
   // STEP 4
   // TODO Publish contacts on an ignition transport topic?
