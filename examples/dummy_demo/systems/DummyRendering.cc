@@ -49,7 +49,8 @@ void DummyRendering::Init(ecs::QueryRegistrar &_registrar)
 void DummyRendering::Update(const ecs::EntityQuery &_result)
 {
   auto &mgr = this->Manager();
-  auto const &currentTime = mgr.SimulationTime();
+  auto handle = mgr.Handle();
+  auto const &currentTime = handle->SimulationTime();
   if (currentTime < this->nextRenderTime)
   {
     // Too early to publish
@@ -60,7 +61,7 @@ void DummyRendering::Update(const ecs::EntityQuery &_result)
 
   for (auto const &entityId : _result.EntityIds())
   {
-    auto &entity = mgr.Entity(entityId);
+    auto &entity = handle->Entity(entityId);
     auto difference_material = entity.IsDifferent<components::Material>();
     auto difference_geometry = entity.IsDifferent<components::Geometry>();
     auto difference_position = entity.IsDifferent<components::Pose>();

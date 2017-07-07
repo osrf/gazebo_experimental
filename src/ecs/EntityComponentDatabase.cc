@@ -104,6 +104,7 @@ class gazebo::ecs::EntityComponentDatabasePrivate
 EntityComponentDatabase::EntityComponentDatabase()
 : dataPtr(new EntityComponentDatabasePrivate)
 {
+  this->dataPtr->blockCount = 0;
 }
 
 /////////////////////////////////////////////////
@@ -516,8 +517,11 @@ void EntityComponentDatabase::Update()
 {
   // Wait here if something wants to block the update
   std::unique_lock<std::mutex> updateLock(this->dataPtr->updateMutex);
-  this->dataPtr->updateCondVar.wait(updateLock,
+  if (this->dataPtr->blockCount)
+  {
+    this->dataPtr->updateCondVar.wait(updateLock,
       [this]{return this->dataPtr->blockCount == 0;});
+  }
 
   // Deleted ids can be reused after one update.
   this->dataPtr->freeIds.insert(this->dataPtr->deletedIds.begin(),

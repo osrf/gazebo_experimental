@@ -61,7 +61,8 @@ void DumbPhysics::Init(ecs::QueryRegistrar &_registrar)
 void DumbPhysics::Update(const ecs::EntityQuery &_result)
 {
   ecs::Manager &mgr = this->Manager();
-  this->diagnostics.UpdateBegin(mgr.SimulationTime());
+  auto handle = mgr.Handle();
+  this->diagnostics.UpdateBegin(handle->SimulationTime());
 
   this->diagnostics.StartTimer("Update Internal");
   // STEP 1 Loop through entities and update internal representation
@@ -70,7 +71,7 @@ void DumbPhysics::Update(const ecs::EntityQuery &_result)
   for (auto const &entityId : _result.EntityIds())
   {
     // Get entity (should check if exists?)
-    auto &entity = mgr.Entity(entityId);
+    auto &entity = handle->Entity(entityId);
 
     // Body is the internal representation of an entity in this system
     auto body = this->world.BodyById(entityId);
@@ -132,7 +133,7 @@ void DumbPhysics::Update(const ecs::EntityQuery &_result)
   double changeInTime = 0.001;
   auto contacts = this->world.Update(changeInTime);
   ignition::common::Time delta(changeInTime);
-  mgr.SimulationTime(mgr.SimulationTime() + delta);
+  handle->SimulationTime(handle->SimulationTime() + delta);
 
   // TODO Publish contacts on an ignition transport topic?
   for (auto contact : contacts)
@@ -154,7 +155,7 @@ void DumbPhysics::Update(const ecs::EntityQuery &_result)
       continue;
     }
 
-    auto &entity = mgr.Entity(entityId);
+    auto &entity = handle->Entity(entityId);
 
     auto worldPose = entity.ComponentMutable<components::Pose>();
     this->SyncExternalPose(body, worldPose);

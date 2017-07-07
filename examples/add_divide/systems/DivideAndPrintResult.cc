@@ -41,10 +41,11 @@ void DivideAndPrintResult::Init(ecs::QueryRegistrar &_registrar)
 void DivideAndPrintResult::Update(const ecs::EntityQuery &_result)
 {
   ecs::Manager &mgr = this->Manager();
+  auto handle = mgr.Handle();
   // Loop through all of the entities which have the required components
   for (auto const &entityId : _result.EntityIds())
   {
-    auto &entity = mgr.Entity(entityId);
+    auto &entity = handle->Entity(entityId);
     auto fraction = entity.Component<components::Fraction>();
 
     std::cout << "Dividing " << entityId << ":" <<

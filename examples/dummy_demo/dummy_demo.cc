@@ -102,12 +102,13 @@ int main(int argc, char **argv)
     }
   }
 
+  auto handle = manager.Handle();
   // Create 25 sphere entities
   for (int i = 0; i < 25; i++)
   {
     // Create the entity
-    gazebo::ecs::EntityId e = manager.CreateEntity();
-    gazebo::ecs::Entity &entity = manager.Entity(e);
+    gazebo::ecs::EntityId e = handle->CreateEntity();
+    gazebo::ecs::Entity &entity = handle->Entity(e);
 
     // Give it components
 

@@ -74,10 +74,11 @@ int main(int argc, char **argv)
   // Create a few entities to work with
   for (int i = 0; i < 10; i++)
   {
+    auto handle = manager.Handle();
     // An entity is just an ID
-    gazebo::ecs::EntityId e = manager.CreateEntity();
+    gazebo::ecs::EntityId e = handle->CreateEntity();
     // Convenience wrapper for working with an Id
-    gazebo::ecs::Entity &entity = manager.Entity(e);
+    gazebo::ecs::Entity &entity = handle->Entity(e);
 
     if (e % 2 == 0)
     {

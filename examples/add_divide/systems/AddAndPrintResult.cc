@@ -41,10 +41,11 @@ void AddAndPrintResult::Init(ecs::QueryRegistrar &_registrar)
 void AddAndPrintResult::Update(const ecs::EntityQuery &_query)
 {
   ecs::Manager &mgr = this->Manager();
+  auto handle = mgr.Handle();
   // Loop through all of the entities which have the required components
   for (auto const &entityId : _query.EntityIds())
   {
-    auto &entity = mgr.Entity(entityId);
+    auto &entity = handle->Entity(entityId);
     auto numbers = entity.Component<components::Triplet>();
 
     std::cout << "Adding " << entityId << ":" <<
