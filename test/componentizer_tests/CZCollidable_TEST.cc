@@ -129,8 +129,9 @@ TEST(CZCollidable, SdfTwoCollisions)
       });
 
   ASSERT_EQ(2, entities.size());
-  gzecs::Entity &e1 = mgr.Entity(*(entities.begin()));
-  gzecs::Entity &e2 = mgr.Entity(*(++entities.begin()));
+  auto handle = mgr.Handle();
+  gzecs::Entity &e1 = handle->Entity(*(entities.begin()));
+  gzecs::Entity &e2 = handle->Entity(*(++entities.begin()));
   auto comp1 = e1.Component<gazebo::components::Collidable>();
   auto comp2 = e2.Component<gazebo::components::Collidable>();
   EXPECT_NE(gzecs::NO_ENTITY, comp1.GroupId());

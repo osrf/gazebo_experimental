@@ -85,7 +85,8 @@ TEST(CZMaterial, VisualWithMaterial)
       });
 
   ASSERT_EQ(1, entities.size());
-  gzecs::Entity &e = mgr.Entity(*(entities.begin()));
+  auto handle = mgr.Handle();
+  gzecs::Entity &e = handle->Entity(*(entities.begin()));
   auto comp = e.Component<gazebo::components::Material>();
   EXPECT_TRUE(comp.Appearance().HasColor());
   EXPECT_FLOAT_EQ(0.1, comp.Appearance().Color().Red());

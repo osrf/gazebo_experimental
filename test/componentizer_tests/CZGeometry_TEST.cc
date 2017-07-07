@@ -87,7 +87,8 @@ TEST(CZGeometry, SdfSphereGeometry)
       });
 
   ASSERT_EQ(1, entities.size());
-  gzecs::Entity &e = mgr.Entity(*(entities.begin()));
+  auto handle = mgr.Handle();
+  gzecs::Entity &e = handle->Entity(*(entities.begin()));
   auto comp = e.Component<gazebo::components::Geometry>();
   EXPECT_TRUE(comp.Shape().HasSphere());
   EXPECT_DOUBLE_EQ(0.5, comp.Shape().Sphere().Radius());
@@ -126,7 +127,8 @@ TEST(CZGeometry, SdfBoxGeometry)
       });
 
   ASSERT_EQ(1, entities.size());
-  gzecs::Entity &e = mgr.Entity(*(entities.begin()));
+  auto handle = mgr.Handle();
+  gzecs::Entity &e = handle->Entity(*(entities.begin()));
   auto comp = e.Component<gazebo::components::Geometry>();
   EXPECT_TRUE(comp.Shape().HasBox());
   EXPECT_DOUBLE_EQ(0.5, comp.Shape().Box().X());
@@ -168,7 +170,8 @@ TEST(CZGeometry, SdfCylinderGeometry)
       });
 
   ASSERT_EQ(1, entities.size());
-  gzecs::Entity &e = mgr.Entity(*(entities.begin()));
+  auto handle = mgr.Handle();
+  gzecs::Entity &e = handle->Entity(*(entities.begin()));
   auto comp = e.Component<gazebo::components::Geometry>();
   EXPECT_TRUE(comp.Shape().HasCylinder());
   EXPECT_DOUBLE_EQ(0.54321, comp.Shape().Cylinder().Radius());

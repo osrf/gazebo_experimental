@@ -91,7 +91,8 @@ TEST(CZInertial, LinkWithInertial)
       });
 
   ASSERT_EQ(1, entities.size());
-  gzecs::Entity &e = mgr.Entity(*(entities.begin()));
+  auto handle = mgr.Handle();
+  gzecs::Entity &e = handle->Entity(*(entities.begin()));
   auto comp = e.Component<gazebo::components::Inertial>();
   EXPECT_DOUBLE_EQ(3.14, comp.Mass());
   EXPECT_DOUBLE_EQ(1.23, comp.Inertia()(0, 0));

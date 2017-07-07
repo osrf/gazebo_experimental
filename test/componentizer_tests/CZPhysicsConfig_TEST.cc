@@ -104,7 +104,8 @@ TEST(CZPhysicsConfig, SdfMaxStepSize)
       });
 
   ASSERT_EQ(1, entities.size());
-  gzecs::Entity &e = mgr.Entity(*(entities.begin()));
+  auto handle = mgr.Handle();
+  gzecs::Entity &e = handle->Entity(*(entities.begin()));
   auto comp = e.Component<gazebo::components::PhysicsConfig>();
   EXPECT_DOUBLE_EQ(1.234, comp.MaxStepSize());
 }
