@@ -36,7 +36,8 @@ void CZPose::Init()
 }
 
 //////////////////////////////////////////////////
-void CZPose::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
+void CZPose::FromSDF(std::unique_ptr<ecs::DataHandle> _handle,
+    sdf::Element &_elem,
     const std::unordered_map<sdf::Element*, ecs::EntityId> &_ids)
 {
   // Create frame names according to gazebo 9 document
@@ -82,7 +83,7 @@ void CZPose::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
 
     // create component
     ecs::EntityId id = _ids.at(&_elem);
-    ecs::Entity &entity = _mgr.Entity(id);
+    ecs::Entity &entity = _handle->Entity(id);
     auto comp = entity.AddComponent<components::Pose>();
     comp.ParentFrame() = parentFrame;
     comp.DefinesFrame() = definesFrame;

@@ -36,7 +36,8 @@ void CZCollidable::Init()
 }
 
 //////////////////////////////////////////////////
-void CZCollidable::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
+void CZCollidable::FromSDF(std::unique_ptr<ecs::DataHandle> _handle,
+    sdf::Element &_elem,
     const std::unordered_map<sdf::Element*, ecs::EntityId> &_ids)
 {
   if (_elem.GetName() == "collision")
@@ -54,7 +55,7 @@ void CZCollidable::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
     {
       ecs::EntityId groupId = _ids.at(parent.get());
       ecs::EntityId id = _ids.at(&_elem);
-      ecs::Entity &entity = _mgr.Entity(id);
+      ecs::Entity &entity = _handle->Entity(id);
 
       auto comp = entity.AddComponent<components::Collidable>();
       // Group all collissions on a link together

@@ -36,7 +36,8 @@ void CZPhysicsConfig::Init()
 }
 
 //////////////////////////////////////////////////
-void CZPhysicsConfig::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
+void CZPhysicsConfig::FromSDF(std::unique_ptr<ecs::DataHandle> _handle,
+    sdf::Element &_elem,
     const std::unordered_map<sdf::Element*, ecs::EntityId> &_ids)
 {
   if (_elem.GetName() == "physics")
@@ -55,7 +56,7 @@ void CZPhysicsConfig::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
     {
       // Create the inertial component on the entity associated with the link
       ecs::EntityId id = _ids.at(&_elem);
-      ecs::Entity &entity = _mgr.Entity(id);
+      ecs::Entity &entity = _handle->Entity(id);
 
       auto comp = entity.AddComponent<components::PhysicsConfig>();
       comp.MaxStepSize() = _elem.Get<double>("max_step_size");

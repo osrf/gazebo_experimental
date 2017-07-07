@@ -36,7 +36,8 @@ void CZMaterial::Init()
 }
 
 //////////////////////////////////////////////////
-void CZMaterial::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
+void CZMaterial::FromSDF(std::unique_ptr<ecs::DataHandle> _handle,
+    sdf::Element &_elem,
     const std::unordered_map<sdf::Element*, ecs::EntityId> &_ids)
 {
   if (_elem.GetName() == "visual")
@@ -47,7 +48,7 @@ void CZMaterial::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
 
     // No material, use the default material
     ecs::EntityId id = _ids.at(&_elem);
-    ecs::Entity &visualEntity = _mgr.Entity(id);
+    ecs::Entity &visualEntity = _handle->Entity(id);
     auto material = visualEntity.AddComponent<components::Material>();
     material.Appearance().Color().Red() = 0.7;
     material.Appearance().Color().Green() = 0.7;
@@ -74,7 +75,7 @@ void CZMaterial::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
     else
     {
       ecs::EntityId id = _ids.at(parent.get());
-      ecs::Entity &visualEntity = _mgr.Entity(id);
+      ecs::Entity &visualEntity = _handle->Entity(id);
       sdf::ElementPtr ambient = _elem.GetElement("ambient");
       auto color = ambient->Get<ignition::math::Color>();
 

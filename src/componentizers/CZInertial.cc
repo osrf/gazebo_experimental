@@ -36,7 +36,8 @@ void CZInertial::Init()
 }
 
 //////////////////////////////////////////////////
-void CZInertial::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
+void CZInertial::FromSDF(std::unique_ptr<ecs::DataHandle> _handle,
+    sdf::Element &_elem,
     const std::unordered_map<sdf::Element*, ecs::EntityId> &_ids)
 {
   if (_elem.GetName() == "inertial")
@@ -54,7 +55,7 @@ void CZInertial::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
     {
       // Create the inertial component on the entity associated with the link
       ecs::EntityId parentId = _ids.at(parent.get());
-      ecs::Entity &entity = _mgr.Entity(parentId);
+      ecs::Entity &entity = _handle->Entity(parentId);
 
       auto comp = entity.AddComponent<components::Inertial>();
       if (_elem.HasElement("mass"))

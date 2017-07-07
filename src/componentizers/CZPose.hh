@@ -34,11 +34,13 @@ namespace gazebo
       public: virtual ~CZPose();
 
       // Inherited
-      public: virtual void Init();
+      public: virtual void Init() override;
 
       // Inherited
-      public: virtual void FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
-                  const std::unordered_map<sdf::Element*, ecs::EntityId> &_ids);
+      public: virtual void FromSDF(std::unique_ptr<ecs::DataHandle> _handle,
+                  sdf::Element &_elem,
+                  const std::unordered_map<sdf::Element*, ecs::EntityId> &_ids)
+              override;
 
       /// \brief map of elements to their frame names
       private: std::unordered_map<sdf::Element*, std::string> frames;

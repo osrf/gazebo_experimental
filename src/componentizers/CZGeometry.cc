@@ -34,7 +34,8 @@ void CZGeometry::Init()
 }
 
 //////////////////////////////////////////////////
-void CZGeometry::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
+void CZGeometry::FromSDF(std::unique_ptr<ecs::DataHandle> _handle,
+    sdf::Element &_elem,
     const std::unordered_map<sdf::Element*, ecs::EntityId> &_ids)
 {
   if (_elem.GetName() == "geometry")
@@ -46,7 +47,7 @@ void CZGeometry::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
         (parent->GetName() == "visual" || parent->GetName() == "collision"))
     {
       ecs::EntityId parentId = _ids.at(parent.get());
-      ecs::Entity &parentEntity = _mgr.Entity(parentId);
+      ecs::Entity &parentEntity = _handle->Entity(parentId);
 
       // Make sure there is a child with some actual data
       sdf::ElementPtr childElement = _elem.GetFirstElement();

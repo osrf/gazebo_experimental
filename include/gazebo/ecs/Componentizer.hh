@@ -17,8 +17,10 @@
 #ifndef GAZEBO_ECS_COMPONENTIZER_HH__
 #define GAZEBO_ECS_COMPONENTIZER_HH__
 
+#include <memory>
 #include <unordered_map>
 
+#include "gazebo/ecs/DataHandle.hh"
 #include "gazebo/ecs/Entity.hh"
 
 namespace sdf
@@ -31,9 +33,6 @@ namespace gazebo
 {
   namespace ecs
   {
-    /// \brief forward declaration
-    class Manager;
-
     /// \brief a plugin that creates entities and components from SDF
     class Componentizer
     {
@@ -48,7 +47,8 @@ namespace gazebo
       /// \param[in] _mgr manager to use to create the entities and components
       /// \param[in] _elem The sdf element to pull data from
       /// \param[in] _ids Maps elements to entity IDs. Makes grouping easier
-      public: virtual void FromSDF(Manager &_mgr, sdf::Element &_elem,
+      public: virtual void FromSDF(std::unique_ptr<DataHandle> _handle,
+                  sdf::Element &_elem,
                   const std::unordered_map<sdf::Element*, EntityId> &_ids) = 0;
     };
   }

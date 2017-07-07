@@ -244,7 +244,7 @@ void ManagerPrivate::Componentize(Manager *_mgr, sdf::SDF &_sdf)
 
     for (auto &cz : this->componentizers)
     {
-      cz->FromSDF(*_mgr, *nextElement, ids);
+      cz->FromSDF(_mgr->Handle(), *nextElement, ids);
     }
 
     sdf::ElementPtr child = nextElement->GetFirstElement();

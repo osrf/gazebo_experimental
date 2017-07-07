@@ -36,7 +36,8 @@ void CZWorldVelocity::Init()
 }
 
 //////////////////////////////////////////////////
-void CZWorldVelocity::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
+void CZWorldVelocity::FromSDF(std::unique_ptr<ecs::DataHandle> _handle,
+    sdf::Element &_elem,
     const std::unordered_map<sdf::Element*, ecs::EntityId> &_ids)
 {
   if (_elem.GetName() == "link")
@@ -61,7 +62,7 @@ void CZWorldVelocity::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
       }
 
       ecs::EntityId id = _ids.at(&_elem);
-      ecs::Entity &entity = _mgr.Entity(id);
+      ecs::Entity &entity = _handle->Entity(id);
       entity.AddComponent<components::WorldVelocity>();
       igndbg << "Added WorldVelocity to " << id << std::endl;
     }

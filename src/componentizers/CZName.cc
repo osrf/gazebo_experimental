@@ -35,7 +35,8 @@ void CZName::Init()
 }
 
 //////////////////////////////////////////////////
-void CZName::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
+void CZName::FromSDF(std::unique_ptr<ecs::DataHandle> _handle,
+    sdf::Element &_elem,
     const std::unordered_map<sdf::Element*, ecs::EntityId> &_ids)
 {
   // Add name component for this element
@@ -45,7 +46,7 @@ void CZName::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
     if (!name.empty())
     {
       ecs::EntityId id = _ids.at(&_elem);
-      ecs::Entity &e = _mgr.Entity(id);
+      ecs::Entity &e = _handle->Entity(id);
       auto nameComponent = e.AddComponent<components::Name>();
       nameComponent.Text() = name;
       igndbg << "Added Name " << name << " to " << id << std::endl;
