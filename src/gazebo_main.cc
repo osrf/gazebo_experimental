@@ -17,7 +17,9 @@
 
 #include <atomic>
 #include <functional>
+#include <fstream>
 #include <iostream>
+#include <sstream>
 #include <thread>
 
 #include <gflags/gflags.h>
@@ -28,6 +30,7 @@
 #include <ignition/math/Rand.hh>
 #include "gazebo/ecs/ComponentFactory.hh"
 #include "gazebo/ecs/Manager.hh"
+#include <sdf/sdf.hh>
 
 #ifndef Q_MOC_RUN
   #include <ignition/gui/Iface.hh>
@@ -42,6 +45,8 @@ namespace gzecs = gazebo::ecs;
 DEFINE_bool(h, false, "");
 DEFINE_int32(verbose, 1, "");
 DEFINE_int32(v, 1, "");
+DEFINE_string(file, "", "");
+DEFINE_string(f, "empty.world", "");
 
 //////////////////////////////////////////////////
 void Help()
@@ -57,6 +62,7 @@ void Help()
   << "  --version                     Print version information." << std::endl
   << "  -v [--verbose] arg            Adjust the level of console output (0~4)."
   << std::endl
+  << "  -f [ --file ] FILE            SDF file to load on start." << std::endl
   << std::endl;
 }
 
@@ -81,7 +87,7 @@ static bool VerbosityValidator(const char */*_flagname*/, int _value)
 
 
 //////////////////////////////////////////////////
-bool LoadSystems(gzecs::Manager &_mgr, std::vector<std::string> _libs)
+bool LoadSystems(gzecs::Manager &_mgr, const std::vector<std::string> &_libs)
 {
   ignition::common::PluginLoader pluginLoader;
   ignition::common::SystemPaths sp;
@@ -117,7 +123,8 @@ bool LoadSystems(gzecs::Manager &_mgr, std::vector<std::string> _libs)
 }
 
 //////////////////////////////////////////////////
-bool LoadComponentizers(gzecs::Manager &_mgr, std::vector<std::string> _libs)
+bool LoadComponentizers(gzecs::Manager &_mgr,
+    const std::vector<std::string> &_libs)
 {
   ignition::common::PluginLoader pluginLoader;
   ignition::common::SystemPaths sp;
@@ -153,102 +160,24 @@ bool LoadComponentizers(gzecs::Manager &_mgr, std::vector<std::string> _libs)
 }
 
 //////////////////////////////////////////////////
-std::string PlaceholderLoadWorld()
+bool LoadWorld(gzecs::Manager &_mgr, const std::string &_file)
 {
-  return std::string(
-      "<?xml version='1.0'?>"
-      "<sdf version='1.6'>"
-      " <world name='default'>"
-      "   <physics type='ode'>"
-      "     <max_step_size>0.001</max_step_size>"
-      "     <real_time_factor>1</real_time_factor>"
-      "     <real_time_update_rate>1000</real_time_update_rate>"
-      "   </physics>"
-      "   <model name='some_model'>"
-      "     <link name='some_link'>"
-      "       <pose>0 0 0 0 0 0</pose>"
-      "       <collision name='some_collision'>"
-      "         <geometry>"
-      "           <box>"
-      "             <size>1 2 3</size>"
-      "           </box>"
-      "         </geometry>"
-      "       </collision>"
-      "       <collision name='some_other_collision'>"
-      "         <pose>1 0 0 0 0 0</pose>"
-      "         <geometry>"
-      "           <box>"
-      "             <size>1 2 3</size>"
-      "           </box>"
-      "         </geometry>"
-      "       </collision>"
-      "       <visual name='some_visual'>"
-      "         <geometry>"
-      "           <box>"
-      "             <size>1 2 3</size>"
-      "           </box>"
-      "         </geometry>"
-      "       </visual>"
-      "       <visual name='some_other_visual'>"
-      "         <pose>1 0 0 0 0 0</pose>"
-      "         <geometry>"
-      "           <box>"
-      "             <size>1 2 3</size>"
-      "           </box>"
-      "         </geometry>"
-      "       </visual>"
-      "       <inertial>"
-      "         <mass>5.0</mass>"
-      "         <inertia>"
-      "           <ixx>1.0</ixx>"
-      "           <ixy>2.0</ixy>"
-      "           <ixz>3.0</ixz>"
-      "           <iyy>0</iyy>"
-      "           <iyz>0</iyz>"
-      "           <izz>0</izz>"
-      "         </inertia>"
-      "       </inertial>"
-      "     </link>"
-      "     <link name='some_link_2'>"
-      "       <pose>1.5 0 1 0 0 0</pose>"
-      "       <collision name='some_collision_2'>"
-      "         <geometry>"
-      "           <sphere>"
-      "             <radius>0.5</radius>"
-      "           </sphere>"
-      "         </geometry>"
-      "       </collision>"
-      "       <visual name='some_visual'>"
-      "         <geometry>"
-      "           <sphere>"
-      "             <radius>0.5</radius>"
-      "           </sphere>"
-      "         </geometry>"
-      "       </visual>"
-      "     </link>"
-      "     <link name='some_link_3'>"
-      "       <pose>3 0 2 0 0 0</pose>"
-      "       <collision name='some_collision_3'>"
-      "         <geometry>"
-      "           <cylinder>"
-      "             <radius>0.5</radius>"
-      "             <length>1.0</length>"
-      "           </cylinder>"
-      "         </geometry>"
-      "       </collision>"
-      "       <visual name='some_visual'>"
-      "         <geometry>"
-      "           <cylinder>"
-      "             <radius>0.5</radius>"
-      "             <length>1.0</length>"
-      "           </cylinder>"
-      "         </geometry>"
-      "       </visual>"
-      "     </link>"
-      "   </model>"
-      " </world>"
-      "</sdf>"
-    );
+  bool success = true;
+  ignition::common::SystemPaths sp;
+
+  std::string fullPath = sp.LocateLocalFile(_file, {"", "./", GAZEBO_WORLD_INSTALL_DIR});
+  if (fullPath.empty())
+  {
+    ignwarn << "Cannot find [" << _file << "]" << std::endl;
+    success = false;
+  }
+  else
+  {
+    igndbg << "Loading world [" << fullPath << "]" << std::endl;
+    success = _mgr.LoadWorldFromPath(fullPath);
+  }
+
+  return success;
 }
 
 //////////////////////////////////////////////////
@@ -259,6 +188,26 @@ void RunECS(gzecs::Manager &_mgr, std::atomic<bool> &stop)
   {
     _mgr.UpdateOnce(realTimeFactor);
   }
+}
+
+//////////////////////////////////////////////////
+/// \brief configure paths and callbacks for sdformat model lookups
+void SDFormatModelPathSetup()
+{
+  char *env = getenv("GAZEBO_MODEL_PATH");
+  if (env)
+  {
+    sdf::addURIPath("model://", env);
+  }
+
+  char *homePath = getenv("HOME");
+  if (homePath)
+  {
+    std::string home = homePath;
+    sdf::addURIPath("model://", home + "/.gazebo/models");
+  }
+
+  sdf::setFindCallback([] (const std::string &) -> std::string {return "";});
 }
 
 //////////////////////////////////////////////////
@@ -295,6 +244,22 @@ int main(int _argc, char **_argv)
       FLAGS_verbose = FLAGS_v;
   }
 
+  // SDF File
+  std::string filename = FLAGS_f;
+  bool fileSet = false;
+  gflags::GetCommandLineFlagInfo("file", &info);
+  if (!info.is_default)
+  {
+    fileSet = true;
+    filename = FLAGS_file;
+  }
+  gflags::GetCommandLineFlagInfo("f", &info);
+  if (!info.is_default && fileSet)
+  {
+    ignerr << "Only one world file may be given" << std::endl;
+    return 3;
+  }
+
   // If help message is requested, substitute in the override help function.
   if (showHelp)
   {
@@ -315,6 +280,8 @@ int main(int _argc, char **_argv)
   {
     // Set verbosity level
     Verbose();
+
+    SDFormatModelPathSetup();
 
     gzecs::Manager manager;
 
@@ -341,8 +308,11 @@ int main(int _argc, char **_argv)
       return 1;
     }
 
-    // Load the world
-    manager.LoadWorld(PlaceholderLoadWorld());
+    if (!LoadWorld(manager, filename))
+    {
+      ignerr << "Error while loading world [" << filename << "]" << std::endl;
+      return 4;
+    }
 
     // Initialize app
     ignition::gui::initApp();

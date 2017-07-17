@@ -60,6 +60,8 @@ set (INCLUDE_INSTALL_DIR
   "${CMAKE_INSTALL_INCLUDEDIR}/gazebo-${PROJECT_MAJOR_VERSION}/gazebo")
 set (LIB_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR})
 set (BIN_INSTALL_DIR ${CMAKE_INSTALL_BINDIR})
+set (WORLD_INSTALL_DIR
+  ${CMAKE_INSTALL_PREFIX}/share/gazebo-${PROJECT_MAJOR_VERSION}/worlds/)
 
 if (build_errors)
   message(STATUS "BUILD ERRORS: These must be resolved before compiling.")
@@ -76,4 +78,5 @@ else (build_errors)
   add_subdirectory(src)
   add_subdirectory(test)
   add_subdirectory(examples)
+  add_subdirectory(worlds)
 endif (build_errors)
