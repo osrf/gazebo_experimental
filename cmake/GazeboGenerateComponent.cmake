@@ -2,7 +2,7 @@
 # GAZEBO_GENERATE_COMPONENT(_protobuf)
 # Generates a component plugin from a protobuf file
 # _protobuf is a relative path to a protobuf file
-#   It must be a relative path, matching protoc's idea of "cannonical path"
+#   It must be a relative path, matching protoc's idea of "canonical path"
 # Uses PROTOBUF_PROTOC_EXECUTABLE as path to protoc
 # Uses CMAKE_CURRENT_SOURCE_DIR as a protobuf import path
 # Uses GAZEBO_COMPONENT_GENERATOR_DIR as a protobuf import path
