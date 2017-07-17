@@ -33,24 +33,28 @@ namespace gazebo
 
       /// \brief Constructor
       public: GuiRenderWidget();
-      
+
       /// \brief Destructor
       public: virtual ~GuiRenderWidget();
 
       /// \brief Qt paint event.
       protected: virtual void paintEvent(QPaintEvent *_e);
 
-      protected: virtual void showEvent(QShowEvent *_event);
+      protected: virtual void showEvent(QShowEvent *_e);
 
       protected: virtual void resizeEvent(QResizeEvent *_e);
+
+      protected: virtual void moveEvent(QMoveEvent *_e);
+
 
       /// \brief Override paintEngine to stop Qt From trying to draw on top of
       /// render window.
       /// \return NULL.
       protected: virtual QPaintEngine *paintEngine() const;
 
-      /// \brief Frame that holds the render window
-      private: QFrame *renderFrame = nullptr;
+      private: void CreateRenderWindow();
+
+      private: QTimer *updateTimer = nullptr;
 
       private: ignition::rendering::RenderWindowPtr renderWindow;
       private: ignition::rendering::CameraPtr camera;
