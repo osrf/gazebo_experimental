@@ -21,7 +21,8 @@ Build and install the Ignition projects from source in this order:
 Other dependencies include
 
 * gflags
-    * sudo apt install libgflags-dev
+
+        sudo apt install libgflags-dev
 
 ## Get the source code
 ```
@@ -46,14 +47,6 @@ hg clone ssh://hg@bitbucket.org/osrf/gazebo_experimental
         make install
 
 # Running
-This project makes use of plugins to provide most of the features.
-The paths to search for these plugins are given using environment variables.
-The two important ones are `IGN_GUI_PLUGIN_PATH` and `GAZEBO_PLUGIN_PATH`.
-
-1. Set environment variables. Assuming you're in the build/ folder:
-
-        export GAZEBO_PLUGIN_PATH=$LD_LIBRARY_PATH
-        export IGN_GUI_PLUGIN_PATH=src/gui
 
 1. If you've done "make install", run Gazebo:
 
@@ -61,7 +54,26 @@ The two important ones are `IGN_GUI_PLUGIN_PATH` and `GAZEBO_PLUGIN_PATH`.
 
 1. If you haven't installed, from the build/ folder you can run:
 
-        ./src/gazebo
+        ./src/gazebo -v 4
+
+# Plugins
+
+This project makes use of plugins to provide most of its features.
+
+## Plugin types
+
+Currently supported plugin types are:
+
+* Gazebo ECS systems
+* Gazebo ECS components
+* Ignition GUI plugins
+
+## Finding plugins
+
+Gazebo will look for plugins on the following paths, in this order:
+
+1. all paths set on the `GAZEBO_PLUGIN_PATH` environment variable
+1. path where Gazebo's built-in plugins are installed
 
 # Running demo
 
