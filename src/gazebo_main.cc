@@ -85,13 +85,18 @@ static bool VerbosityValidator(const char */*_flagname*/, int _value)
   return _value >= 0 && _value <= 4;
 }
 
-
 //////////////////////////////////////////////////
 bool LoadSystems(gzecs::Manager &_mgr, const std::vector<std::string> &_libs)
 {
   ignition::common::PluginLoader pluginLoader;
   ignition::common::SystemPaths sp;
+
+  // Look for plugins at runtime-defined path
   sp.SetPluginPathEnv("GAZEBO_PLUGIN_PATH");
+
+  // Then look for plugins on compile-time defined path.
+  // Plugins installed by gazebo end up here
+  sp.AddPluginPaths(GAZEBO_PLUGIN_INSTALL_PATH);
 
   for (auto const &libName : _libs)
   {
@@ -128,7 +133,13 @@ bool LoadComponentizers(gzecs::Manager &_mgr,
 {
   ignition::common::PluginLoader pluginLoader;
   ignition::common::SystemPaths sp;
+
+  // Look for plugins at runtime-defined path
   sp.SetPluginPathEnv("GAZEBO_PLUGIN_PATH");
+
+  // Then look for plugins on compile-time defined path.
+  // Plugins installed by gazebo end up here
+  sp.AddPluginPaths(GAZEBO_PLUGIN_INSTALL_PATH);
 
   for (auto const &libName : _libs)
   {
@@ -319,6 +330,13 @@ int main(int _argc, char **_argv)
     // Run the ECS in another thread
     std::atomic<bool> stop(false);
     std::thread ecsThread(RunECS, std::ref(manager), std::ref(stop));
+
+    // Look for all plugins in the same place
+    ignition::gui::setPluginPathEnv("GAZEBO_PLUGIN_PATH");
+
+    // Then look for plugins on compile-time defined path.
+    // Plugins installed by gazebo end up here
+    ignition::gui::addPluginPath(GAZEBO_PLUGIN_INSTALL_PATH);
 
     // TODO: load startup plugins and configuration files here before creating
     // the window

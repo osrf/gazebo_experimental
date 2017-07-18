@@ -63,6 +63,8 @@ set (BIN_INSTALL_DIR ${CMAKE_INSTALL_BINDIR})
 set (WORLD_INSTALL_DIR
   ${CMAKE_INSTALL_PREFIX}/share/gazebo-${PROJECT_MAJOR_VERSION}/worlds/)
 
+set(GAZEBO_PLUGIN_INSTALL_PATH ${CMAKE_INSTALL_PREFIX}/${LIB_INSTALL_DIR}/gazebo-${PROJECT_MAJOR_VERSION}/plugins)
+
 if (build_errors)
   message(STATUS "BUILD ERRORS: These must be resolved before compiling.")
   foreach (msg ${build_errors})

@@ -31,7 +31,7 @@ foreach (plugin ${plugins})
     ${Qt5Widgets_LIBRARIES}
   )
 
-  gz_install_library(gazebo${plugin})
+  install (TARGETS gazebo${plugin} DESTINATION ${GAZEBO_PLUGIN_INSTALL_PATH})
 
 endforeach ()
 
