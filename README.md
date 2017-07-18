@@ -81,7 +81,9 @@ To run one specific test from the build folder:
     ./test/unit_tests/UNIT_Manager_TEST
 
 # Uninstalling
-**TO DO**
+
+        cd build
+        sudo make uninstall
 
 # Style check
 **TO DO**
