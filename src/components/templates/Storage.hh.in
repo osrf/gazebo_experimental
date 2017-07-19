@@ -15,6 +15,17 @@
  *
 */
 
+/* ***********************************
+ * ******** GENERATED FILE ***********
+ * *      Do not edit directly       *
+ * ***********************************
+ * This file was generated on %%gen_date%% using the command
+ * %%gen_cmd%%
+ * from the file
+ * %%gen_file%%
+ * ***********************************
+ */
+
 #ifndef %%include_guard%%_STORAGE_HH_
 #define %%include_guard%%_STORAGE_HH_
 

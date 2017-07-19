@@ -17,6 +17,7 @@
 
 import os
 import sys
+import datetime
 
 
 try:
@@ -194,9 +195,13 @@ def get_template(name):
     with open(file_path + "/templates/" + name, "r") as fin:
         return fin.read()
 
+SOURCE_FILE="Not set"
 
 def populate_template(template, **kwargs):
     """Uses keyword arugments to do template substitutions"""
+    kwargs['gen_date'] = str(datetime.datetime.now())
+    kwargs['gen_cmd'] = repr(sys.argv)
+    kwargs['gen_file'] = SOURCE_FILE
     populated = template
     for key, value in kwargs.items():
         populated = populated.replace("%%{key}%%".format(key=key), str(value))
@@ -688,6 +693,10 @@ def generate_code(request, response):
     required of ECS components"""
     # Loop through included protobuf fields
     for proto_file in request.proto_file:
+        # for printing the source file name in generated comments
+        global SOURCE_FILE
+        SOURCE_FILE = proto_file.name
+
         # Support only one top-level message per file
         if len(proto_file.message_type) != 1:
             sys.stderr.write("Must be exactly one top-level message per file")
