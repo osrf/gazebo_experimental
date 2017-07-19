@@ -83,7 +83,7 @@ class gazebo::ecs::ManagerPrivate
   public: util::DiagnosticsManager diagnostics;
 
   /// \brief mutex for protecting diagnostics when doing multi-threaded stuff
-  std::mutex diagMtx;
+  public: std::mutex diagMtx;
 
   /// \brief Updates the state and systems once
   public: void UpdateOnce();
