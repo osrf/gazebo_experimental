@@ -66,6 +66,12 @@ class gazebo::ecs::ManagerPrivate
   /// \brief Holds the current simulation time
   public: ignition::common::Time simTime;
 
+  /// \brief Holds the current time since the simulation started.
+  public: ignition::common::Time realTime;
+
+  /// \brief Holds the system time when simulation started.
+  public: ignition::common::Time realTimeStart;
+
   /// \brief Holds the next simulation time
   public: ignition::common::Time nextSimTime;
 
@@ -113,7 +119,8 @@ bool Manager::DeleteEntity(EntityId _id)
 /////////////////////////////////////////////////
 void Manager::UpdateOnce()
 {
-  this->dataPtr->diagnostics.UpdateBegin(this->dataPtr->simTime);
+  this->dataPtr->diagnostics.UpdateBegin(this->dataPtr->simTime,
+                                         this->dataPtr->realTime);
   this->dataPtr->UpdateOnce();
   this->dataPtr->diagnostics.UpdateEnd();
 }
@@ -121,7 +128,8 @@ void Manager::UpdateOnce()
 /////////////////////////////////////////////////
 void Manager::UpdateOnce(double _real_time_factor)
 {
-  this->dataPtr->diagnostics.UpdateBegin(this->dataPtr->simTime);
+  this->dataPtr->diagnostics.UpdateBegin(this->dataPtr->simTime,
+                                         this->dataPtr->realTime);
 
   ignition::common::Time startWallTime = ignition::common::Time::SystemTime();
   ignition::common::Time startSimTime = this->dataPtr->simTime;
@@ -187,6 +195,11 @@ void ManagerPrivate::UpdateOnce()
 
   // Advance sim time according to what was set last update
   this->simTime = this->nextSimTime;
+
+  // Update real time
+  if (this->realTimeStart == ignition::common::Time::Zero)
+    this->realTimeStart = ignition::common::Time::SystemTime();
+  this->realTime = ignition::common::Time::SystemTime() - this->realTimeStart;
 }
 
 /////////////////////////////////////////////////
@@ -297,6 +310,12 @@ bool Manager::LoadWorldFromSDFString(const std::string &_world)
 gazebo::ecs::Entity &Manager::Entity(const EntityId _id) const
 {
   return this->dataPtr->database.Entity(_id);
+}
+
+/////////////////////////////////////////////////
+const ignition::common::Time &Manager::RealTime() const
+{
+  return this->dataPtr->realTime;
 }
 
 /////////////////////////////////////////////////

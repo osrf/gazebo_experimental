@@ -49,6 +49,9 @@ namespace gazebo
       /// \returns true if the time was set, or false if paused
       public: bool SimulationTime(const ignition::common::Time &_newTime);
 
+      /// \brief Get the current real time
+      public: const ignition::common::Time &RealTime() const;
+
       /// \brief Pause the simulation
       /// \description EndPause() must be called for each call to BeginPause().
       /// \returns a count of systems that want time paused. This will never be

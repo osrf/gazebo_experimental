@@ -68,7 +68,7 @@ void DumbPhysics::Init(ecs::QueryRegistrar &_registrar)
 void DumbPhysics::Update(const ecs::EntityQuery &_result)
 {
   ecs::Manager &mgr = this->Manager();
-  this->diagnostics.UpdateBegin(mgr.SimulationTime());
+  this->diagnostics.UpdateBegin(mgr.SimulationTime(), mgr.RealTime());
 
   this->diagnostics.StartTimer("Update Internal");
   // STEP 1 Loop through entities and update internal representation

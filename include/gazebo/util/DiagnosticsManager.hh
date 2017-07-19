@@ -43,7 +43,8 @@ namespace gazebo
 
       /// \brief called to signal the beginning of a diagnostic update
       /// \param[in] _simTime currrent simulation time
-      public: void UpdateBegin(ignition::common::Time _simTime);
+      public: void UpdateBegin(const ignition::common::Time &_simTime,
+                               const ignition::common::Time &_realTime);
 
       /// \brief called to signal the end of a a diagnostic update
       /// \remark This publishes a diagnostics message. Any timers that have

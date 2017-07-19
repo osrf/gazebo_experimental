@@ -342,6 +342,7 @@ int main(int _argc, char **_argv)
     // the window
     ignition::gui::loadPlugin("gazeboGuiDisplayImage");
     ignition::gui::loadPlugin("gazeboGuiDiagnostics");
+    ignition::gui::loadPlugin("gazeboGuiTimePanel");
 
     // Create main window
     ignition::gui::createMainWindow();

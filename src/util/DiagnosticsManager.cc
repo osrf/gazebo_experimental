@@ -72,12 +72,16 @@ bool DiagnosticsManager::Init(const std::string &_name)
 }
 
 //////////////////////////////////////////////////
-void DiagnosticsManager::UpdateBegin(ignition::common::Time _simTime)
+void DiagnosticsManager::UpdateBegin(const ignition::common::Time &_simTime,
+                                     const ignition::common::Time &_realTime)
 {
   if (this->dataPtr->initialized)
   {
     this->dataPtr->msg.mutable_sim_time()->set_sec(_simTime.sec);
     this->dataPtr->msg.mutable_sim_time()->set_nsec(_simTime.nsec);
+
+    this->dataPtr->msg.mutable_real_time()->set_sec(_realTime.sec);
+    this->dataPtr->msg.mutable_real_time()->set_nsec(_realTime.nsec);
   }
 }
 
