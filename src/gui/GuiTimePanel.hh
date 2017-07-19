@@ -44,6 +44,18 @@ namespace gazebo
       /// \brief Callback in main thread when diagnostics come in
       public slots: void ProcessMsg();
 
+      /// \brief Callback in Qt thread when play button is clicked.
+      public slots: void OnPlay();
+
+      /// \brief Callback in Qt thread when pause button is clicked.
+      public slots: void OnPause();
+
+      /// \brief Notify that it's now playing.
+      signals: void Playing();
+
+      /// \brief Notify that it's now paused.
+      signals: void Paused();
+
       /// \brief Subscriber callback when new diagnostics are received
       private: void OnDiagnosticsMsg(const ignition::msgs::Diagnostics &_msg);
 

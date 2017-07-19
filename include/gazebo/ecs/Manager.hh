@@ -23,6 +23,8 @@
 #include <set>
 
 #include <ignition/common/Time.hh>
+#include <ignition/msgs.hh>
+#include <ignition/transport/Node.hh>
 
 #include "gazebo/ecs/Componentizer.hh"
 #include "gazebo/ecs/Entity.hh"
@@ -138,6 +140,15 @@ namespace gazebo
 #endif
         std::set<gazebo::ecs::EntityId> QueryEntities(
             const std::vector<std::string> &_components);
+
+      /// \brief Callback for world control service, which takes care of play, pause,
+      /// step, etc.
+      /// \param[in] _req World control request
+      /// \param[out] _rep Empty reply
+      /// \param[out] _result True if request was successfully completed.
+      private: void WorldControlService(const ignition::msgs::WorldControl &_req,
+                   ignition::msgs::Empty &/*_rep*/, bool &_result);
+
 
       private: Manager(const Manager&) = delete;
 

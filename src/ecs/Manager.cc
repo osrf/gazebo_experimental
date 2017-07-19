@@ -89,6 +89,9 @@ class gazebo::ecs::ManagerPrivate
 
   /// \brief Invokes componentizers on SDF
   public: void Componentize(Manager *_mgr, sdf::SDF &_sdf);
+
+  /// \brief Node for communication.
+  public: ignition::transport::Node node;
 };
 
 /////////////////////////////////////////////////
@@ -97,11 +100,35 @@ Manager::Manager()
 {
   this->dataPtr->pauseCount = 0;
   this->dataPtr->diagnostics.Init("ecs:Manager");
+
+  // World control service
+  if (!this->dataPtr->node.Advertise("/world_control",
+      &Manager::WorldControlService, this))
+  {
+    ignerr << "Error advertising world control service." << std::endl;
+  }
 }
 
 /////////////////////////////////////////////////
 Manager::~Manager()
 {
+}
+
+//////////////////////////////////////////////////
+void Manager::WorldControlService(const ignition::msgs::WorldControl &_req,
+    ignition::msgs::Empty &/*_rep*/, bool &_result)
+{
+  _result = false;
+
+  if (_req.has_pause())
+  {
+    if (_req.pause())
+      this->BeginPause();
+    else
+      this->EndPause();
+
+    _result = true;
+  }
 }
 
 /////////////////////////////////////////////////
