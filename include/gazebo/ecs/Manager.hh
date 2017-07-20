@@ -41,10 +41,14 @@ namespace gazebo
 
     class Manager
     {
+      /// \brief Constructor
       public: Manager();
+
+      /// \brief Destructor
       public: ~Manager();
 
       /// \brief Get the current simulation time
+      /// \return Simulation time
       public: const ignition::common::Time &SimulationTime() const;
 
       /// \brief Set the simulation time of the next update
@@ -52,6 +56,7 @@ namespace gazebo
       public: bool SimulationTime(const ignition::common::Time &_newTime);
 
       /// \brief Get the current real time
+      /// \return Real time
       public: const ignition::common::Time &RealTime() const;
 
       /// \brief Pause the simulation
