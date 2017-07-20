@@ -17,7 +17,7 @@
 #include <iostream>
 #include <ignition/common/PluginMacros.hh>
 
-#include "components/Fraction.hh"
+// #include "components/Fraction.hh"
 #include "gazebo/ecs/Manager.hh"
 #include "systems/DivideAndPrintResult.hh"
 
@@ -27,7 +27,7 @@ using namespace systems;
 /////////////////////////////////////////////////
 void DivideAndPrintResult::Init(ecs::QueryRegistrar &_registrar)
 {
-  ecs::EntityQuery query;
+  /*ecs::EntityQuery query;
 
   // Add components which are required
   if (!query.AddComponent("gazebo::components::Fraction"))
@@ -35,12 +35,13 @@ void DivideAndPrintResult::Init(ecs::QueryRegistrar &_registrar)
 
   _registrar.Register(query,
       std::bind(&DivideAndPrintResult::Update, this, std::placeholders::_1));
+      */
 }
 
 /////////////////////////////////////////////////
 void DivideAndPrintResult::Update(const ecs::EntityQuery &_result)
 {
-  ecs::Manager &mgr = this->Manager();
+  /*ecs::Manager &mgr = this->Manager();
   // Loop through all of the entities which have the required components
   for (auto const &entityId : _result.EntityIds())
   {
@@ -50,6 +51,7 @@ void DivideAndPrintResult::Update(const ecs::EntityQuery &_result)
     std::cout << "Dividing " << entityId << ":" <<
       fraction->numerator / fraction->denominator << std::endl;
   }
+  */
 }
 
 IGN_COMMON_REGISTER_SINGLE_PLUGIN(gazebo::systems::DivideAndPrintResult,

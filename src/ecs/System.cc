@@ -20,9 +20,11 @@
 using namespace gazebo;
 using namespace ecs;
 
+/// \brief Private data class for a System
 class gazebo::ecs::SystemPrivate
 {
-  public: ecs::Manager *_mgr;
+  /// \brief Pointer the the ECS manager
+  public: ecs::Manager *mgr;
 };
 
 /////////////////////////////////////////////////
@@ -31,16 +33,16 @@ System::System()
 {
 }
 
-/// \brief Get the manager this system is a part of
+/////////////////////////////////////////////////
 ecs::Manager &System::Manager()
 {
-  return *(this->dataPtr->_mgr);
+  return *(this->dataPtr->mgr);
 }
 
-/// \brief Set the manager this system is a part of
+/////////////////////////////////////////////////
 void System::Manager(ecs::Manager *_mgr)
 {
-  this->dataPtr->_mgr = _mgr;
+  this->dataPtr->mgr = _mgr;
 }
 
 /////////////////////////////////////////////////

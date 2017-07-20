@@ -40,22 +40,26 @@ namespace gazebo
     /// will only operate on an entity if it has all of the required components
     class System
     {
+      /// \brief Constructor
       public: System();
+
+      /// \brief Destructor
       public: virtual ~System() = 0;
 
       /// \brief Initialize the system so it can register queries and callbacks
       public: virtual void Init(QueryRegistrar &_registrar) = 0;
 
-      friend ecs::Manager;
+      /// \NATE:remove this line friend ecs::Manager;
 
       /// \brief Get the manager this system is a part of
       public: ecs::Manager &Manager();
 
       /// \brief Set the manager this system is a part of
+      /// \NATE: Can we remove this function?
       private:void Manager(ecs::Manager *_mgr);
 
       /// \brief No copy constructor
-      private: System(const System&) = delete;
+      private: System(const System &) = delete;
 
       private: std::unique_ptr<SystemPrivate> dataPtr;
     };

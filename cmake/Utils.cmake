@@ -51,4 +51,8 @@ macro (gz_install_executable _name)
   install (TARGETS ${_name} DESTINATION ${BIN_INSTALL_DIR})
 endmacro ()
 
-
+#################################################
+macro (gz_install_includes _subdir)
+  install(FILES ${ARGN}
+    DESTINATION ${INCLUDE_INSTALL_DIR}/gazebo/${_subdir} COMPONENT headers)
+endmacro()

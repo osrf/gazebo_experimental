@@ -17,7 +17,7 @@
 #include <iostream>
 #include <ignition/common/PluginMacros.hh>
 
-#include "components/Triplet.hh"
+//#include "components/Triplet.hh"
 #include "gazebo/ecs/Manager.hh"
 #include "systems/AddAndPrintResult.hh"
 
@@ -27,6 +27,7 @@ using namespace systems;
 /////////////////////////////////////////////////
 void AddAndPrintResult::Init(ecs::QueryRegistrar &_registrar)
 {
+  /*
   ecs::EntityQuery query;
 
   // Add components which are required
@@ -35,11 +36,13 @@ void AddAndPrintResult::Init(ecs::QueryRegistrar &_registrar)
 
   _registrar.Register(query,
       std::bind(&AddAndPrintResult::Update, this, std::placeholders::_1));
+      */
 }
 
 /////////////////////////////////////////////////
 void AddAndPrintResult::Update(const ecs::EntityQuery &_query)
 {
+  /*
   ecs::Manager &mgr = this->Manager();
   // Loop through all of the entities which have the required components
   for (auto const &entityId : _query.EntityIds())
@@ -49,7 +52,7 @@ void AddAndPrintResult::Update(const ecs::EntityQuery &_query)
 
     std::cout << "Adding " << entityId << ":" <<
       numbers->first + numbers->second + numbers->third << std::endl;
-  }
+  }*/
 }
 
 IGN_COMMON_REGISTER_SINGLE_PLUGIN(gazebo::systems::AddAndPrintResult,

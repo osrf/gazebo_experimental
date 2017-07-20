@@ -39,8 +39,14 @@ namespace gazebo
 
     class Manager
     {
+      /// \brief Constructor
       public: Manager();
+
+      /// \brief Destructor
       public: ~Manager();
+
+      /// \brief Load the Manager.
+      public: bool Load(const std::string &_worldFile);
 
       /// \brief Get the current simulation time
       public: const ignition::common::Time &SimulationTime() const;
@@ -72,17 +78,17 @@ namespace gazebo
       /// \brief Convenience function to load a system from a type
       ///
       /// Ex: sm->LoadSystem<FancySystemClass>();
-      public: template <typename T>
+      /*public: template <typename T>
         bool LoadSystem(const std::string &_name)
         {
           return this->LoadSystem(_name, std::unique_ptr<System>(new T()));
         }
+        */
 
       /// \brief Load a system
       ///
-      /// Ex: sm->LoadSystem("my_system", std::move(aUniquePtrInstance))
-      public: bool LoadSystem(const std::string &_name,
-                  std::unique_ptr<System> _sys);
+      /// Ex: sm->LoadSystem("my_system")
+      private: bool LoadSystem(const std::string &_name);
 
       /// \brief Convenience function to load a componentizer from a type
       ///
@@ -98,11 +104,6 @@ namespace gazebo
       ///
       /// Ex: sm->LoadComponentizer(std::move(aUniquePtrInstance))
       public: bool LoadComponentizer(std::unique_ptr<Componentizer> _cz);
-
-      /// \brief Load a world from a file path
-      /// \param[in] A path to a world file on the file system
-      /// \returns true if the sdf is successfully parsed
-      public: bool LoadWorldFromPath(const std::string &_path);
 
       /// \brief Load a world from a string
       /// \param[in] A string containing an SDF xml document with a world tag
