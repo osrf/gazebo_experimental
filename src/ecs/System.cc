@@ -46,4 +46,5 @@ void System::Manager(ecs::Manager *_mgr)
 /////////////////////////////////////////////////
 System::~System()
 {
+  // Pure virtual destructors still have to be defined
 }

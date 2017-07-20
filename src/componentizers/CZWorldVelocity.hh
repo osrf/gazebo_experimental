@@ -15,21 +15,32 @@
  *
 */
 
-#ifndef GAZEBO_COMPONENTS_PHYSICS_PROPERTIES_HH_
-#define GAZEBO_COMPONENTS_PHYSICS_PROPERTIES_HH_
+#ifndef GAZEBO_COMPONENTIZERS_CZWORLDVELOCITY_HH__
+#define GAZEBO_COMPONENTIZERS_CZWORLDVELOCITY_HH__
+
+#include <unordered_map>
+
+#include "gazebo/ecs/Componentizer.hh"
+#include "gazebo/ecs/Manager.hh"
 
 namespace gazebo
 {
-  namespace components
+  namespace componentizers
   {
-    /// \brief Describes the properties of a physics engine
-    struct PhysicsProperties
+    /// \brief a plugin creates "WorldVelocity" component where appropriate
+    class CZWorldVelocity : public ecs::Componentizer
     {
-      /// \brief Maximum time step size
-      double maxStepSize = 0.001;
+      // Inherited
+      public: ~CZWorldVelocity();
+
+      // Inherited
+      public: virtual void Init();
+
+      // Inherited
+      public: virtual void FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
+                  const std::unordered_map<sdf::Element*, ecs::EntityId> &_ids);
     };
   }
 }
 
 #endif
-

@@ -15,28 +15,11 @@
  *
 */
 
-#ifndef GAZEBO_COMPONENTS_INERTIA_HH_
-#define GAZEBO_COMPONENTS_INERTIA_HH_
+#include <gazebo/ecs/Componentizer.hh>
 
-#include <ignition/math/Matrix3.hh>
+using namespace gazebo::ecs;
 
-namespace gazebo
+//////////////////////////////////////////////////
+Componentizer::~Componentizer()
 {
-  namespace components
-  {
-    /// \brief Describes the inertial properties of an entity.
-    struct Inertial
-    {
-      /// \brief Mass in kilograms
-      double mass = 1.0;
-
-      /// \brief inertial matrix
-      ignition::math::Matrix3d inertia = {1, 0, 0,
-                                          0, 1, 0,
-                                          0, 0, 1};
-    };
-  }
 }
-
-#endif
-

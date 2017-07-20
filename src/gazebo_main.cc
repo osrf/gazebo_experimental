@@ -17,7 +17,9 @@
 
 #include <atomic>
 #include <functional>
+#include <fstream>
 #include <iostream>
+#include <sstream>
 #include <thread>
 
 #include <gflags/gflags.h>
@@ -26,13 +28,9 @@
 #include <ignition/common/PluginLoader.hh>
 #include <ignition/common/SystemPaths.hh>
 #include <ignition/math/Rand.hh>
-#include "gazebo/components/Inertial.hh"
-#include "gazebo/components/Geometry.hh"
-#include "gazebo/components/PhysicsProperties.hh"
-#include "gazebo/components/WorldPose.hh"
-#include "gazebo/components/WorldVelocity.hh"
 #include "gazebo/ecs/ComponentFactory.hh"
 #include "gazebo/ecs/Manager.hh"
+#include <sdf/sdf.hh>
 
 #ifndef Q_MOC_RUN
   #include <ignition/gui/Iface.hh>
@@ -47,6 +45,8 @@ namespace gzecs = gazebo::ecs;
 DEFINE_bool(h, false, "");
 DEFINE_int32(verbose, 1, "");
 DEFINE_int32(v, 1, "");
+DEFINE_string(file, "", "");
+DEFINE_string(f, "empty.world", "");
 
 //////////////////////////////////////////////////
 void Help()
@@ -62,6 +62,7 @@ void Help()
   << "  --version                     Print version information." << std::endl
   << "  -v [--verbose] arg            Adjust the level of console output (0~4)."
   << std::endl
+  << "  -f [ --file ] FILE            SDF file to load on start." << std::endl
   << std::endl;
 }
 
@@ -72,87 +73,141 @@ void Version()
 }
 
 //////////////////////////////////////////////////
+void Verbose()
+{
+  // This also applies to all upstream libraries using ignition::common::Console
+  ignition::common::Console::SetVerbosity(FLAGS_verbose);
+}
+
+//////////////////////////////////////////////////
 static bool VerbosityValidator(const char */*_flagname*/, int _value)
 {
   return _value >= 0 && _value <= 4;
 }
 
+
 //////////////////////////////////////////////////
-void PlaceholderCreateComponents(gzecs::Manager &_mgr)
+bool LoadSystems(gzecs::Manager &_mgr, const std::vector<std::string> &_libs)
 {
-  // Componentizer should register components
-  gzecs::ComponentFactory::Register<gazebo::components::Inertial>(
-      "gazebo::components::Inertial");
-  gzecs::ComponentFactory::Register<gazebo::components::Geometry>(
-      "gazebo::components::Geometry");
-  gzecs::ComponentFactory::Register<gazebo::components::PhysicsProperties>(
-      "gazebo::components::PhysicsProperties");
-  gzecs::ComponentFactory::Register<gazebo::components::WorldPose>(
-      "gazebo::components::WorldPose");
-  gzecs::ComponentFactory::Register<gazebo::components::WorldVelocity>(
-      "gazebo::components::WorldVelocity");
+  ignition::common::PluginLoader pluginLoader;
+  ignition::common::SystemPaths sp;
+  sp.SetPluginPathEnv("GAZEBO_PLUGIN_PATH");
 
-  // Placeholder create components. The componentizer should do this
-  // Create 25 sphere entities
-  for (int i = 0; i < 25; i++)
+  for (auto const &libName : _libs)
   {
-    // Create the entity
-    gzecs::EntityId e = _mgr.CreateEntity();
-    gzecs::Entity &entity = _mgr.Entity(e);
-
-    // Inertial component
-    auto inertial = entity.AddComponent<gazebo::components::Inertial>();
-    if (inertial)
+    std::string pathToLibrary = sp.FindSharedLibrary(libName);
+    std::string pluginName = pluginLoader.LoadLibrary(pathToLibrary);
+    if (!pluginName.empty())
     {
-      inertial->mass = ignition::math::Rand::DblUniform(0.1, 5.0);
+      std::unique_ptr<gzecs::System> sys;
+      sys = pluginLoader.Instantiate<gzecs::System>(pluginName);
+      if (!_mgr.LoadSystem(pluginName, std::move(sys)))
+      {
+        ignerr << "Failed to load " << pluginName << " from " << libName
+          << std::endl;
+        return false;
+      }
+      else
+      {
+        igndbg << "Loaded plugin " << pluginName << " from " << libName
+          << std::endl;
+      }
     }
     else
     {
-      std::cerr << "Failed to add inertial component to entity [" << e << "]"
-                << std::endl;
-    }
-
-    // Geometry component
-    auto geom = entity.AddComponent<gazebo::components::Geometry>();
-    if (geom)
-    {
-      geom->type = gazebo::components::Geometry::SPHERE;
-      geom->sphere.radius = ignition::math::Rand::DblUniform(0.1, 0.5);
-    }
-    else
-    {
-      std::cerr << "Failed to add geom component to entity [" << e << "]"
-                << std::endl;
-    }
-
-    // World pose
-    auto pose = entity.AddComponent<gazebo::components::WorldPose>();
-    if (pose)
-    {
-      pose->position.X(ignition::math::Rand::DblUniform(-4.0, 4.0));
-      pose->position.Y(ignition::math::Rand::DblUniform(-4.0, 4.0));
-      pose->position.Z(ignition::math::Rand::DblUniform(-4.0, 4.0));
-    }
-    else
-    {
-      std::cerr << "Failed to add world pose component to entity [" << e << "]"
-                << std::endl;
-    }
-
-    // World velocity
-    auto vel = entity.AddComponent<gazebo::components::WorldVelocity>();
-    if (vel)
-    {
-      vel->linear.X(ignition::math::Rand::DblUniform(-1.0, 1.0));
-      vel->linear.Y(ignition::math::Rand::DblUniform(-1.0, 1.0));
-      vel->linear.Z(ignition::math::Rand::DblUniform(-1.0, 1.0));
-    }
-    else
-    {
-      std::cerr << "Failed to add world velocity component to entity ["
-                << e << "]" << std::endl;
+      ignerr << "Failed to load library " << libName << std::endl;
+      return false;
     }
   }
+  return true;
+}
+
+//////////////////////////////////////////////////
+bool LoadComponentizers(gzecs::Manager &_mgr,
+    const std::vector<std::string> &_libs)
+{
+  ignition::common::PluginLoader pluginLoader;
+  ignition::common::SystemPaths sp;
+  sp.SetPluginPathEnv("GAZEBO_PLUGIN_PATH");
+
+  for (auto const &libName : _libs)
+  {
+    std::string pathToLibrary = sp.FindSharedLibrary(libName);
+    std::string pluginName = pluginLoader.LoadLibrary(pathToLibrary);
+    if (pluginName.size())
+    {
+      std::unique_ptr<gzecs::Componentizer> cz;
+      cz = pluginLoader.Instantiate<gzecs::Componentizer>(pluginName);
+      if (!_mgr.LoadComponentizer(std::move(cz)))
+      {
+        ignerr << "Failed to load " << pluginName << " from " << libName
+          << std::endl;
+        return false;
+      }
+      else
+      {
+        igndbg << "Loaded plugin " << pluginName << " from " << libName
+          << std::endl;
+      }
+    }
+    else
+    {
+      ignerr << "Failed to load library " << libName << std::endl;
+      return false;
+    }
+  }
+  return true;
+}
+
+//////////////////////////////////////////////////
+bool LoadWorld(gzecs::Manager &_mgr, const std::string &_file)
+{
+  bool success = true;
+  ignition::common::SystemPaths sp;
+
+  std::string fullPath = sp.LocateLocalFile(_file, {"", "./", GAZEBO_WORLD_INSTALL_DIR});
+  if (fullPath.empty())
+  {
+    ignwarn << "Cannot find [" << _file << "]" << std::endl;
+    success = false;
+  }
+  else
+  {
+    igndbg << "Loading world [" << fullPath << "]" << std::endl;
+    success = _mgr.LoadWorldFromPath(fullPath);
+  }
+
+  return success;
+}
+
+//////////////////////////////////////////////////
+void RunECS(gzecs::Manager &_mgr, std::atomic<bool> &stop)
+{
+  const double realTimeFactor = 1.0;
+  while (!stop)
+  {
+    _mgr.UpdateOnce(realTimeFactor);
+  }
+}
+
+//////////////////////////////////////////////////
+/// \brief configure paths and callbacks for sdformat model lookups
+void SDFormatModelPathSetup()
+{
+  char *env = getenv("GAZEBO_MODEL_PATH");
+  if (env)
+  {
+    sdf::addURIPath("model://", env);
+  }
+
+  char *homePath = getenv("HOME");
+  if (homePath)
+  {
+    std::string home = homePath;
+    sdf::addURIPath("model://", home + "/.gazebo/models");
+  }
+
+  sdf::setFindCallback([] (const std::string &) -> std::string {return "";});
 }
 
 //////////////////////////////////////////////////
@@ -189,6 +244,22 @@ int main(int _argc, char **_argv)
       FLAGS_verbose = FLAGS_v;
   }
 
+  // SDF File
+  std::string filename = FLAGS_f;
+  bool fileSet = false;
+  gflags::GetCommandLineFlagInfo("file", &info);
+  if (!info.is_default)
+  {
+    fileSet = true;
+    filename = FLAGS_file;
+  }
+  gflags::GetCommandLineFlagInfo("f", &info);
+  if (!info.is_default && fileSet)
+  {
+    ignerr << "Only one world file may be given" << std::endl;
+    return 3;
+  }
+
   // If help message is requested, substitute in the override help function.
   if (showHelp)
   {
@@ -207,28 +278,47 @@ int main(int _argc, char **_argv)
   // Run Gazebo
   else
   {
-    /*
     // Set verbosity level
-    // This also applies to all upstream libraries using
-    // ignition::common::Console
-    ignition::common::Console::SetVerbosity(FLAGS_verbose);
+    Verbose();
+
+    SDFormatModelPathSetup();
 
     gzecs::Manager manager;
 
-    // TODO componentizer
-    PlaceholderCreateComponents(manager);
+    if (!LoadComponentizers(manager, {
+          "gazeboCZName",
+          "gazeboCZGeometry",
+          "gazeboCZMaterial",
+          "gazeboCZPose",
+          "gazeboCZCollidable",
+          "gazeboCZInertial",
+          "gazeboCZPhysicsConfig",
+          "gazeboCZWorldVelocity",
+          }))
+    {
+      return 2;
+    }
 
     // Load ECS systems
-    if (!manager.LoadSystems({"gazeboPhysicsSystem"}))
+    if (!LoadSystems(manager, {
+        "gazeboPhysicsSystem",
+        }))
     {
       return 1;
     }
 
-    // Run the ECS in another thread
-    manager.Run();
+    if (!LoadWorld(manager, filename))
+    {
+      ignerr << "Error while loading world [" << filename << "]" << std::endl;
+      return 4;
+    }
 
-    // Initialize the gui
+    // Initialize app
     ignition::gui::initApp();
+
+    // Run the ECS in another thread
+    std::atomic<bool> stop(false);
+    std::thread ecsThread(RunECS, std::ref(manager), std::ref(stop));
 
     // TODO: load startup plugins and configuration files here before creating
     // the window
@@ -250,9 +340,9 @@ int main(int _argc, char **_argv)
     ignition::gui::stop();
 
     // Stop the ECS
-    manager.Stop();
+    stop = true;
     igndbg << "Waiting for ECS thread" << std::endl;
-    */
+    ecsThread.join();
   }
 
   igndbg << "Shutting down" << std::endl;

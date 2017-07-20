@@ -15,28 +15,32 @@
  *
 */
 
-#ifndef GAZEBO_COMPONENTS_INERTIA_HH_
-#define GAZEBO_COMPONENTS_INERTIA_HH_
+#ifndef GAZEBO_COMPONENTIZERS_CZINERTIAL_HH__
+#define GAZEBO_COMPONENTIZERS_CZINERTIAL_HH__
 
-#include <ignition/math/Matrix3.hh>
+#include <unordered_map>
+
+#include "gazebo/ecs/Componentizer.hh"
+#include "gazebo/ecs/Manager.hh"
 
 namespace gazebo
 {
-  namespace components
+  namespace componentizers
   {
-    /// \brief Describes the inertial properties of an entity.
-    struct Inertial
+    /// \brief a plugin creates "Inertial" component where appropriate
+    class CZInertial : public ecs::Componentizer
     {
-      /// \brief Mass in kilograms
-      double mass = 1.0;
+      // Inherited
+      public: virtual ~CZInertial();
 
-      /// \brief inertial matrix
-      ignition::math::Matrix3d inertia = {1, 0, 0,
-                                          0, 1, 0,
-                                          0, 0, 1};
+      // Inherited
+      public: virtual void Init();
+
+      // Inherited
+      public: virtual void FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
+                  const std::unordered_map<sdf::Element*, ecs::EntityId> &_ids);
     };
   }
 }
 
 #endif
-

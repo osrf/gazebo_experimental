@@ -15,11 +15,17 @@
  *
 */
 #include <atomic>
+#include <queue>
 #include <set>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
+#include <ignition/common/Console.hh>
+#include <sdf/sdf.hh>
+#include <ignition/common/WorkerPool.hh>
+
+#include "gazebo/ecs/Componentizer.hh"
 #include "gazebo/ecs/EntityComponentDatabase.hh"
 #include "gazebo/ecs/EntityQuery.hh"
 #include "gazebo/ecs/Manager.hh"
@@ -53,11 +59,17 @@ class gazebo::ecs::ManagerPrivate
 
   public: std::unique_ptr<std::thread> runThread;
 
+  /// \brief Componentizers that are added to the manager
+  public: std::vector<std::unique_ptr<Componentizer> > componentizers;
+
   /// \brief Systems that are added to the manager
   public: std::vector<std::unique_ptr<System> > systems;
 
   /// \brief System info associated with a system by index
   public: std::vector<SystemInfo> systemInfo;
+
+  /// \brief Pool of workers to do stuff in parallel
+  public: ignition::common::WorkerPool workerThreads;
 
   /// \brief Handles storage and quering of components
   public: EntityComponentDatabase database;
@@ -76,6 +88,15 @@ class gazebo::ecs::ManagerPrivate
 
   /// \brief tool for publishing diagnostic info
   public: util::DiagnosticsManager diagnostics;
+
+  /// \brief mutex for protecting diagnostics when doing multi-threaded stuff
+  public: std::mutex diagMtx;
+
+  /// \brief Updates the state and systems once
+  public: void UpdateOnce();
+
+  /// \brief Invokes componentizers on SDF
+  public: void Componentize(Manager *_mgr, sdf::SDF &_sdf);
 };
 
 /////////////////////////////////////////////////
@@ -153,29 +174,29 @@ void ManagerPrivate::UpdateOnce()
   this->database.Update();
   this->diagnostics.StopTimer("database");
 
-  // TODO There is a lot of opportunity for parallelization here
-  // In general systems are run sequentially, one after the other
-  //  Different Systems can run in parallel if they don't share components
-  //  How to handle systems which add or remove entities?
-  //  Defer creation and deletion?
-  // Some systems could be run on multiple cores, such that several
-  //  instances of a system each run on a subset of the entities returned
-  //  in a query result.
-  // Heck, entity and component data can be shared over the network to
-  //  other SystemManagers to use multiple machines for one simulation
-
-  // But this is a prototype, so here's the basic implementation
+  // Update systems in parallel
+  // \NATE: THis should be replaced with an execution model.
   for(auto &sysInfo : this->systemInfo)
   {
-    this->diagnostics.StartTimer(sysInfo.name);
-    for (auto &updateInfo : sysInfo.updates)
-    {
-      auto query = this->database.Query(updateInfo.first);
-      QueryCallback cb = updateInfo.second;
-      cb(query);
-    }
-    this->diagnostics.StopTimer(sysInfo.name);
+    this->workerThreads.AddWork([&sysInfo, this] ()
+        {
+          {
+            std::unique_lock<std::mutex> diagLock(this->diagMtx);
+            this->diagnostics.StartTimer(sysInfo.name);
+          }
+          for (auto &updateInfo : sysInfo.updates)
+          {
+            auto query = this->database.Query(updateInfo.first);
+            QueryCallback cb = updateInfo.second;
+            cb(query);
+          }
+          {
+             std::unique_lock<std::mutex> diagLock(this->diagMtx);
+             this->diagnostics.StopTimer(sysInfo.name);
+          }
+        });
   }
+  assert(this->workerThreads.WaitForResults());
 
   // Advance sim time according to what was set last update
   this->simTime = this->nextSimTime;
@@ -204,6 +225,84 @@ bool Manager::LoadSystem(const std::string &_name,
     this->dataPtr->systemInfo.push_back(sysInfo);
     success = true;
   }
+  return success;
+}
+
+//////////////////////////////////////////////////
+bool Manager::LoadComponentizer(std::unique_ptr<Componentizer> _cz)
+{
+  bool success = false;
+  if (_cz)
+  {
+    _cz->Init();
+    this->dataPtr->componentizers.push_back(std::move(_cz));
+    success = true;
+  }
+  return success;
+}
+
+//////////////////////////////////////////////////
+void ManagerPrivate::Componentize(Manager *_mgr, sdf::SDF &_sdf)
+{
+  std::unordered_map<sdf::Element*, EntityId> ids;
+  // breadth-first componentization
+  std::queue<sdf::ElementPtr> elementQueue;
+  elementQueue.push(_sdf.Root());
+  while (!elementQueue.empty())
+  {
+    sdf::ElementPtr nextElement = elementQueue.front();
+    elementQueue.pop();
+
+    assert(ids.find(nextElement.get()) == ids.end());
+
+    // An entity makes it easier to group components from different
+    // componentizers. However, they are free to create their own entities
+    EntityId groupId = this->database.CreateEntity();
+    ids[nextElement.get()] = groupId;
+
+    for (auto &cz : this->componentizers)
+    {
+      cz->FromSDF(*_mgr, *nextElement, ids);
+    }
+
+    sdf::ElementPtr child = nextElement->GetFirstElement();
+    while (child)
+    {
+      elementQueue.push(child);
+      child = child->GetNextElement();
+    }
+  }
+}
+
+//////////////////////////////////////////////////
+bool Manager::LoadWorldFromPath(const std::string &_path)
+{
+  bool success = false;
+  sdf::SDFPtr sdfWorld(new sdf::SDF());
+  sdf::init(sdfWorld);
+
+  if (sdf::readFile(_path, sdfWorld))
+  {
+    success = true;
+    this->dataPtr->Componentize(this, *sdfWorld);
+  }
+
+  return success;
+}
+
+/////////////////////////////////////////////////
+bool Manager::LoadWorldFromSDFString(const std::string &_world)
+{
+  bool success = false;
+  sdf::SDFPtr sdfWorld(new sdf::SDF());
+  sdf::init(sdfWorld);
+
+  if (sdf::readString(_world, sdfWorld))
+  {
+    success = true;
+    this->dataPtr->Componentize(this, *sdfWorld);
+  }
+
   return success;
 }
 
@@ -314,4 +413,20 @@ void Manager::RunImpl()
   {
     this->UpdateOnce(realTimeFactor);
   }
+}
+
+//////////////////////////////////////////////////
+std::set<gazebo::ecs::EntityId> Manager::QueryEntities(
+            const std::vector<std::string> &_components)
+{
+  // Make a query from the component names
+  // demand the database to give us the results now
+  EntityQuery q;
+  for (const std::string compName : _components)
+  {
+    q.AddComponent(compName);
+  }
+
+  this->dataPtr->database.InstantQuery(q);
+  return q.EntityIds();
 }

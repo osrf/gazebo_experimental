@@ -24,6 +24,7 @@
 
 #include <ignition/common/Time.hh>
 
+#include "gazebo/ecs/Componentizer.hh"
 #include "gazebo/ecs/Entity.hh"
 #include "gazebo/ecs/System.hh"
 #include "gazebo/ecs/ComponentFactory.hh"
@@ -33,7 +34,7 @@ namespace gazebo
 {
   namespace ecs
   {
-    // Forward declare private data class.
+    /// \brief Forward declare private data class.
     class ManagerPrivate;
 
     class Manager
@@ -83,6 +84,31 @@ namespace gazebo
       public: bool LoadSystem(const std::string &_name,
                   std::unique_ptr<System> _sys);
 
+      /// \brief Convenience function to load a componentizer from a type
+      ///
+      /// Ex: sm->LoadComponentizer<CZFancyClass>();
+      public: template <typename T>
+        bool LoadComponentizer()
+        {
+          return this->LoadComponentizer(
+              std::unique_ptr<Componentizer>(new T()));
+        }
+
+      /// \brief Load a componentizer
+      ///
+      /// Ex: sm->LoadComponentizer(std::move(aUniquePtrInstance))
+      public: bool LoadComponentizer(std::unique_ptr<Componentizer> _cz);
+
+      /// \brief Load a world from a file path
+      /// \param[in] A path to a world file on the file system
+      /// \returns true if the sdf is successfully parsed
+      public: bool LoadWorldFromPath(const std::string &_path);
+
+      /// \brief Load a world from a string
+      /// \param[in] A string containing an SDF xml document with a world tag
+      /// \returns true if the sdf is successfully parsed
+      public: bool LoadWorldFromSDFString(const std::string &_world);
+
       public: bool LoadSystems(const std::vector<std::string> &_libs);
 
       /// \brief Update everything once and return immediately
@@ -105,6 +131,11 @@ namespace gazebo
       public: void Stop();
 
       private: void RunImpl();
+      /// \brief Test hook for querying entities
+      /// \remarks must not be called while database is being updated
+      /// \param[in] _components List of component names to query
+      protected: std::set<gazebo::ecs::EntityId> QueryEntities(
+                   const std::vector<std::string> &_components);
 
       private: Manager(const Manager&) = delete;
 

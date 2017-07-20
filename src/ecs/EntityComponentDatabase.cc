@@ -77,6 +77,10 @@ class gazebo::ecs::EntityComponentDatabasePrivate
 
   /// \brief Queries on this manager
   public: std::vector<EntityQuery> queries;
+
+  /// \brief mutex used for thread safety
+  /// \remarks TODO thread safety without locking everything
+  public: std::mutex mtx;
 };
 
 /////////////////////////////////////////////////
@@ -180,6 +184,7 @@ bool EntityComponentDatabase::RemoveQuery(const EntityQueryId _id)
 /////////////////////////////////////////////////
 EntityId EntityComponentDatabase::CreateEntity()
 {
+  std::lock_guard<std::mutex> lock(this->dataPtr->mtx);
   EntityId id;
   if (!this->dataPtr->freeIds.empty())
   {
@@ -205,6 +210,7 @@ EntityId EntityComponentDatabase::CreateEntity()
 /////////////////////////////////////////////////
 bool EntityComponentDatabase::DeleteEntity(EntityId _id)
 {
+  std::lock_guard<std::mutex> lock(this->dataPtr->mtx);
   bool success = false;
   if (this->dataPtr->EntityExists(_id))
   {
@@ -230,6 +236,7 @@ bool EntityComponentDatabase::DeleteEntity(EntityId _id)
 /////////////////////////////////////////////////
 gazebo::ecs::Entity &EntityComponentDatabase::Entity(EntityId _id) const
 {
+  std::lock_guard<std::mutex> lock(this->dataPtr->mtx);
   if (this->dataPtr->EntityExists(_id))
     return this->dataPtr->entities[_id];
   else
@@ -241,6 +248,7 @@ gazebo::ecs::Entity &EntityComponentDatabase::Entity(EntityId _id) const
 /////////////////////////////////////////////////
 void *EntityComponentDatabase::AddComponent(EntityId _id, ComponentType _type)
 {
+  std::lock_guard<std::mutex> lock(this->dataPtr->mtx);
   void *component = nullptr;
   StorageKey key = std::make_pair(_id, _type);
   // if component has not been added already
@@ -289,6 +297,7 @@ bool EntityComponentDatabase::RemoveComponent(EntityId _id, ComponentType _type)
 void const *EntityComponentDatabase::EntityComponent(EntityId _id,
     ComponentType _type) const
 {
+  std::lock_guard<std::mutex> lock(this->dataPtr->mtx);
   void const *component = nullptr;
   StorageKey key = std::make_pair(_id, _type);
   if (this->dataPtr->componentIndices.find(key) !=
@@ -305,6 +314,7 @@ void const *EntityComponentDatabase::EntityComponent(EntityId _id,
 void *EntityComponentDatabase::EntityComponentMutable(EntityId _id,
     ComponentType _type)
 {
+  std::lock_guard<std::mutex> lock(this->dataPtr->mtx);
   void *component = nullptr;
   StorageKey key = std::make_pair(_id, _type);
   auto compIter = this->dataPtr->componentIndices.find(key);
@@ -358,6 +368,16 @@ void EntityComponentDatabasePrivate::UpdateQueries(EntityId _id)
   {
     if (this->EntityMatches(_id, query.ComponentTypes()))
       query.AddEntity(_id);
+  }
+}
+
+//////////////////////////////////////////////////
+void EntityComponentDatabase::InstantQuery(EntityQuery &_query)
+{
+  for (const gazebo::ecs::Entity &entity : this->dataPtr->entities)
+  {
+    if (this->dataPtr->EntityMatches(entity.Id(), _query.ComponentTypes()))
+      _query.AddEntity(entity.Id());
   }
 }
 
