@@ -1,3 +1,28 @@
 %%inline_definitions%%
 
+//////////////////////////////////////////////////
+%%full_namespace%%::%%class_name%%::%%class_name%%() :
+  dataPtr(new %%class_name%%Storage)
+{
+}
+
+//////////////////////////////////////////////////
+%%full_namespace%%::%%class_name%%::%%class_name%%(const %%class_name%% &_rhs)
+{
+  this->dataPtr.reset(new %%class_name%%Storage(*(_rhs.dataPtr)));
+}
+
+//////////////////////////////////////////////////
+%%full_namespace%%::%%class_name%%::%%class_name%%(%%class_name%% &&_old)
+{
+  this->dataPtr.swap(_old.dataPtr);
+}
+
+//////////////////////////////////////////////////
+%%full_namespace%%::%%class_name%% &%%full_namespace%%::%%class_name%%::operator=(const %%class_name%% &_rhs)
+{
+  this->dataPtr.reset(new %%class_name%%Storage(*(_rhs.dataPtr)));
+  return *this;
+}
+
 %%api_definitions%%

@@ -52,78 +52,10 @@ TypesAreSame(T& t, U& u)
     return false;
 }
 
-//////////////////////////////////////////////////
-/// \brief Class to take care of boiler plate for loading component
-template <typename COMP>
-class ComponentLoader
-{
-  public: std::unique_ptr<gazebo::ecs::ComponentFactory> factory;
-
-  protected: std::vector<std::unique_ptr<char[]> > storages;
-
-  protected: std::vector<COMP> apis;
-
-  public: ComponentLoader()
-  {
-  }
-
-  public: bool LoadComponent(std::string _compName)
-  {
-    std::string libName = "gazeboComponent" + _compName;
-    std::string factoryName = "::gazebo::components::test::"
-                              + _compName
-                              + "Factory";
-    ignition::common::PluginLoader pl;
-    ignition::common::SystemPaths sp;
-    sp.AddPluginPaths("./");
-    std::string pathToLibrary = sp.FindSharedLibrary(libName);
-    if (pathToLibrary.empty())
-    {
-      return false;
-    }
-    std::string pluginName = pl.LoadLibrary(pathToLibrary);
-    if (factoryName != pluginName)
-    {
-      return false;
-    }
-    this->factory = pl.Instantiate<gazebo::ecs::ComponentFactory>(pluginName);
-    return true;
-  }
-
-  public: COMP Instance()
-  {
-    
-    std::unique_ptr<char[]> storage(new char[this->factory->StorageSize()]);
-    this->factory->ConstructStorage(static_cast<void *>(storage.get()));
-
-    COMP apiInst;
-    this->factory->ConstructAPI(
-      static_cast<void *>(&apiInst), static_cast<void *>(storage.get()));
-
-    this->apis.push_back(apiInst);
-    this->storages.push_back(std::move(storage));
-
-    return apiInst;
-  }
-
-  public: ~ComponentLoader()
-  {
-    for (auto &storage : this->storages)
-    {
-      this->factory->DestructStorage(static_cast<void *>(storage.get()));
-    }
-  }
-};
-
-
 /////////////////////////////////////////////////
 TEST(PIMPLCPP, SimpleHaveRightTypes)
 {
-  ComponentLoader<gazebo::components::test::SimpleTypes> cl;
-  ASSERT_TRUE(cl.LoadComponent("SimpleTypes")) << "test must be run from"
-                                                  " the directory that"
-                                                  " contains it.";
-  auto st = cl.Instance();
+  gazebo::components::test::SimpleTypes comp;
 
   double DoubleField;
   float FloatField;
@@ -141,21 +73,21 @@ TEST(PIMPLCPP, SimpleHaveRightTypes)
   std::string StringField;
   std::string BytesField;
 
-  auto uutDoubleField = st.DoubleField();
-  auto uutFloatField = st.FloatField();
-  auto uutInt32Field = st.Int32Field();
-  auto uutInt64Field = st.Int64Field();
-  auto uutUint32Field = st.Uint32Field();
-  auto uutUint64Field = st.Uint64Field();
-  auto uutSint32Field = st.Sint32Field();
-  auto uutSint64Field = st.Sint64Field();
-  auto uutFixed32Field = st.Fixed32Field();
-  auto uutFixed64Field = st.Fixed64Field();
-  auto uutSfixed32Field = st.Sfixed32Field();
-  auto uutSfixed64Field = st.Sfixed64Field();
-  auto uutBoolField = st.BoolField();
-  auto uutStringField = st.StringField();
-  auto uutBytesField = st.BytesField();
+  auto uutDoubleField = comp.DoubleField();
+  auto uutFloatField = comp.FloatField();
+  auto uutInt32Field = comp.Int32Field();
+  auto uutInt64Field = comp.Int64Field();
+  auto uutUint32Field = comp.Uint32Field();
+  auto uutUint64Field = comp.Uint64Field();
+  auto uutSint32Field = comp.Sint32Field();
+  auto uutSint64Field = comp.Sint64Field();
+  auto uutFixed32Field = comp.Fixed32Field();
+  auto uutFixed64Field = comp.Fixed64Field();
+  auto uutSfixed32Field = comp.Sfixed32Field();
+  auto uutSfixed64Field = comp.Sfixed64Field();
+  auto uutBoolField = comp.BoolField();
+  auto uutStringField = comp.StringField();
+  auto uutBytesField = comp.BytesField();
 
   EXPECT_TRUE(TypesAreSame(DoubleField, uutDoubleField));
   EXPECT_TRUE(TypesAreSame(FloatField, uutFloatField));
@@ -177,63 +109,55 @@ TEST(PIMPLCPP, SimpleHaveRightTypes)
 /////////////////////////////////////////////////
 TEST(PIMPLCPP, SimpleTypesModifyable)
 {
-  ComponentLoader<gazebo::components::test::SimpleTypes> cl;
-  ASSERT_TRUE(cl.LoadComponent("SimpleTypes")) << "test must be run from"
-                                                  " the directory that"
-                                                  " contains it.";
-  auto st = cl.Instance();
+  gazebo::components::test::SimpleTypes comp;
 
-  st.DoubleField() = 5.0;
-  st.FloatField() = 4.0f;
-  st.Int32Field() = -42;
-  st.Int64Field() = -84;
-  st.Uint32Field() = 42;
-  st.Uint64Field() = 84;
-  st.Sint32Field() = -123;
-  st.Sint64Field() = -456;
-  st.Fixed32Field() = 789;
-  st.Fixed64Field() = 987;
-  st.Sfixed32Field() = -543;
-  st.Sfixed64Field() = -643;
-  st.BoolField() = true;
-  st.StringField() = "Hello world";
-  st.BytesField() = "100001111011";
+  comp.DoubleField() = 5.0;
+  comp.FloatField() = 4.0f;
+  comp.Int32Field() = -42;
+  comp.Int64Field() = -84;
+  comp.Uint32Field() = 42;
+  comp.Uint64Field() = 84;
+  comp.Sint32Field() = -123;
+  comp.Sint64Field() = -456;
+  comp.Fixed32Field() = 789;
+  comp.Fixed64Field() = 987;
+  comp.Sfixed32Field() = -543;
+  comp.Sfixed64Field() = -643;
+  comp.BoolField() = true;
+  comp.StringField() = "Hello world";
+  comp.BytesField() = "100001111011";
 
-  EXPECT_EQ(5.0, st.DoubleField());
-  EXPECT_EQ(4.0f, st.FloatField());
-  EXPECT_EQ(-42, st.Int32Field());
-  EXPECT_EQ(-84, st.Int64Field());
-  EXPECT_EQ(42, st.Uint32Field());
-  EXPECT_EQ(84, st.Uint64Field());
-  EXPECT_EQ(-123, st.Sint32Field());
-  EXPECT_EQ(-456, st.Sint64Field());
-  EXPECT_EQ(789, st.Fixed32Field());
-  EXPECT_EQ(987, st.Fixed64Field());
-  EXPECT_EQ(-543, st.Sfixed32Field());
-  EXPECT_EQ(-643, st.Sfixed64Field());
-  EXPECT_EQ(true, st.BoolField());
-  EXPECT_EQ(std::string("Hello world"), st.StringField());
-  EXPECT_EQ(std::string("100001111011"), st.BytesField());
+  EXPECT_EQ(5.0, comp.DoubleField());
+  EXPECT_EQ(4.0f, comp.FloatField());
+  EXPECT_EQ(-42, comp.Int32Field());
+  EXPECT_EQ(-84, comp.Int64Field());
+  EXPECT_EQ(42, comp.Uint32Field());
+  EXPECT_EQ(84, comp.Uint64Field());
+  EXPECT_EQ(-123, comp.Sint32Field());
+  EXPECT_EQ(-456, comp.Sint64Field());
+  EXPECT_EQ(789, comp.Fixed32Field());
+  EXPECT_EQ(987, comp.Fixed64Field());
+  EXPECT_EQ(-543, comp.Sfixed32Field());
+  EXPECT_EQ(-643, comp.Sfixed64Field());
+  EXPECT_EQ(true, comp.BoolField());
+  EXPECT_EQ(std::string("Hello world"), comp.StringField());
+  EXPECT_EQ(std::string("100001111011"), comp.BytesField());
 }
 
 /////////////////////////////////////////////////
 TEST(PIMPLCPP, MathTypesAreSubstituted)
 {
-  ComponentLoader<gazebo::components::test::SubstitutedTypes> cl;
-  ASSERT_TRUE(cl.LoadComponent("SubstitutedTypes")) << "test must be run from"
-                                                       " the directory that"
-                                                       " contains it.";
-  auto st = cl.Instance();
+  gazebo::components::test::SubstitutedTypes comp;
 
   ignition::math::Vector3d VectorField;
   ignition::math::Quaterniond QuaternionField;
   ignition::math::Pose3d PoseField;
   ignition::math::Matrix3d MatrixField;
 
-  auto uutVectorField = st.Vector();
-  auto uutQuaternionField = st.Quaternion();
-  auto uutPoseField = st.Pose();
-  auto uutMatrixField = st.Transform();
+  auto uutVectorField = comp.Vector();
+  auto uutQuaternionField = comp.Quaternion();
+  auto uutPoseField = comp.Pose();
+  auto uutMatrixField = comp.Transform();
 
   EXPECT_TRUE(TypesAreSame(VectorField, uutVectorField));
   EXPECT_TRUE(TypesAreSame(QuaternionField, uutQuaternionField));
@@ -244,157 +168,126 @@ TEST(PIMPLCPP, MathTypesAreSubstituted)
 /////////////////////////////////////////////////
 TEST(PIMPLCPP, MathTypesModifyable)
 {
-  ComponentLoader<gazebo::components::test::SubstitutedTypes> cl;
-  ASSERT_TRUE(cl.LoadComponent("SubstitutedTypes")) << "test must be run from"
-                                                       " the directory that"
-                                                       " contains it.";
-  auto st = cl.Instance();
+  gazebo::components::test::SubstitutedTypes comp;
 
-  st.Vector().X(5);
-  st.Quaternion().Y(6);
-  st.Pose().Pos().Z(7);
-  st.Pose().Rot().W(8);
+  comp.Vector().X(5);
+  comp.Quaternion().Y(6);
+  comp.Pose().Pos().Z(7);
+  comp.Pose().Rot().W(8);
 
-  EXPECT_DOUBLE_EQ(5, st.Vector().X());
-  EXPECT_DOUBLE_EQ(6, st.Quaternion().Y());
-  EXPECT_DOUBLE_EQ(7, st.Pose().Pos().Z());
-  EXPECT_DOUBLE_EQ(8, st.Pose().Rot().W());
+  EXPECT_DOUBLE_EQ(5, comp.Vector().X());
+  EXPECT_DOUBLE_EQ(6, comp.Quaternion().Y());
+  EXPECT_DOUBLE_EQ(7, comp.Pose().Pos().Z());
+  EXPECT_DOUBLE_EQ(8, comp.Pose().Rot().W());
 }
 
 /////////////////////////////////////////////////
 TEST(PIMPLCPP, EnumTypesModifyable)
 {
-  ComponentLoader<gazebo::components::test::EnumType> cl;
-  ASSERT_TRUE(cl.LoadComponent("EnumType")) << "test must be run from"
-                                               " the directory that"
-                                               " contains it.";
-  auto et = cl.Instance();
+  gazebo::components::test::EnumType comp;
 
   // default is always zero
-  EXPECT_EQ(gazebo::components::test::EnumType::TURTLE, et.SomeEnum());
-  et.SomeEnum() = gazebo::components::test::EnumType::COW;
-  EXPECT_EQ(gazebo::components::test::EnumType::COW, et.SomeEnum());
+  EXPECT_EQ(gazebo::components::test::EnumType::TURTLE, comp.SomeEnum());
+  comp.SomeEnum() = gazebo::components::test::EnumType::COW;
+  EXPECT_EQ(gazebo::components::test::EnumType::COW, comp.SomeEnum());
 }
 
 /////////////////////////////////////////////////
 TEST(PIMPLCPP, OperatorBool)
 {
-  ComponentLoader<gazebo::components::test::EnumType> cl;
-  ASSERT_TRUE(cl.LoadComponent("EnumType")) << "test must be run from"
-                                               " the directory that"
-                                               " contains it.";
+  gazebo::components::test::EnumType comp1;
+  comp1.ComponentType(42);
+  gazebo::ecs::NullComponent comp2;
 
-  gazebo::components::test::EnumType et1;
+  EXPECT_TRUE(comp1);
+  EXPECT_FALSE(comp2);
 
-  // Set component type for class
-  et1.ComponentType(42);
-
-  gazebo::components::test::EnumType et2 = cl.Instance();
-
-  EXPECT_FALSE(et1);
-  EXPECT_TRUE(et2);
-
-  et1.ComponentType(gazebo::ecs::NO_COMPONENT);
+  // cleanup
+  comp1.ComponentType(gazebo::ecs::NO_COMPONENT);
 }
 
 /////////////////////////////////////////////////
 TEST(PIMPLCPP, DefaultValues)
 {
-  ComponentLoader<gazebo::components::test::DefaultValues> cl;
-  ASSERT_TRUE(cl.LoadComponent("DefaultValues")) << "test must be run from"
-                                                    " the directory that"
-                                                    " contains it.";
-  auto dv = cl.Instance();
+  gazebo::components::test::DefaultValues comp;
 
-  EXPECT_EQ(26, dv.SomeInt());
-  EXPECT_EQ(std::string("Hello World!"), dv.SomeString());
-  EXPECT_EQ(std::string("1234abc"), dv.SomeBytes());
+  EXPECT_EQ(26, comp.SomeInt());
+  EXPECT_EQ(std::string("Hello World!"), comp.SomeString());
+  EXPECT_EQ(std::string("1234abc"), comp.SomeBytes());
   // default enum is always zero
-  EXPECT_FALSE(dv.SomeBool());
+  EXPECT_FALSE(comp.SomeBool());
 }
 
 /////////////////////////////////////////////////
 TEST(PIMPLCPP, NestedMessages)
 {
-  ComponentLoader<gazebo::components::test::NestedMessage> cl;
-  ASSERT_TRUE(cl.LoadComponent("NestedMessage")) << "test must be run from"
-                                                    " the directory that"
-                                                    " contains it.";
-  auto nm = cl.Instance();
+  gazebo::components::test::NestedMessage comp;
 
   // Check imported message works correclty
-  nm.Imported().SomeInt() = 35;
+  comp.Imported().SomeInt() = 35;
 
   // First level nested message
-  nm.FirstLevelMessage().SomeFloat() = 26.7f;
-  nm.FirstLevelMessage().SomeInt() = 7;
+  comp.FirstLevelMessage().SomeFloat() = 26.7f;
+  comp.FirstLevelMessage().SomeInt() = 7;
 
   // Second level nested message
-  nm.DoubleInlined().SecondLevelMessage().SomeFloat() = 8111.1f;
-  nm.DoubleInlined().SecondLevelMessage().SomeInt() = -12345;
+  comp.DoubleInlined().SecondLevelMessage().SomeFloat() = 8111.1f;
+  comp.DoubleInlined().SecondLevelMessage().SomeInt() = -12345;
 
   // Third level nested message
-  nm.DoubleInlined().ThirdLevelMessage().DeepFloat() = -7711.0f;
-  nm.DoubleInlined().ThirdLevelMessage().DeepString() = "Hello World!";
+  comp.DoubleInlined().ThirdLevelMessage().DeepFloat() = -7711.0f;
+  comp.DoubleInlined().ThirdLevelMessage().DeepString() = "Hello World!";
 
-  EXPECT_EQ(35, nm.Imported().SomeInt());
-  EXPECT_EQ(26.7f, nm.FirstLevelMessage().SomeFloat());
-  EXPECT_EQ(7, nm.FirstLevelMessage().SomeInt());
-  EXPECT_FLOAT_EQ(8111.1f, nm.DoubleInlined().SecondLevelMessage().SomeFloat());
-  EXPECT_EQ(-12345, nm.DoubleInlined().SecondLevelMessage().SomeInt());
-  EXPECT_FLOAT_EQ(-7711.0f, nm.DoubleInlined().ThirdLevelMessage().DeepFloat());
-  EXPECT_EQ(std::string("Hello World!"), nm.DoubleInlined().ThirdLevelMessage().DeepString());
+  EXPECT_EQ(35, comp.Imported().SomeInt());
+  EXPECT_EQ(26.7f, comp.FirstLevelMessage().SomeFloat());
+  EXPECT_EQ(7, comp.FirstLevelMessage().SomeInt());
+  EXPECT_FLOAT_EQ(8111.1f, comp.DoubleInlined().SecondLevelMessage().SomeFloat());
+  EXPECT_EQ(-12345, comp.DoubleInlined().SecondLevelMessage().SomeInt());
+  EXPECT_FLOAT_EQ(-7711.0f, comp.DoubleInlined().ThirdLevelMessage().DeepFloat());
+  EXPECT_EQ(std::string("Hello World!"), comp.DoubleInlined().ThirdLevelMessage().DeepString());
 }
 
 /////////////////////////////////////////////////
 TEST(PIMPLCPP, RepeatedFields)
 {
-  ComponentLoader<gazebo::components::test::RepeatedMessage> cl;
-  ASSERT_TRUE(cl.LoadComponent("RepeatedMessage")) << "test must be run from"
-                                                      " the directory that"
-                                                      " contains it.";
-  auto rm = cl.Instance();
+  gazebo::components::test::RepeatedMessage comp;
 
   // Check imported message works correclty
-  rm.Imported().Resize(2);
-  ASSERT_EQ(2, rm.Imported().Size());
-  rm.Imported()[0].SomeInt() = 35;
-  rm.Imported()[1].SomeInt() = 53;
+  comp.Imported().Resize(2);
+  ASSERT_EQ(2, comp.Imported().Size());
+  comp.Imported()[0].SomeInt() = 35;
+  comp.Imported()[1].SomeInt() = 53;
 
-  rm.InlinedOptional().SomeFloat().Resize(2);
-  ASSERT_EQ(2, rm.InlinedOptional().SomeFloat().Size());
-  rm.InlinedOptional().SomeFloat()[0] = 5.0f;
-  rm.InlinedOptional().SomeFloat()[1] = 26.7f;
+  comp.InlinedOptional().SomeFloat().Resize(2);
+  ASSERT_EQ(2, comp.InlinedOptional().SomeFloat().Size());
+  comp.InlinedOptional().SomeFloat()[0] = 5.0f;
+  comp.InlinedOptional().SomeFloat()[1] = 26.7f;
 
-  rm.InlinedRepeated().Resize(2);
-  ASSERT_EQ(2, rm.InlinedRepeated().Size());
-  rm.InlinedRepeated()[0].SomeFloat().Resize(2);
-  ASSERT_EQ(2, rm.InlinedRepeated()[0].SomeFloat().Size());
-  rm.InlinedRepeated()[1].SomeFloat().Resize(2);
-  ASSERT_EQ(2, rm.InlinedRepeated()[1].SomeFloat().Size());
-  rm.InlinedRepeated()[0].SomeFloat()[0] = 19.9f;
-  rm.InlinedRepeated()[0].SomeFloat()[1] = 0.9f;
-  rm.InlinedRepeated()[1].SomeFloat()[0] = 26.0f;
-  rm.InlinedRepeated()[1].SomeFloat()[1] = 20.17f;
+  comp.InlinedRepeated().Resize(2);
+  ASSERT_EQ(2, comp.InlinedRepeated().Size());
+  comp.InlinedRepeated()[0].SomeFloat().Resize(2);
+  ASSERT_EQ(2, comp.InlinedRepeated()[0].SomeFloat().Size());
+  comp.InlinedRepeated()[1].SomeFloat().Resize(2);
+  ASSERT_EQ(2, comp.InlinedRepeated()[1].SomeFloat().Size());
+  comp.InlinedRepeated()[0].SomeFloat()[0] = 19.9f;
+  comp.InlinedRepeated()[0].SomeFloat()[1] = 0.9f;
+  comp.InlinedRepeated()[1].SomeFloat()[0] = 26.0f;
+  comp.InlinedRepeated()[1].SomeFloat()[1] = 20.17f;
 
-  EXPECT_EQ(35, rm.Imported()[0].SomeInt());
-  EXPECT_EQ(53, rm.Imported()[1].SomeInt());
-  EXPECT_FLOAT_EQ(5.0f, rm.InlinedOptional().SomeFloat()[0]);
-  EXPECT_FLOAT_EQ(26.7f, rm.InlinedOptional().SomeFloat()[1]);
-  EXPECT_FLOAT_EQ(19.9f, rm.InlinedRepeated()[0].SomeFloat()[0]);
-  EXPECT_FLOAT_EQ(0.9f, rm.InlinedRepeated()[0].SomeFloat()[1]);
-  EXPECT_FLOAT_EQ(26.0f, rm.InlinedRepeated()[1].SomeFloat()[0]);
-  EXPECT_FLOAT_EQ(20.17f, rm.InlinedRepeated()[1].SomeFloat()[1]);
+  EXPECT_EQ(35, comp.Imported()[0].SomeInt());
+  EXPECT_EQ(53, comp.Imported()[1].SomeInt());
+  EXPECT_FLOAT_EQ(5.0f, comp.InlinedOptional().SomeFloat()[0]);
+  EXPECT_FLOAT_EQ(26.7f, comp.InlinedOptional().SomeFloat()[1]);
+  EXPECT_FLOAT_EQ(19.9f, comp.InlinedRepeated()[0].SomeFloat()[0]);
+  EXPECT_FLOAT_EQ(0.9f, comp.InlinedRepeated()[0].SomeFloat()[1]);
+  EXPECT_FLOAT_EQ(26.0f, comp.InlinedRepeated()[1].SomeFloat()[0]);
+  EXPECT_FLOAT_EQ(20.17f, comp.InlinedRepeated()[1].SomeFloat()[1]);
 }
 
 /////////////////////////////////////////////////
 TEST(PIMPLCPP, OneofMessage)
 {
-  ComponentLoader<gazebo::components::test::OneofMessage> cl;
-  ASSERT_TRUE(cl.LoadComponent("OneofMessage")) << "test must be run from"
-                                                   " the directory that"
-                                                   " contains it.";
-  auto comp = cl.Instance();
+  gazebo::components::test::OneofMessage comp;
 
   // Initially no member is set
   EXPECT_FALSE(comp.SomeUnion().HasImported());
@@ -423,57 +316,22 @@ TEST(PIMPLCPP, OneofMessage)
 }
 
 /////////////////////////////////////////////////
-TEST(PIMPLCPP, OneofDeepCopy)
-{
-  ignition::common::PluginLoader pl;
-  ignition::common::SystemPaths sp;
-  sp.AddPluginPaths("./");
-  std::string pathToLibrary = sp.FindSharedLibrary(
-      "gazeboComponentOneofMessage");
-  ASSERT_FALSE(pathToLibrary.empty()) << "test must be run from"
-                                         " the directory that"
-                                         " contains it.";
-  std::string pluginName = pl.LoadLibrary(pathToLibrary);
-  ASSERT_EQ("::gazebo::components::test::OneofMessageFactory", pluginName);
-
-  auto factory = pl.Instantiate<gazebo::ecs::ComponentFactory>(pluginName);
-  std::unique_ptr<char[]> storage(new char[factory->StorageSize()]);
-  factory->ConstructStorage(static_cast<void *>(storage.get()));
-
-  gazebo::components::test::OneofMessage comp;
-  factory->ConstructAPI(
-      static_cast<void *>(&comp), static_cast<void *>(storage.get()));
-
-  std::unique_ptr<char[]> storage2(new char[factory->StorageSize()]);
-  factory->ConstructStorage(static_cast<void *>(storage2.get()));
-
-  comp.SomeOtherUnion().SomeFloat() = -54.6f;
-
-  factory->DeepCopyStorage(
-    static_cast<void *>(storage.get()), static_cast<void *>(storage2.get()));
-
-  gazebo::components::test::OneofMessage comp2;
-  factory->ConstructAPI(
-      static_cast<void *>(&comp2), static_cast<void *>(storage2.get()));
-
-  EXPECT_TRUE(comp2.SomeOtherUnion().HasSomeFloat());
-  EXPECT_FLOAT_EQ(-54.6f, comp2.SomeOtherUnion().SomeFloat());
-
-  factory->DestructAPI(static_cast<void *>(&comp2));
-  factory->DestructStorage(static_cast<void *>(storage2.get()));
-
-  factory->DestructAPI(static_cast<void *>(&comp));
-  factory->DestructStorage(static_cast<void *>(storage.get()));
-}
+// TEST(PIMPLCPP, OneofDeepCopy)
+// {
+//   ComponentLoader<gazebo::components::test::OneofMessage> cl;
+//   ASSERT_TRUE(cl.LoadComponent("OneofMessage")) << "test must be run from"
+//                                                    " the directory that"
+//                                                    " contains it.";
+//   auto comp = cl.Instance();
+// 
+//   comp.SomeOtherUnion().SomeFloat() = -54.6f;
+// 
+// }
 
 /////////////////////////////////////////////////
 TEST(PIMPLCPP, NestedOneof)
 {
-  ComponentLoader<gazebo::components::test::NestedOneof> cl;
-  ASSERT_TRUE(cl.LoadComponent("NestedOneof")) << "test must be run from"
-                                                  " the directory that"
-                                                  " contains it.";
-  auto comp = cl.Instance();
+  gazebo::components::test::NestedOneof comp;
 
   // First level oneof
   comp.Inlined().SomeUnion().SomeInt() = 1234;
@@ -497,11 +355,7 @@ TEST(PIMPLCPP, NestedOneof)
 /////////////////////////////////////////////////
 TEST(PIMPLCPP, EmptyNested)
 {
-  ComponentLoader<gazebo::components::test::EmptyNested> cl;
-  ASSERT_TRUE(cl.LoadComponent("EmptyNested")) << "test must be run from"
-                                                  " the directory that"
-                                                  " contains it.";
-  auto comp = cl.Instance();
+  gazebo::components::test::EmptyNested comp;
 
   comp.Msg().SomeInt() = 747576;
 

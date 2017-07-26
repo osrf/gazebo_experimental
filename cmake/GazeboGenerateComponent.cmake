@@ -32,7 +32,6 @@ MACRO (GAZEBO_GENERATE_COMPONENT _protobuf)
   # Headers that shouldn't be installed
   set(GAZEBO_GENERATE_COMPONENT_PRIVATE_HEADERS
     ${CMAKE_CURRENT_BINARY_DIR}/${rel_dir}/${comp_name}.storage.hh
-    ${CMAKE_CURRENT_BINARY_DIR}/${rel_dir}/${comp_name}.factory.hh
   )
   set(gen_hh
     ${GAZEBO_GENERATE_COMPONENT_HEADERS}
@@ -41,7 +40,6 @@ MACRO (GAZEBO_GENERATE_COMPONENT _protobuf)
   # Source files to get linked into a shared library
   set(gen_cc
     ${CMAKE_CURRENT_BINARY_DIR}/${rel_dir}/${comp_name}.api.cc
-    ${CMAKE_CURRENT_BINARY_DIR}/${rel_dir}/${comp_name}.factory.cc
   )
 
   set_source_files_properties(${gen_hh} ${gen_cc} PROPERTIES GENERATED TRUE)

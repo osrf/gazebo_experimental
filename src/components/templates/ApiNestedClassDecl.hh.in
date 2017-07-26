@@ -25,17 +25,18 @@
 %%ns_indent%%  // Constructors + PIMPL
 %%ns_indent%%  ////////////////////
 
-%%ns_indent%%  /// \brief Constructor for class factory
-%%ns_indent%%  public: %%class_name%%(%%class_name%%Storage *_storage) : dataPtr(_storage)
-%%ns_indent%%  {
-%%ns_indent%%    // Nothing to do
-%%ns_indent%%  }
+%%ns_indent%%  /// \brief Constructor
+%%ns_indent%%  public: %%class_name%%();
 
-%%ns_indent%%  /// \brief Constructor for users
-%%ns_indent%%  public: %%class_name%%() : dataPtr(nullptr)
-%%ns_indent%%  {
-%%ns_indent%%  }
+%%ns_indent%%  /// \brief Copy constructor (deep copy)
+%%ns_indent%%  public: %%class_name%%(const %%class_name%% &_rhs);
+
+%%ns_indent%%  /// \brief Move Constructor
+%%ns_indent%%  public: %%class_name%%(%%class_name%% &&_old);
+
+%%ns_indent%%  /// \brief Assignment Operator (deep copy)
+%%ns_indent%%  public: %%class_name%% &operator=(const %%class_name%% &_old);
 
 %%ns_indent%%  /// \brief private storage pointer
-%%ns_indent%%  private: %%class_name%%Storage *dataPtr;
+%%ns_indent%%  private: std::shared_ptr<%%class_name%%Storage> dataPtr;
 %%ns_indent%%};

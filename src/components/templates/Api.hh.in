@@ -29,6 +29,7 @@
 #ifndef %%include_guard%%_API_HH_
 #define %%include_guard%%_API_HH_
 
+#include <memory>
 %%includes%%
 #include <ignition/common/System.hh>
 #include "gazebo/ecs/Component.hh"
@@ -38,7 +39,7 @@
 %%ns_indent%%class %%class_name%%Storage;
 
 %%ns_indent%%/// \brief API for interacting with a %%class_name%% component
-%%ns_indent%%class IGNITION_COMMON_VISIBLE %%class_name%% : public gazebo::ecs::ComponentAPI
+%%ns_indent%%class IGNITION_COMMON_VISIBLE %%class_name%% : public gazebo::ecs::Component
 %%ns_indent%%{
 %%ns_indent%%  ////////////////////
 %%ns_indent%%  // Enumerations used by this component
@@ -62,32 +63,27 @@
 %%ns_indent%%  // Constructors + PIMPL
 %%ns_indent%%  ////////////////////
 
-%%ns_indent%%  /// \brief Constructor for component factory
-%%ns_indent%%  public: %%class_name%%(%%class_name%%Storage *_storage) : dataPtr(_storage)
-%%ns_indent%%  {
-%%ns_indent%%    // Nothing to do
-%%ns_indent%%  }
+%%ns_indent%%  /// \brief Constructor
+%%ns_indent%%  public: %%class_name%%();
 
-%%ns_indent%%  /// \brief Constructor for users
-%%ns_indent%%  public: %%class_name%%() : dataPtr(nullptr)
-%%ns_indent%%  {
-%%ns_indent%%  }
+%%ns_indent%%  /// \brief Copy constructor (deep copy)
+%%ns_indent%%  public: %%class_name%%(const %%class_name%% &_rhs);
+
+%%ns_indent%%  /// \brief Move Constructor
+%%ns_indent%%  public: %%class_name%%(%%class_name%% &&_old);
+
+%%ns_indent%%  /// \brief Assignment Operator (deep copy)
+%%ns_indent%%  public: %%class_name%% &operator=(const %%class_name%% &_old);
 
 %%ns_indent%%  /// \brief private storage pointer
-%%ns_indent%%  private: %%class_name%%Storage *dataPtr;
+%%ns_indent%%  private: std::shared_ptr<%%class_name%%Storage> dataPtr;
 
 %%ns_indent%%  ////////////////////
 %%ns_indent%%  // Inherited Virtual methods
 %%ns_indent%%  ////////////////////
 
 %%ns_indent%%  /// \brief destructor
-%%ns_indent%%  public: virtual ~%%class_name%%()
-%%ns_indent%%  {
-%%ns_indent%%    // Nothing to do
-%%ns_indent%%  }
-
-%%ns_indent%%  // Inherited
-%%ns_indent%%  public: virtual operator bool() const override;
+%%ns_indent%%  public: virtual ~%%class_name%%();
 
 %%ns_indent%%  // Inherited
 %%ns_indent%%  public: virtual const char *ComponentName() const override;

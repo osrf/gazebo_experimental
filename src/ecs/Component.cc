@@ -21,11 +21,35 @@
 using namespace gazebo::ecs;
 
 //////////////////////////////////////////////////
-ComponentAPI::~ComponentAPI()
+Component::~Component()
 {
 }
 
 //////////////////////////////////////////////////
-ComponentFactory::~ComponentFactory()
+Component::operator bool() const
 {
+  return this->ComponentType() != NO_COMPONENT;
+}
+
+//////////////////////////////////////////////////
+NullComponent::~NullComponent()
+{
+}
+
+//////////////////////////////////////////////////
+const char *NullComponent::ComponentName() const
+{
+  return "gazebo::ecs::NullComponent";
+}
+
+//////////////////////////////////////////////////
+gazebo::ecs::ComponentType NullComponent::ComponentType() const
+{
+  return NO_COMPONENT;
+}
+
+//////////////////////////////////////////////////
+void NullComponent::ComponentType(gazebo::ecs::ComponentType _type)
+{
+  // Intentionally empty
 }

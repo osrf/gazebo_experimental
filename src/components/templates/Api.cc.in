@@ -40,6 +40,36 @@ using namespace generated_ns;
 static gazebo::ecs::ComponentType g%%class_name%%ComponentType = gazebo::ecs::NO_COMPONENT;
 
 //////////////////////////////////////////////////
+%%class_name%%::%%class_name%%()
+  : dataPtr(new %%class_name%%Storage)
+{
+}
+
+//////////////////////////////////////////////////
+%%class_name%%::%%class_name%%(const %%class_name%% &_rhs)
+{
+  this->dataPtr.reset(new %%class_name%%Storage(*(_rhs.dataPtr)));
+}
+
+//////////////////////////////////////////////////
+%%class_name%%::%%class_name%%(%%class_name%% &&_old)
+{
+  this->dataPtr.swap(_old.dataPtr);
+}
+
+//////////////////////////////////////////////////
+%%class_name%% &%%class_name%%::operator=(const %%class_name%% &_rhs)
+{
+  this->dataPtr.reset(new %%class_name%%Storage(*(_rhs.dataPtr)));
+  return *this;
+}
+
+//////////////////////////////////////////////////
+%%class_name%%::~%%class_name%%()
+{
+}
+
+//////////////////////////////////////////////////
 const char *%%class_name%%::ComponentName() const
 {
   return "%%full_namespace%%::%%class_name%%";
@@ -59,12 +89,9 @@ void %%class_name%%::ComponentType(gazebo::ecs::ComponentType _type)
     g%%class_name%%ComponentType = _type;
 }
 
-//////////////////////////////////////////////////
-%%class_name%%::operator bool() const
-{
-  return g%%class_name%%ComponentType != gazebo::ecs::NO_COMPONENT && this->dataPtr;
-}
-
 %%inline_definitions%%
 
 %%api_definitions%%
+
+IGN_COMMON_REGISTER_SINGLE_PLUGIN(%%full_namespace%%::%%component_name%%,
+    gazebo::ecs::Component)
