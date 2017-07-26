@@ -316,17 +316,41 @@ TEST(PIMPLCPP, OneofMessage)
 }
 
 /////////////////////////////////////////////////
-// TEST(PIMPLCPP, OneofDeepCopy)
-// {
-//   ComponentLoader<gazebo::components::test::OneofMessage> cl;
-//   ASSERT_TRUE(cl.LoadComponent("OneofMessage")) << "test must be run from"
-//                                                    " the directory that"
-//                                                    " contains it.";
-//   auto comp = cl.Instance();
-// 
-//   comp.SomeOtherUnion().SomeFloat() = -54.6f;
-// 
-// }
+TEST(PIMPLCPP, OneofDeepCopy)
+{
+  gazebo::components::test::OneofMessage comp1;
+  comp1.ComponentType(56);
+
+  comp1.SomeOtherUnion().SomeFloat() = -54.6f;
+
+  gazebo::components::test::OneofMessage comp2;
+  comp2.DeepCopy(comp1);
+
+  EXPECT_FLOAT_EQ(-54.6f, comp1.SomeOtherUnion().SomeFloat());
+  comp1.SomeOtherUnion().SomeFloat() = -29.5f;
+  EXPECT_FLOAT_EQ(-54.6f, comp2.SomeOtherUnion().SomeFloat());
+
+  // Cleanup
+  comp1.ComponentType(gazebo::ecs::NO_COMPONENT);
+}
+
+/////////////////////////////////////////////////
+TEST(PIMPLCPP, DefaultValuesMove)
+{
+  gazebo::components::test::DefaultValues comp1;
+  comp1.ComponentType(56);
+
+  comp1.SomeInt() = 62;
+
+  gazebo::components::test::DefaultValues comp2;
+  comp2.Move(comp1);
+
+  EXPECT_EQ(26, comp1.SomeInt());
+  EXPECT_EQ(62, comp2.SomeInt());
+
+  // Cleanup
+  comp1.ComponentType(gazebo::ecs::NO_COMPONENT);
+}
 
 /////////////////////////////////////////////////
 TEST(PIMPLCPP, NestedOneof)

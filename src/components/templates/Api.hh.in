@@ -93,6 +93,12 @@
 
 %%ns_indent%%  // Inherited
 %%ns_indent%%  public: virtual void ComponentType(gazebo::ecs::ComponentType _type) override;
+
+%%ns_indent%%  // Inherited
+%%ns_indent%%  public: virtual void DeepCopy(const gazebo::ecs::Component &_other) override;
+
+%%ns_indent%%  // Inherited
+%%ns_indent%%  public: virtual void Move(gazebo::ecs::Component &_old) override;
 %%ns_indent%%};
 %%ns_end%%
 #endif

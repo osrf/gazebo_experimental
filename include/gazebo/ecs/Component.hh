@@ -18,6 +18,7 @@
 #ifndef GAZEBO_ECS_COMPONENTAPI_HH_
 #define GAZEBO_ECS_COMPONENTAPI_HH_
 
+#include <exception>
 #include <memory>
 #include <type_traits>
 
@@ -56,6 +57,18 @@ namespace gazebo
       /// \remarks this should only allow the type to be set once
       public: virtual void ComponentType(ecs::ComponentType _type) = 0;
 
+      /// \brief Performs a deep copy
+      /// \throw NotSameComponentType if _other is a different component type
+      /// \throw NoComponentType if this->ComponentType() == NO_COMPONENT
+      /// \param[in] _other An existing instance of this type of component
+      public: virtual void DeepCopy(const ecs::Component &_other) = 0;
+
+      /// \brief Moves a component to this object
+      /// \throw NotSameComponentType if _other is a different component type
+      /// \throw NoComponentType if this->ComponentType() == NO_COMPONENT
+      /// \param[in] _old An existing instance of this type of component
+      public: virtual void Move(ecs::Component &_old) = 0;
+
       /// \brief TODO apis for introspection and serialization/deserialization
     };
 
@@ -73,6 +86,32 @@ namespace gazebo
 
       /// \brief Does nothing
       public: virtual void ComponentType(ecs::ComponentType _type) override;
+
+      /// \brief Does nothing
+      public: virtual void DeepCopy(const ecs::Component &_other) override;
+
+      /// \brief Does nothing
+      public: virtual void Move(ecs::Component &_old) override;
+    };
+
+    /// \brief Exception thrown to indicate components are not of the same type
+    class NotSameComponentType : public std::exception
+    {
+      /// \brief Returns a string identifying the component
+      virtual const char *what() const noexcept override
+      {
+        return "gazebo::ecs::NotSameComponentType";
+      }
+    };
+
+    /// \brief Exception thrown to indicate component has not been given a type
+    class NoComponentType : public std::exception
+    {
+      /// \brief Returns a string identifying the component
+      virtual const char *what() const noexcept override
+      {
+        return "gazebo::ecs::NoComponentType";
+      }
     };
   }
 }

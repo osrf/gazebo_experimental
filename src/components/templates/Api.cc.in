@@ -65,6 +65,38 @@ static gazebo::ecs::ComponentType g%%class_name%%ComponentType = gazebo::ecs::NO
 }
 
 //////////////////////////////////////////////////
+void %%class_name%%::DeepCopy(const gazebo::ecs::Component &_other)
+{
+  if (this->ComponentType() == gazebo::ecs::NO_COMPONENT)
+  {
+    throw gazebo::ecs::NoComponentType();
+  }
+  if (_other.ComponentType() != this->ComponentType())
+  {
+    throw gazebo::ecs::NotSameComponentType();
+  }
+
+  auto const &other = reinterpret_cast<const %%class_name%%&>(_other);
+  this->dataPtr.reset(new %%class_name%%Storage(*(other.dataPtr)));
+}
+
+//////////////////////////////////////////////////
+void %%class_name%%::Move(gazebo::ecs::Component &_old)
+{
+  if (this->ComponentType() == gazebo::ecs::NO_COMPONENT)
+  {
+    throw gazebo::ecs::NoComponentType();
+  }
+  if (_old.ComponentType() != this->ComponentType())
+  {
+    throw gazebo::ecs::NotSameComponentType();
+  }
+
+  auto &old = reinterpret_cast<%%class_name%%&>(_old);
+  this->dataPtr.swap(old.dataPtr);
+}
+
+//////////////////////////////////////////////////
 %%class_name%%::~%%class_name%%()
 {
 }

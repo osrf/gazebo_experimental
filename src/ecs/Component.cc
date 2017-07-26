@@ -53,3 +53,15 @@ void NullComponent::ComponentType(gazebo::ecs::ComponentType _type)
 {
   // Intentionally empty
 }
+
+//////////////////////////////////////////////////
+void NullComponent::DeepCopy(const gazebo::ecs::Component &_other)
+{
+  // Intentionally empty
+}
+
+//////////////////////////////////////////////////
+void NullComponent::Move(gazebo::ecs::Component &_old)
+{
+  // Intentionally empty
+}
