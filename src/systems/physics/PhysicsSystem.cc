@@ -22,6 +22,7 @@
 #include "gazebo/components/Geometry.hh"
 #include "gazebo/components/PhysicsConfig.hh"
 #include "gazebo/components/Pose.hh"
+#include "gazebo/components/TimeInfo.hh"
 #include "gazebo/components/WorldVelocity.hh"
 #include "gazebo/ecs/Manager.hh"
 #include "gazebo/ecs/EntityQuery.hh"
@@ -45,6 +46,15 @@ void PhysicsSystem::Init(ecs::QueryRegistrar &_registrar)
   {
     _registrar.Register(configQuery,
         std::bind(&PhysicsSystem::UpdateConfig, this, std::placeholders::_1));
+  }
+  if (!configQuery.AddComponent("gazebo::components::TimeInfo"))
+  {
+    std::cerr << "Undefined component[gazebo::components::TimeInfo]\n";
+  }
+  else
+  {
+    _registrar.Register(configQuery,
+        std::bind(&PhysicsSystem::UpdateTime, this, std::placeholders::_1));
   }
 
   // Query for bodies to simulate
@@ -75,9 +85,26 @@ void PhysicsSystem::UpdateConfig(const ecs::EntityQuery &_result)
     auto difference = entity.IsDifferent<components::PhysicsConfig>();
     if (difference == ecs::WAS_CREATED || difference == ecs::WAS_MODIFIED)
     {
-      auto const *geom = entity.Component<components::PhysicsConfig>();
-      this->maxStepSize = geom->maxStepSize;
+      auto const *physics = entity.Component<components::PhysicsConfig>();
+      this->maxStepSize = physics->maxStepSize;
     }
+  }
+}
+
+/////////////////////////////////////////////////
+void PhysicsSystem::UpdateTime(const ecs::EntityQuery &_result)
+{
+  ecs::Manager &mgr = this->Manager();
+  auto const &entityIds = _result.EntityIds();
+  if (!entityIds.empty())
+  {
+    // only consider the first entity
+    auto &entity = mgr.Entity(*entityIds.begin());
+
+    // Time component
+    auto *time = entity.ComponentMutable<components::TimeInfo>();
+    time->simTime = ignition::common::Time(mgr.SimulationTime());
+    time->realTime = ignition::common::Time(mgr.RealTime());
   }
 }
 

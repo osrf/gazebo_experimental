@@ -17,7 +17,6 @@ link_directories(
 set (plugins
   GuiDisplayImage
   GuiDiagnostics
-  GuiTimePanel
 )
 
 foreach (plugin ${plugins})

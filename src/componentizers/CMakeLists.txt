@@ -18,6 +18,7 @@ set (plugins
   CZName
   CZPhysicsConfig
   CZPose
+  CZTimeInfo
   CZWorldVelocity
 )
 

@@ -15,38 +15,37 @@
  *
 */
 
-#ifndef GAZEBO_SYSTEMS_PHYSICS_PHYSICSSYSTEM_HH_
-#define GAZEBO_SYSTEMS_PHYSICS_PHYSICSSYSTEM_HH_
+#ifndef GAZEBO_SYSTEMS_TIMESYSTEM_HH_
+#define GAZEBO_SYSTEMS_TIMESYSTEM_HH_
+
+#include <memory>
 
 #include "gazebo/ecs/Entity.hh"
 #include "gazebo/ecs/System.hh"
-
 
 namespace gazebo
 {
   namespace systems
   {
+    class TimeSystemPrivate;
+
     /// \brief ECSystem to do physics
-    class PhysicsSystem : public ecs::System
+    class TimeSystem : public ecs::System
     {
+      /// \brief Cosntructor
+      public: TimeSystem();
+
       /// \brief Called when the system is loaded
       /// \param[in] Registrar used to register callbacks for query results
       public: virtual void Init(ecs::QueryRegistrar &_registrar);
 
       /// \brief Called every physics update with global configuration
-      /// \param[in] _result EntityQuery with results from a registered query
+      /// \param[in] _result EntityQuery with results fromm a registered query
       protected: void UpdateConfig(const ecs::EntityQuery &_result);
 
-      /// \brief Called every physics update with things to simulate
-      /// \param[in] _result EntityQuery with results from a registered query
-      protected: void UpdateBodies(const ecs::EntityQuery &_result);
-
-      /// \brief Called every physics update with things to simulate
-      /// \param[in] _result EntityQuery with results from a registered query
-      protected: void UpdateTime(const ecs::EntityQuery &_result);
-
-      /// \brief max time in seconds to step the world
-      protected: double maxStepSize = 0.001;
+      /// \internal
+      /// \brief Pointer to private data
+      private: std::unique_ptr<TimeSystemPrivate> dataPtr;
     };
   }
 }

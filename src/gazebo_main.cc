@@ -304,6 +304,7 @@ int main(int _argc, char **_argv)
           "gazeboCZCollidable",
           "gazeboCZInertial",
           "gazeboCZPhysicsConfig",
+          "gazeboCZTimeInfo",
           "gazeboCZWorldVelocity",
           }))
     {
@@ -313,6 +314,7 @@ int main(int _argc, char **_argv)
     // Load ECS systems
     if (!LoadSystems(manager, {
         "gazeboPhysicsSystem",
+        "gazeboTimeSystem",
         }))
     {
       return 1;
@@ -340,7 +342,7 @@ int main(int _argc, char **_argv)
 
     // TODO: load startup plugins and configuration files here before creating
     // the window
-    ignition::gui::loadPlugin("gazeboGuiTimePanel");
+  //  ignition::gui::loadPlugin("TimePanel");
     ignition::gui::loadPlugin("gazeboGuiDisplayImage");
     ignition::gui::loadPlugin("gazeboGuiDiagnostics");
 
