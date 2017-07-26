@@ -89,9 +89,6 @@ class gazebo::ecs::ManagerPrivate
 
   /// \brief Invokes componentizers on SDF
   public: void Componentize(Manager *_mgr, sdf::SDF &_sdf);
-
-  /// \brief Node for communication.
-  public: ignition::transport::Node node;
 };
 
 /////////////////////////////////////////////////
@@ -100,35 +97,11 @@ Manager::Manager()
 {
   this->dataPtr->pauseCount = 0;
   this->dataPtr->diagnostics.Init("ecs:Manager");
-
-  // World control service
-  if (!this->dataPtr->node.Advertise("/world_control",
-      &Manager::WorldControlService, this))
-  {
-    ignerr << "Error advertising world control service." << std::endl;
-  }
 }
 
 /////////////////////////////////////////////////
 Manager::~Manager()
 {
-}
-
-//////////////////////////////////////////////////
-void Manager::WorldControlService(const ignition::msgs::WorldControl &_req,
-    ignition::msgs::Empty &/*_rep*/, bool &_result)
-{
-  _result = false;
-
-  if (_req.has_pause())
-  {
-    if (_req.pause())
-      this->BeginPause();
-    else
-      this->EndPause();
-
-    _result = true;
-  }
 }
 
 /////////////////////////////////////////////////
@@ -146,8 +119,7 @@ bool Manager::DeleteEntity(EntityId _id)
 /////////////////////////////////////////////////
 void Manager::UpdateOnce()
 {
-  this->dataPtr->diagnostics.UpdateBegin(this->dataPtr->simTime,
-                                         this->dataPtr->realTime);
+  this->dataPtr->diagnostics.UpdateBegin(this->dataPtr->simTime);
   this->dataPtr->UpdateOnce();
   this->dataPtr->diagnostics.UpdateEnd();
 }
@@ -155,8 +127,7 @@ void Manager::UpdateOnce()
 /////////////////////////////////////////////////
 void Manager::UpdateOnce(double _real_time_factor)
 {
-  this->dataPtr->diagnostics.UpdateBegin(this->dataPtr->simTime,
-                                         this->dataPtr->realTime);
+  this->dataPtr->diagnostics.UpdateBegin(this->dataPtr->simTime);
 
   ignition::common::Time startWallTime = ignition::common::Time::SystemTime();
   ignition::common::Time startSimTime = this->dataPtr->simTime;
@@ -365,12 +336,14 @@ bool Manager::SimulationTime(const ignition::common::Time &_newTime)
 /////////////////////////////////////////////////
 int Manager::BeginPause()
 {
+  ignmsg << "Manager: begin pause" << std::endl;
   return ++(this->dataPtr->pauseCount);
 }
 
 /////////////////////////////////////////////////
 int Manager::EndPause()
 {
+  ignmsg << "Manager: end pause" << std::endl;
   int currentCount = this->dataPtr->pauseCount;
   while (currentCount && !this->dataPtr->pauseCount.compare_exchange_weak(
         currentCount, currentCount - 1))

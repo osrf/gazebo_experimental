@@ -105,6 +105,7 @@ void PhysicsSystem::UpdateTime(const ecs::EntityQuery &_result)
     auto *time = entity.ComponentMutable<components::TimeInfo>();
     time->simTime = ignition::common::Time(mgr.SimulationTime());
     time->realTime = ignition::common::Time(mgr.RealTime());
+    time->paused = mgr.Paused();
   }
 }
 

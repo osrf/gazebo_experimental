@@ -60,10 +60,17 @@ void TimeSystem::Init(ecs::QueryRegistrar &_registrar)
         std::bind(&TimeSystem::UpdateConfig, this, std::placeholders::_1));
   }
 
-  // Publisher
+  // World stats publisher
   this->dataPtr->pub =
       this->dataPtr->node.Advertise<ignition::msgs::WorldStatistics>(
-      "world_stats");
+      "/world_stats");
+
+  // World control service
+  if (!this->dataPtr->node.Advertise("/world_control",
+      &TimeSystem::WorldControlService, this))
+  {
+    ignerr << "Error advertising world control service." << std::endl;
+  }
 }
 
 /////////////////////////////////////////////////
@@ -96,6 +103,24 @@ void TimeSystem::UpdateConfig(const ecs::EntityQuery &_result)
 
       this->dataPtr->pub.Publish(msg);
     }
+  }
+}
+
+//////////////////////////////////////////////////
+void TimeSystem::WorldControlService(const ignition::msgs::WorldControl &_req,
+    ignition::msgs::Empty &/*_rep*/, bool &_result)
+{
+  _result = false;
+  ecs::Manager &mgr = this->Manager();
+
+  if (_req.has_pause())
+  {
+    if (_req.pause())
+      mgr.BeginPause();
+    else
+      mgr.EndPause();
+
+    _result = true;
   }
 }
 

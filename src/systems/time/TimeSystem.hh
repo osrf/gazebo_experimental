@@ -43,6 +43,14 @@ namespace gazebo
       /// \param[in] _result EntityQuery with results fromm a registered query
       protected: void UpdateConfig(const ecs::EntityQuery &_result);
 
+      /// \brief Callback for world control service, which takes care of play, pause,
+      /// step, etc.
+      /// \param[in] _req World control request
+      /// \param[out] _rep Empty reply (for now, we may want to return something)
+      /// \param[out] _result True if request was successfully completed.
+      private: void WorldControlService(const ignition::msgs::WorldControl &_req,
+                   ignition::msgs::Empty &/*_rep*/, bool &_result);
+
       /// \internal
       /// \brief Pointer to private data
       private: std::unique_ptr<TimeSystemPrivate> dataPtr;

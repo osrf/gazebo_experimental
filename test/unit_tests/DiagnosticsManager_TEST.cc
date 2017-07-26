@@ -62,8 +62,8 @@ TEST_F(DiagnosticsManagerTest, PublishEmptyDiagnostics)
   gzutil::DiagnosticsManager mgr;
   ASSERT_TRUE(mgr.Init("PublishEmptyDiagnostics"));
 
-  ignition::common::Time time;
-  mgr.UpdateBegin(time, time);
+  ignition::common::Time simTime;
+  mgr.UpdateBegin(simTime);
   mgr.UpdateEnd();
 
   ASSERT_EQ(1, this->num);
@@ -74,8 +74,8 @@ TEST_F(DiagnosticsManagerTest, NotInitDontPublish)
 {
   gzutil::DiagnosticsManager mgr;
 
-  ignition::common::Time time;
-  mgr.UpdateBegin(time, time);
+  ignition::common::Time simTime;
+  mgr.UpdateBegin(simTime);
   mgr.UpdateEnd();
 
   ASSERT_EQ(0, this->num);
@@ -87,8 +87,8 @@ TEST_F(DiagnosticsManagerTest, PublishSomeDiagnostics)
   gzutil::DiagnosticsManager mgr;
   ASSERT_TRUE(mgr.Init("PublishSomeDiagnostics"));
 
-  ignition::common::Time time;
-  mgr.UpdateBegin(time, time);
+  ignition::common::Time simTime;
+  mgr.UpdateBegin(simTime);
   mgr.StartTimer("asdf");
   mgr.StopTimer("asdf");
   mgr.UpdateEnd();
@@ -104,14 +104,14 @@ TEST_F(DiagnosticsManagerTest, DiagnosticsClearedEveryUpdate)
   gzutil::DiagnosticsManager mgr;
   ASSERT_TRUE(mgr.Init("DiagnosticsClearedEveryUpdate"));
 
-  ignition::common::Time time;
-  mgr.UpdateBegin(time, time);
+  ignition::common::Time simTime;
+  mgr.UpdateBegin(simTime);
   mgr.StartTimer("asdf");
   mgr.StopTimer("asdf");
   mgr.UpdateEnd();
   ASSERT_EQ(1, this->num);
 
-  mgr.UpdateBegin(time, time);
+  mgr.UpdateBegin(simTime);
   mgr.StopTimer("asdf");
   mgr.UpdateEnd();
   ASSERT_EQ(2, this->num);
