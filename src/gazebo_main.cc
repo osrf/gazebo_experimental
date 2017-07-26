@@ -340,9 +340,28 @@ int main(int _argc, char **_argv)
     // Plugins installed by gazebo end up here
     ignition::gui::addPluginPath(GAZEBO_PLUGIN_INSTALL_PATH);
 
-    // TODO: load startup plugins and configuration files here before creating
-    // the window
-  //  ignition::gui::loadPlugin("TimePanel");
+    // Time panel plugin
+    {
+      static const char* pluginStr =
+        "<plugin filename=\"libTimePanel.so\">\
+          <world_control>\
+            <play_pause>true</play_pause>\
+            <start_paused>false</start_paused>\
+            <service>/world_control</service>\
+          </world_control>\
+          <world_stats>\
+            <sim_time>true</sim_time>\
+            <real_time>true</real_time>\
+            <topic>/world_stats</topic>\
+          </world_stats>\
+        </plugin>";
+
+      tinyxml2::XMLDocument pluginDoc;
+      pluginDoc.Parse(pluginStr);
+      ignition::gui::loadPlugin("TimePanel",
+                                pluginDoc.FirstChildElement("plugin"));
+    }
+
     ignition::gui::loadPlugin("gazeboGuiDisplayImage");
     ignition::gui::loadPlugin("gazeboGuiDiagnostics");
 
