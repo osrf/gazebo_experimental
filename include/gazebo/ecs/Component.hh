@@ -22,7 +22,6 @@
 #include <memory>
 #include <type_traits>
 
-// TODO move this to ComponentFactor.hh
 
 namespace gazebo
 {
