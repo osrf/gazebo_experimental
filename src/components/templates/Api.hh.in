@@ -91,8 +91,14 @@
 %%ns_indent%%  // Inherited
 %%ns_indent%%  public: virtual gazebo::ecs::ComponentType ComponentType() const override;
 
+%%ns_indent%%  // Required of ecs::Component, but not Inherited because it's static
+%%ns_indent%%  public: static gazebo::ecs::ComponentType StaticComponentType();
+
 %%ns_indent%%  // Inherited
 %%ns_indent%%  public: virtual void ComponentType(gazebo::ecs::ComponentType _type) override;
+
+%%ns_indent%%  // Required of ecs::Component, but not Inherited because it's static
+%%ns_indent%%  public: virtual void StaticComponentType(gazebo::ecs::ComponentType _type);
 
 %%ns_indent%%  // Inherited
 %%ns_indent%%  public: virtual void DeepCopy(const gazebo::ecs::Component &_other) override;

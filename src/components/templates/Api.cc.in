@@ -76,7 +76,7 @@ void %%class_name%%::DeepCopy(const gazebo::ecs::Component &_other)
     throw gazebo::ecs::NotSameComponentType();
   }
 
-  auto const &other = reinterpret_cast<const %%class_name%%&>(_other);
+  auto const &other = static_cast<const %%class_name%%&>(_other);
   this->dataPtr.reset(new %%class_name%%Storage(*(other.dataPtr)));
 }
 
@@ -92,7 +92,7 @@ void %%class_name%%::Move(gazebo::ecs::Component &_old)
     throw gazebo::ecs::NotSameComponentType();
   }
 
-  auto &old = reinterpret_cast<%%class_name%%&>(_old);
+  auto &old = static_cast<%%class_name%%&>(_old);
   this->dataPtr.swap(old.dataPtr);
 }
 
@@ -110,11 +110,23 @@ const char *%%class_name%%::ComponentName() const
 //////////////////////////////////////////////////
 gazebo::ecs::ComponentType %%class_name%%::ComponentType() const
 {
+  return %%class_name%%::StaticComponentType();
+}
+
+//////////////////////////////////////////////////
+gazebo::ecs::ComponentType %%class_name%%::StaticComponentType()
+{
   return g%%class_name%%ComponentType;
 }
 
 //////////////////////////////////////////////////
 void %%class_name%%::ComponentType(gazebo::ecs::ComponentType _type)
+{
+  %%class_name%%::StaticComponentType(_type);
+}
+
+//////////////////////////////////////////////////
+void %%class_name%%::StaticComponentType(gazebo::ecs::ComponentType _type)
 {
   // allow type assignment once per run
   if (g%%class_name%%ComponentType == gazebo::ecs::NO_COMPONENT)

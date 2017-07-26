@@ -193,20 +193,6 @@ TEST(PIMPLCPP, EnumTypesModifyable)
 }
 
 /////////////////////////////////////////////////
-TEST(PIMPLCPP, OperatorBool)
-{
-  gazebo::components::test::EnumType comp1;
-  comp1.ComponentType(42);
-  gazebo::ecs::NullComponent comp2;
-
-  EXPECT_TRUE(comp1);
-  EXPECT_FALSE(comp2);
-
-  // cleanup
-  comp1.ComponentType(gazebo::ecs::NO_COMPONENT);
-}
-
-/////////////////////////////////////////////////
 TEST(PIMPLCPP, DefaultValues)
 {
   gazebo::components::test::DefaultValues comp;
@@ -329,9 +315,6 @@ TEST(PIMPLCPP, OneofDeepCopy)
   EXPECT_FLOAT_EQ(-54.6f, comp1.SomeOtherUnion().SomeFloat());
   comp1.SomeOtherUnion().SomeFloat() = -29.5f;
   EXPECT_FLOAT_EQ(-54.6f, comp2.SomeOtherUnion().SomeFloat());
-
-  // Cleanup
-  comp1.ComponentType(gazebo::ecs::NO_COMPONENT);
 }
 
 /////////////////////////////////////////////////
@@ -347,9 +330,6 @@ TEST(PIMPLCPP, DefaultValuesMove)
 
   EXPECT_EQ(26, comp1.SomeInt());
   EXPECT_EQ(62, comp2.SomeInt());
-
-  // Cleanup
-  comp1.ComponentType(gazebo::ecs::NO_COMPONENT);
 }
 
 /////////////////////////////////////////////////

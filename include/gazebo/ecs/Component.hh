@@ -43,18 +43,21 @@ namespace gazebo
       /// \brief virtual destructor
       public: virtual ~Component();
 
-      /// \returns true if ComponentType() != NO_COMPONENT
-      public: operator bool() const;
-
       /// \brief Return the name of the component type
       public: virtual const char *ComponentName() const = 0;
 
       /// \brief Return a unique id for this component
       public: virtual ecs::ComponentType ComponentType() const = 0;
 
+      /// \brief Statically get the component type
+      public: static ecs::ComponentType StaticComponentType();
+
       /// \brief Initializes a static or global variable with a unique id
       /// \remarks this should only allow the type to be set once
       public: virtual void ComponentType(ecs::ComponentType _type) = 0;
+
+      /// \brief Statically set a component type
+      public: static void StaticComponentType(ecs::ComponentType _type);
 
       /// \brief Performs a deep copy
       /// \throw NotSameComponentType if _other is a different component type
@@ -69,28 +72,6 @@ namespace gazebo
       public: virtual void Move(ecs::Component &_old) = 0;
 
       /// \brief TODO apis for introspection and serialization/deserialization
-    };
-
-    /// \brief Used to indicate a component does not exist
-    class NullComponent : public Component
-    {
-      /// \brief virtual destructor
-      public: virtual ~NullComponent();
-
-      /// \brief Returns "gazebo::ecs::NullComponent"
-      public: virtual const char *ComponentName() const override;
-
-      /// \returns NO_COMPONENT
-      public: virtual ecs::ComponentType ComponentType() const override;
-
-      /// \brief Does nothing
-      public: virtual void ComponentType(ecs::ComponentType _type) override;
-
-      /// \brief Does nothing
-      public: virtual void DeepCopy(const ecs::Component &_other) override;
-
-      /// \brief Does nothing
-      public: virtual void Move(ecs::Component &_old) override;
     };
 
     /// \brief Exception thrown to indicate components are not of the same type
