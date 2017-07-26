@@ -76,6 +76,11 @@ MACRO (GAZEBO_GENERATE_COMPONENT _protobuf)
     ${gen_cc}
   )
 
+  target_compile_definitions(${GAZEBO_GENERATE_COMPONENT_LIBRARY}
+    PRIVATE
+      BUILDING_COMPONENT_${comp_name}_DLL=1
+  )
+
   target_include_directories(${GAZEBO_GENERATE_COMPONENT_LIBRARY}
     PRIVATE
       ${CMAKE_CURRENT_BINARY_DIR}

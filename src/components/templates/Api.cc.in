@@ -37,7 +37,7 @@ using namespace generated_ns;
 
 
 //////////////////////////////////////////////////
-static gazebo::ecs::ComponentType g%%class_name%%ComponentType = gazebo::ecs::NO_COMPONENT;
+gazebo::ecs::ComponentType %%class_name%%::_static%%class_name%%ComponentType = gazebo::ecs::NO_COMPONENT;
 
 //////////////////////////////////////////////////
 %%class_name%%::%%class_name%%()
@@ -116,7 +116,7 @@ gazebo::ecs::ComponentType %%class_name%%::ComponentType() const
 //////////////////////////////////////////////////
 gazebo::ecs::ComponentType %%class_name%%::StaticComponentType()
 {
-  return g%%class_name%%ComponentType;
+  return _static%%class_name%%ComponentType;
 }
 
 //////////////////////////////////////////////////
@@ -129,8 +129,8 @@ void %%class_name%%::ComponentType(gazebo::ecs::ComponentType _type)
 void %%class_name%%::StaticComponentType(gazebo::ecs::ComponentType _type)
 {
   // allow type assignment once per run
-  if (g%%class_name%%ComponentType == gazebo::ecs::NO_COMPONENT)
-    g%%class_name%%ComponentType = _type;
+  if (_static%%class_name%%ComponentType == gazebo::ecs::NO_COMPONENT)
+    _static%%class_name%%ComponentType = _type;
 }
 
 %%inline_definitions%%

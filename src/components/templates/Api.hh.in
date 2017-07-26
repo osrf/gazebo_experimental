@@ -29,17 +29,50 @@
 #ifndef %%include_guard%%_API_HH_
 #define %%include_guard%%_API_HH_
 
+
 #include <memory>
 %%includes%%
 #include <ignition/common/System.hh>
 #include "gazebo/ecs/Component.hh"
+
+
+/// \def %%include_guard%%_VISIBLE
+/// Use to represent "symbol visible" if supported
+
+/// \def %%include_guard%%_HIDDEN
+/// Use to represent "symbol hidden" if supported
+#if defined _WIN32 || defined __CYGWIN__
+  #ifdef BUILDING_COMPONENT_%%class_name%%_DLL
+    #ifdef __GNUC__
+      #define %%include_guard%%_VISIBLE __attribute__ ((dllexport))
+    #else
+      #define %%include_guard%%_VISIBLE __declspec(dllexport)
+    #endif
+  #else
+    #ifdef __GNUC__
+      #define %%include_guard%%_VISIBLE __attribute__ ((dllimport))
+    #else
+      #define %%include_guard%%_VISIBLE __declspec(dllimport)
+    #endif
+  #endif
+  #define %%include_guard%%_HIDDEN
+#else
+  #if __GNUC__ >= 4
+    #define %%include_guard%%_VISIBLE __attribute__ ((visibility ("default")))
+    #define %%include_guard%%_HIDDEN  __attribute__ ((visibility ("hidden")))
+  #else
+    #define %%include_guard%%_VISIBLE
+    #define %%include_guard%%_HIDDEN
+  #endif
+#endif
+
 
 %%ns_begin%%
 %%ns_indent%%/// \brief forward delcaration for storage
 %%ns_indent%%class %%class_name%%Storage;
 
 %%ns_indent%%/// \brief API for interacting with a %%class_name%% component
-%%ns_indent%%class IGNITION_COMMON_VISIBLE %%class_name%% : public gazebo::ecs::Component
+%%ns_indent%%class %%include_guard%%_VISIBLE %%class_name%% : public gazebo::ecs::Component
 %%ns_indent%%{
 %%ns_indent%%  ////////////////////
 %%ns_indent%%  // Enumerations used by this component
@@ -105,6 +138,9 @@
 
 %%ns_indent%%  // Inherited
 %%ns_indent%%  public: virtual void Move(gazebo::ecs::Component &_old) override;
+
+%%ns_indent%%  // Not inherited, but necessary
+%%ns_indent%%  private: static gazebo::ecs::ComponentType _static%%class_name%%ComponentType;
 %%ns_indent%%};
 %%ns_end%%
 #endif
