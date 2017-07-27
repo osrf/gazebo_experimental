@@ -15,10 +15,11 @@ string (TOUPPER ${PROJECT_NAME} PROJECT_NAME_UPPER)
 set(PROJECT_LIBRARY_TARGET_NAME ${PROJECT_NAME_LOWER})
 set(PKG_NAME ${PROJECT_NAME_UPPER})
 
+
 set (project_cmake_dir ${PROJECT_SOURCE_DIR}/cmake
     CACHE PATH "Location of CMake scripts")
 
-set(CMAKE_CXX_FLAGS "-std=c++11")
+set(CMAKE_CXX_FLAGS "-std=c++1z")
 
 set (PROJECT_CMAKE_DIR ${PROJECT_SOURCE_DIR}/cmake
   CACHE PATH "Location of CMake scripts")
@@ -73,7 +74,9 @@ set (INCLUDE_INSTALL_DIR
 set (LIB_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR})
 set (BIN_INSTALL_DIR ${CMAKE_INSTALL_BINDIR})
 set (WORLD_INSTALL_DIR
-  ${CMAKE_INSTALL_PREFIX}/share/gazebo-${PROJECT_MAJOR_VERSION}/worlds/)
+  ${CMAKE_INSTALL_PREFIX}/share/gazebo-experimental/worlds/)
+set(GAZEBO_PLUGIN_PATH ${CMAKE_INSTALL_PREFIX}/${LIB_INSTALL_DIR}/gazebo-experimental/plugins/)
+set(GAZEBO_SYSTEM_PLUGIN_PATH ${CMAKE_INSTALL_PREFIX}/${LIB_INSTALL_DIR}/gazebo-experimental/plugins/systems)
 
 if (build_errors)
   message(STATUS "BUILD ERRORS: These must be resolved before compiling.")

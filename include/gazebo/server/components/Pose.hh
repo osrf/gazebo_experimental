@@ -15,35 +15,44 @@
  *
 */
 
-#ifndef GAZEBO_EXAMPLES_ADD_DIVIDE_COMPONENTS_TRIPLET_HH_
-#define GAZEBO_EXAMPLES_ADD_DIVIDE_COMPONENTS_TRIPLET_HH_
+#ifndef GAZEBO_COMPONENTS_POSE_HH_
+#define GAZEBO_COMPONENTS_POSE_HH_
 
+#include <sdf/sdf.hh>
+#include <ignition/math/Pose3.hh>
 #include "gazebo/server/ComponentFactory.hh"
 
 namespace gazebo
 {
   namespace components
   {
-    /// \brief Three numbers
-    struct Triplet
+    /// \brief Create a Pose3d component from SDF
+    ignition::math::Pose3d Pose3dFromSDF(sdf::ElementPtr _elem)
     {
-      float first;
-      float second;
-      float third;
-    };
+      if (_elem->GetName() == "pose")
+      {
+        return _elem->Get<ignition::math::Pose3d>();
+      }
+      else
+      {
+        ignerr << "Attempting to read an ignition::math::pose3d "
+          << "value from an SDF element of type["
+          << _elem->GetName() << "].\n";
+      }
+      return ignition::math::Pose3d();
+    }
 
     /// \todo: Create a macro in ComponentFactory for this type of operation.
-    class TripletRegister
+    class Pose3dRegister
     {
-      public: TripletRegister()
+      public: Pose3dRegister()
               {
                 gazebo::server::ComponentFactory::Register<
-                  gazebo::components::Triplet>(
-                      {"triplet", "gazebo::components::Triplet"});
+                  ignition::math::Pose3d>({"pose", "ignition::math::Pose3d"},
+                      std::bind(&Pose3dFromSDF, std::placeholders::_1));
               }
     };
-
-    static TripletRegister tripletRegister;
+    static Pose3dRegister poseRegister;
   }
 }
 

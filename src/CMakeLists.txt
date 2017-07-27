@@ -1,13 +1,10 @@
 add_subdirectory(util)
-add_subdirectory(ecs)
-add_subdirectory(systems)
+add_subdirectory(server)
 add_subdirectory(gui)
 
-include_directories(${SDFormat_INCLUDE_DIRS})
-
-add_executable(gazebo main.cc)
-target_link_libraries(gazebo
-  GazeboECS
+add_executable(gazebo-experimental main.cc)
+target_link_libraries(gazebo-experimental
+  GazeboExperimentalServer
   ${gflags_LIBRARIES}
   ${IGNITION-COMMON_LIBRARIES}
   ${IGNITION-GUI_LIBRARIES}
@@ -16,9 +13,7 @@ target_link_libraries(gazebo
 )
 
 if (UNIX)
-  target_link_libraries(gazebo
-    pthread
-    )
+  target_link_libraries(gazebo-experimental pthread)
 endif()
 
-gz_install_executable(gazebo)
+gz_install_executable(gazebo-experimental)

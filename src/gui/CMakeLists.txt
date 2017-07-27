@@ -14,9 +14,9 @@ link_directories(
   ${IGNITION-TRANSPORT_LIBRARY_DIRS}
   )
 
-add_library(gazeboGuiDisplayImage SHARED GuiDisplayImage.cc)
+add_library(gazeboExperimentalGuiDisplayImage SHARED GuiDisplayImage.cc)
 
-target_link_libraries(gazeboGuiDisplayImage
+target_link_libraries(gazeboExperimentalGuiDisplayImage
   ${IGNITION-MSGS_LIBRARIES}
   ${IGNITION-TRANSPORT_LIBRARIES}
   ${IGNITION-GUI_LIBRARIES}
@@ -24,9 +24,9 @@ target_link_libraries(gazeboGuiDisplayImage
   ${Qt5Widgets_LIBRARIES}
   )
 
-add_library(gazeboGuiDiagnostics SHARED GuiDiagnostics.cc)
+add_library(gazeboExperimentalGuiDiagnostics SHARED GuiDiagnostics.cc)
 
-target_link_libraries(gazeboGuiDiagnostics
+target_link_libraries(gazeboExperimentalGuiDiagnostics
   ${IGNITION-COMMON_LIBRARIES}
   ${IGNITION-MSGS_LIBRARIES}
   ${IGNITION-TRANSPORT_LIBRARIES}
@@ -35,5 +35,5 @@ target_link_libraries(gazeboGuiDiagnostics
   ${Qt5Widgets_LIBRARIES}
   )
 
-gz_install_library(gazeboGuiDisplayImage)
-gz_install_library(gazeboGuiDiagnostics)
+gz_install_library(gazeboExperimentalGuiDisplayImage)
+gz_install_library(gazeboExperimentalGuiDiagnostics)

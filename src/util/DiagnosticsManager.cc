@@ -44,6 +44,9 @@ class gzutil::DiagnosticsManagerPrivate
 
   /// \brief name belonging to these diagnostics
   public: std::string name;
+
+  /// \brief Mutex for threading safety.
+  public: std::mutex mutex;
 };
 
 //////////////////////////////////////////////////
@@ -73,6 +76,7 @@ bool DiagnosticsManager::Init(const std::string &_name)
 //////////////////////////////////////////////////
 void DiagnosticsManager::UpdateBegin(const ignition::common::Time &_simTime)
 {
+  std::unique_lock<std::mutex> diagLock(this->dataPtr->mutex);
   if (this->dataPtr->initialized)
   {
     this->dataPtr->msg.mutable_sim_time()->set_sec(_simTime.sec);
@@ -83,6 +87,7 @@ void DiagnosticsManager::UpdateBegin(const ignition::common::Time &_simTime)
 //////////////////////////////////////////////////
 void DiagnosticsManager::UpdateEnd()
 {
+  std::unique_lock<std::mutex> diagLock(this->dataPtr->mutex);
   if (this->dataPtr->initialized)
   {
     this->dataPtr->pub.Publish(this->dataPtr->msg);
@@ -94,6 +99,7 @@ void DiagnosticsManager::UpdateEnd()
 //////////////////////////////////////////////////
 void DiagnosticsManager::StartTimer(const std::string &_name)
 {
+  std::unique_lock<std::mutex> diagLock(this->dataPtr->mutex);
   if (this->dataPtr->initialized)
   {
     ignition::common::Timer timer;
@@ -105,6 +111,7 @@ void DiagnosticsManager::StartTimer(const std::string &_name)
 //////////////////////////////////////////////////
 void DiagnosticsManager::StopTimer(const std::string &_name)
 {
+  std::unique_lock<std::mutex> diagLock(this->dataPtr->mutex);
   if (this->dataPtr->initialized)
   {
     auto kvIter = this->dataPtr->timers.find(_name);

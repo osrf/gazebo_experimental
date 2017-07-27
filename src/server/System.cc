@@ -15,23 +15,24 @@
  *
 */
 
-#ifndef GAZEBO_PRIVATE_SYSTEMS_ADDANDPRINTRESULT_HH_
-#define GAZEBO_PRIVATE_SYSTEMS_ADDANDPRINTRESULT_HH_
-
 #include "gazebo/server/System.hh"
 
-namespace gazebo
-{
-  namespace systems
-  {
-    class AddAndPrintResult : public server::System
-    {
-      public: virtual void Init(server::EntityQueryRegistrar &_registrar);
+using namespace gazebo;
+using namespace server;
 
-      /// \brief callback for query results
-      public: void Update(const server::Manager *_mgr,
-                  const server::EntityQuery &_result);
-    };
-  }
+/// \brief Private data class for a System
+class gazebo::server::SystemPrivate
+{
+};
+
+/////////////////////////////////////////////////
+System::System()
+: dataPtr(new SystemPrivate())
+{
 }
-#endif
+
+/////////////////////////////////////////////////
+System::~System()
+{
+  // Pure virtual destructors still have to be defined
+}

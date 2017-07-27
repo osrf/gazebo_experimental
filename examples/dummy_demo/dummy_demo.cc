@@ -42,19 +42,6 @@ int main(int argc, char **argv)
   gazebo::ecs::Manager manager;
 
   // TODO Componentizer to register components
-
-  // Register component types
-  gazebo::ecs::ComponentFactory::Register<gazebo::components::Inertial>(
-      "gazebo::components::Inertial");
-  gazebo::ecs::ComponentFactory::Register<gazebo::components::Geometry>(
-      "gazebo::components::Geometry");
-  gazebo::ecs::ComponentFactory::Register<gazebo::components::WorldPose>(
-      "gazebo::components::WorldPose");
-  gazebo::ecs::ComponentFactory::Register<gazebo::components::WorldVelocity>(
-      "gazebo::components::WorldVelocity");
-  gazebo::ecs::ComponentFactory::Register<gazebo::components::Material>(
-      "gazebo::components::Material");
-
   // Plugin loader (plugins are systems)
   ignition::common::PluginLoader pluginLoader;
   ignition::common::SystemPaths sp;
@@ -85,43 +72,42 @@ int main(int argc, char **argv)
   for (int i = 0; i < 25; i++)
   {
     // Create the entity
-    gazebo::ecs::EntityId e = manager.CreateEntity();
-    gazebo::ecs::Entity &entity = manager.Entity(e);
+    gazebo::ecs::Entity entity = manager.CreateEntity("My Entity");
 
-    // Give it components
+    // Give the entity components
 
     // Inertial component
-    auto inertial = entity.AddComponent<gazebo::components::Inertial>();
-    if (inertial)
-    {
-      inertial->mass = ignition::math::Rand::DblUniform(0.1, 5.0);
-    }
-    else
-    {
-      std::cerr << "Failed to add inertial component to entity [" << e << "]"
-                << std::endl;
-    }
+    // auto inertial = entity.AddComponent<gazebo::components::Inertial>();
+    // if (inertial)
+    // {
+    //   inertial->mass = ignition::math::Rand::DblUniform(0.1, 5.0);
+    // }
+    // else
+    // {
+    //   std::cerr << "Failed to add inertial component to entity [" << e << "]"
+    //             << std::endl;
+    // }
 
-    // Geometry component
-    auto geom = entity.AddComponent<gazebo::components::Geometry>();
-    if (geom)
-    {
-      geom->type = gazebo::components::Geometry::SPHERE;
-      geom->sphere.radius = ignition::math::Rand::DblUniform(0.1, 0.5);
-    }
-    else
-    {
-      std::cerr << "Failed to add geom component to entity [" << e << "]"
-                << std::endl;
-    }
+    // // Geometry component
+    // auto geom = entity.AddComponent<gazebo::components::Geometry>();
+    // if (geom)
+    // {
+    //   geom->type = gazebo::components::Geometry::SPHERE;
+    //   geom->sphere.radius = ignition::math::Rand::DblUniform(0.1, 0.5);
+    // }
+    // else
+    // {
+    //   std::cerr << "Failed to add geom component to entity [" << e << "]"
+    //             << std::endl;
+    // }
 
     // World pose
-    auto pose = entity.AddComponent<gazebo::components::WorldPose>();
+    auto pose = entity.AddComponent<ignition::math::Pose3d>();
     if (pose)
     {
-      pose->position.X(ignition::math::Rand::DblUniform(-4.0, 4.0));
-      pose->position.Y(ignition::math::Rand::DblUniform(-4.0, 4.0));
-      pose->position.Z(ignition::math::Rand::DblUniform(-4.0, 4.0));
+      *pose.position.X(ignition::math::Rand::DblUniform(-4.0, 4.0));
+      *pose.position.Y(ignition::math::Rand::DblUniform(-4.0, 4.0));
+      *pose.position.Z(ignition::math::Rand::DblUniform(-4.0, 4.0));
     }
     else
     {
@@ -129,7 +115,7 @@ int main(int argc, char **argv)
                 << std::endl;
     }
 
-    // World velocity
+    /*// World velocity
     auto vel = entity.AddComponent<gazebo::components::WorldVelocity>();
     if (vel)
     {
@@ -157,6 +143,7 @@ int main(int argc, char **argv)
       std::cerr << "Failed to add Material component to entity ["
                 << e << "]" << std::endl;
     }
+    */
   }
 
   // Simulation loop

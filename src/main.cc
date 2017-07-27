@@ -28,8 +28,8 @@
 #include <ignition/common/PluginLoader.hh>
 #include <ignition/common/SystemPaths.hh>
 #include <ignition/math/Rand.hh>
-#include "gazebo/ecs/ComponentFactory.hh"
-#include "gazebo/ecs/Manager.hh"
+#include "gazebo/server/ComponentFactory.hh"
+#include "gazebo/server/Manager.hh"
 #include <sdf/sdf.hh>
 
 #ifndef Q_MOC_RUN
@@ -151,7 +151,7 @@ int main(int _argc, char **_argv)
     // ignition::common::Console
     ignition::common::Console::SetVerbosity(FLAGS_verbose);
 
-    gazebo::ecs::Manager manager;
+    gazebo::server::Manager manager;
 
     if (!manager.Load(filename))
     {
@@ -167,8 +167,8 @@ int main(int _argc, char **_argv)
 
     // \todo: Load startup plugins and configuration files here before creating
     // the window
-    ignition::gui::loadPlugin("gazeboGuiDisplayImage");
-    ignition::gui::loadPlugin("gazeboGuiDiagnostics");
+    // ignition::gui::loadPlugin("gazeboGuiDisplayImage");
+    // ignition::gui::loadPlugin("gazeboGuiDiagnostics");
 
     // Create main window
     ignition::gui::createMainWindow();
@@ -184,9 +184,9 @@ int main(int _argc, char **_argv)
     // Cleanup once main window is closed
     ignition::gui::stop();
 
-    // Stop the ECS
+    // Stop the server
     manager.Stop();
-    igndbg << "Waiting for ECS thread" << std::endl;
+    igndbg << "Waiting for the server thread" << std::endl;
   }
 
   igndbg << "Shutting down" << std::endl;

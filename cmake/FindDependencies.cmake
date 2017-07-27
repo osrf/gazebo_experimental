@@ -1,6 +1,6 @@
 include (${PROJECT_CMAKE_DIR}/Utils.cmake)
 
-################################################################################
+#################################################
 # GFlags
 find_library(gflags_LIBRARIES NAMES gflags)
 find_path(gflags_INCLUDE_DIRS gflags/gflags.h ENV CPATH)
@@ -12,11 +12,11 @@ else()
   link_directories(${gflags_LIBRARY_DIRS})
 endif()
 
-################################################################################
+#################################################
 # Ignition common
-find_package(ignition-common0 QUIET)
-if (NOT ignition-common0_FOUND)
-  BUILD_ERROR ("Missing: Ignition Common (libignition-common0-dev)")
+find_package(ignition-common1 QUIET)
+if (NOT ignition-common1_FOUND)
+  BUILD_ERROR ("Missing: Ignition Common (libignition-common1-dev)")
 else()
   message (STATUS "Found Ignition Common")
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${IGNITION-COMMON_CXX_FLAGS}")
@@ -24,7 +24,20 @@ else()
   link_directories(${IGNITION-COMMON_LIBRARY_DIRS})
 endif()
 
-################################################################################
+#################################################
+# Ignition math
+find_package(ignition-math4 QUIET)
+if (NOT ignition-math4_FOUND)
+  BUILD_ERROR ("Missing: Ignition Math (libignition-math4-dev)")
+else()
+  message (STATUS "Found Ignition Math")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${IGNITION-COMMON_CXX_FLAGS}")
+  include_directories(${IGNITION-MATH_INCLUDE_DIRS})
+  link_directories(${IGNITION-MATH_LIBRARY_DIRS})
+  message (STATUS ${IGNITION-MATH_INCLUDE_DIRS})
+endif()
+
+#################################################
 # Ignition GUI
 find_package(ignition-gui0 QUIET)
 if (NOT ignition-gui0_FOUND)
@@ -42,11 +55,11 @@ else()
   link_directories(${IGNITION-GUI_LIBRARY_DIRS})
 endif()
 
-################################################################################
+#################################################
 # Ignition msgs
-find_package(ignition-msgs0 QUIET)
-if (NOT ignition-msgs0_FOUND)
-  BUILD_ERROR ("Missing: Ignition msgs (libignition-msgs0-dev)")
+find_package(ignition-msgs1 QUIET)
+if (NOT ignition-msgs1_FOUND)
+  BUILD_ERROR ("Missing: Ignition msgs (libignition-msgs1-dev)")
 else()
   message (STATUS "Found Ignition msgs")
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${IGNITION-MSGS_CXX_FLAGS}")
@@ -54,7 +67,7 @@ else()
   link_directories(${IGNITION-MSGS_LIBRARY_DIRS})
 endif()
 
-################################################################################
+#################################################
 # Ignition transport
 find_package(ignition-transport3 QUIET)
 if (NOT ignition-transport3_FOUND)
@@ -66,7 +79,7 @@ else()
   link_directories(${IGNITION-TRANSPORT_LIBRARY_DIRS})
 endif()
 
-################################################################################
+#################################################
 # Find SDFormat
 set (SDFormat_MIN_VERSION 6.0.0)
 find_package(SDFormat ${SDFormat_MIN_VERSION})
@@ -76,4 +89,6 @@ if (NOT SDFormat_FOUND)
   BUILD_ERROR ("Missing: SDF version >=${SDFormat_MIN_VERSION}. Required for reading and writing SDF files.")
 else()
   message (STATUS "Looking for SDFormat - found")
+  include_directories(${SDFormat_INCLUDE_DIRS})
+  link_directories(${SDFormat_LIBRARY_DIRS})
 endif()

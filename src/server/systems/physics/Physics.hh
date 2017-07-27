@@ -15,23 +15,38 @@
  *
 */
 
-#ifndef GAZEBO_PRIVATE_SYSTEMS_ADDANDPRINTRESULT_HH_
-#define GAZEBO_PRIVATE_SYSTEMS_ADDANDPRINTRESULT_HH_
+#ifndef GAZEBO_SERVER_SYSTEMS_PHYSICS_PHYSICS_HH_
+#define GAZEBO_SERVER_SYSTEMS_PHYSICS_PHYSICS_HH_
 
+#include "gazebo/server/Entity.hh"
 #include "gazebo/server/System.hh"
 
 namespace gazebo
 {
+  namespace server
+  {
+    class Manager;
+  }
+
   namespace systems
   {
-    class AddAndPrintResult : public server::System
+
+    /// \brief ECSystem to do physics
+    class Physics : public server::System
     {
+      /// \brief Called when the system is loaded
+      /// \param[in] Registrar used to register callbacks for query results
       public: virtual void Init(server::EntityQueryRegistrar &_registrar);
 
-      /// \brief callback for query results
-      public: void Update(const server::Manager *_mgr,
-                  const server::EntityQuery &_result);
+      /// \brief Called every physics update with things to simulate
+      /// \param[in] _result EntityQuery with results fromm a registered query
+      protected: void UpdateBodies(const server::Manager *_mgr,
+                     const server::EntityQuery &_result);
+
+      /// \brief max time in seconds to step the world
+      protected: double maxStepSize = 0.001;
     };
   }
 }
+
 #endif

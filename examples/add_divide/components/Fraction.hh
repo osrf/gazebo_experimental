@@ -14,9 +14,10 @@
  * limitations under the License.
  *
 */
+#ifndef GAZEBO_EXAMPLES_ADD_DIVIDE_COMPONENTS_FRACTION_HH_
+#define GAZEBO_EXAMPLES_ADD_DIVIDE_COMPONENTS_FRACTION_HH_
 
-#ifndef GAZEBO_GZ_ECS_COMPONENTS_FRACTION_HH_
-#define GAZEBO_GZ_ECS_COMPONENTS_FRACTION_HH_
+#include "gazebo/server/ComponentFactory.hh"
 
 namespace gazebo
 {
@@ -30,12 +31,25 @@ namespace gazebo
     /// component means the cache can be filled with a list of components,
     /// And the system which operates on them (in this case the division system)
     /// can iterate through all those components and do useful work.
-    struct Fraction
+    class Fraction
     {
-      float numerator;
-      float denominator;
-      float test;
+      public: float numerator;
+      public: float denominator;
+      public: float test;
     };
+
+    /// \todo: Create a macro in ComponentFactory for this type of operation.
+    class FractionRegister
+    {
+      public: FractionRegister()
+              {
+                gazebo::server::ComponentFactory::Register<
+                  gazebo::components::Fraction>(
+                      {"fraction", "gazebo::components::Fraction"});
+              }
+    };
+
+    static FractionRegister fractionRegister;
   }
 }
 

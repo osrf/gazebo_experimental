@@ -15,35 +15,27 @@
  *
 */
 
-#ifndef GAZEBO_EXAMPLES_ADD_DIVIDE_COMPONENTS_TRIPLET_HH_
-#define GAZEBO_EXAMPLES_ADD_DIVIDE_COMPONENTS_TRIPLET_HH_
+#ifndef GAZEBO_COMPONENTS_COLLIDABLE_HH_
+#define GAZEBO_COMPONENTS_COLLIDABLE_HH_
 
-#include "gazebo/server/ComponentFactory.hh"
+#include <gazebo/server/Entity.hh>
 
 namespace gazebo
 {
   namespace components
   {
-    /// \brief Three numbers
-    struct Triplet
+    /// \brief Signals this is part of a collision group
+    struct Collidable
     {
-      float first;
-      float second;
-      float third;
-    };
+      /// \brief A grouping entity iff multiple geometry form one rigid body
+      /// \description this entity is where group properties will be. These
+      ///     include Inertial and WorldVelocity properties. If the group
+      ///     is set to NO_ENTITY than the properties are on the same entity
+      ///     as this component.
+      server::EntityId groupId = server::NO_ENTITY;
 
-    /// \todo: Create a macro in ComponentFactory for this type of operation.
-    class TripletRegister
-    {
-      public: TripletRegister()
-              {
-                gazebo::server::ComponentFactory::Register<
-                  gazebo::components::Triplet>(
-                      {"triplet", "gazebo::components::Triplet"});
-              }
+      // TODO surface properties needed by physics system should go here
     };
-
-    static TripletRegister tripletRegister;
   }
 }
 

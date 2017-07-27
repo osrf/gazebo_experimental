@@ -17,43 +17,45 @@
 #include <iostream>
 #include <ignition/common/PluginMacros.hh>
 
-//#include "components/Triplet.hh"
-#include "gazebo/ecs/Manager.hh"
+#include "components/Triplet.hh"
+#include "gazebo/server/Manager.hh"
 #include "systems/AddAndPrintResult.hh"
 
 using namespace gazebo;
 using namespace systems;
 
 /////////////////////////////////////////////////
-void AddAndPrintResult::Init(ecs::QueryRegistrar &_registrar)
+void AddAndPrintResult::Init(server::EntityQueryRegistrar &_registrar)
 {
-  /*
-  ecs::EntityQuery query;
+  server::EntityQuery query;
 
   // Add components which are required
   if (!query.AddComponent("gazebo::components::Triplet"))
     std::cerr << "Undefined component[gazebo::components::Triplet]\n";
 
-  _registrar.Register(query,
-      std::bind(&AddAndPrintResult::Update, this, std::placeholders::_1));
-      */
+  _registrar.Register(std::move(query),
+      std::bind(&AddAndPrintResult::Update, this, std::placeholders::_1,
+        std::placeholders::_2));
 }
 
 /////////////////////////////////////////////////
-void AddAndPrintResult::Update(const ecs::EntityQuery &_query)
+void AddAndPrintResult::Update(const server::Manager *_mgr,
+    const server::EntityQuery &_query)
 {
-  /*
-  ecs::Manager &mgr = this->Manager();
   // Loop through all of the entities which have the required components
   for (auto const &entityId : _query.EntityIds())
   {
-    auto &entity = mgr.Entity(entityId);
-    auto numbers = entity.Component<gazebo::components::Triplet>();
-
-    std::cout << "Adding " << entityId << ":" <<
-      numbers->first + numbers->second + numbers->third << std::endl;
-  }*/
+    auto &entity = _query.EntityById(entityId);
+    auto const *numbers = entity.Component<gazebo::components::Triplet>();
+    if (numbers)
+    {
+      std::cout << "Adding " << entityId << ":" <<
+        numbers->first + numbers->second + numbers->third << std::endl;
+    }
+    else
+      std::cerr << "Invalid numbers\n";
+  }
 }
 
 IGN_COMMON_REGISTER_SINGLE_PLUGIN(gazebo::systems::AddAndPrintResult,
-                          gazebo::ecs::System)
+                          gazebo::server::System)

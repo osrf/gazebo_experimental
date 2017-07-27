@@ -18,21 +18,19 @@
 #ifndef GAZEBO_PRIVATE_SYSTEMS_DIVIDEANDPRINTRESULT_HH_
 #define GAZEBO_PRIVATE_SYSTEMS_DIVIDEANDPRINTRESULT_HH_
 
-#include "gazebo/ecs/System.hh"
+#include "gazebo/server/System.hh"
 
 namespace gazebo
 {
   namespace systems
   {
-    /// \brief Forward Declaration
-    class EntityQueryResult;
-
-    class DivideAndPrintResult : public ecs::System
+    class DivideAndPrintResult : public server::System
     {
-      public: virtual void Init(ecs::QueryRegistrar &_registrar);
+      public: virtual void Init(server::EntityQueryRegistrar &_registrar);
 
       /// \brief callback for query results
-      public: void Update(const ecs::EntityQuery &_result);
+      public: void Update(const server::Manager *_mgr,
+                  const server::EntityQuery &_result);
     };
   }
 }

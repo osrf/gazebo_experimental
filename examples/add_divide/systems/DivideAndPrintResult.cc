@@ -17,42 +17,48 @@
 #include <iostream>
 #include <ignition/common/PluginMacros.hh>
 
-// #include "components/Fraction.hh"
-#include "gazebo/ecs/Manager.hh"
+#include "components/Fraction.hh"
+#include "gazebo/server/Manager.hh"
 #include "systems/DivideAndPrintResult.hh"
 
 using namespace gazebo;
 using namespace systems;
 
 /////////////////////////////////////////////////
-void DivideAndPrintResult::Init(ecs::QueryRegistrar &_registrar)
+void DivideAndPrintResult::Init(server::EntityQueryRegistrar &_registrar)
 {
-  /*ecs::EntityQuery query;
+  server::EntityQuery query;
 
   // Add components which are required
   if (!query.AddComponent("gazebo::components::Fraction"))
     std::cerr << "Undefined component[gazebo::components::Fraction]\n";
 
-  _registrar.Register(query,
-      std::bind(&DivideAndPrintResult::Update, this, std::placeholders::_1));
-      */
+  _registrar.Register(std::move(query),
+      std::bind(&DivideAndPrintResult::Update, this, std::placeholders::_1,
+        std::placeholders::_2));
 }
 
 /////////////////////////////////////////////////
-void DivideAndPrintResult::Update(const ecs::EntityQuery &_result)
+void DivideAndPrintResult::Update(const server::Manager *_mgr,
+    const server::EntityQuery &_result)
 {
-  /*ecs::Manager &mgr = this->Manager();
   // Loop through all of the entities which have the required components
   for (auto const &entityId : _result.EntityIds())
   {
-    auto &entity = mgr.Entity(entityId);
-    auto fraction = entity.Component<gazebo::components::Fraction>();
+    auto &entity = _result.EntityById(entityId);
+    auto const *fraction = entity.Component<gazebo::components::Fraction>();
 
-    std::cout << "Dividing " << entityId << ":" <<
-      fraction->numerator / fraction->denominator << std::endl;
+    std::cout << "Dividing Entity[" << entityId << "]'s fraction = ";
+    if (fraction)
+    {
+      std::cout << fraction->numerator / fraction->denominator << std::endl;
+    }
+    else
+    {
+      std::cout << "Invalid fraction\n";
+    }
   }
-  */
 }
 
 IGN_COMMON_REGISTER_SINGLE_PLUGIN(gazebo::systems::DivideAndPrintResult,
-                                  gazebo::ecs::System)
+                                  gazebo::server::System)
