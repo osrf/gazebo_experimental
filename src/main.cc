@@ -37,7 +37,6 @@
 
 #include "gazebo/Config.hh"
 
-
 // Gflag command line argument definitions
 // This flag is an abbreviation for the longer gflags built-in help flag.
 DEFINE_bool(h, false, "");

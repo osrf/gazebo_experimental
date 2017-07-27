@@ -14,26 +14,25 @@ link_directories(
   ${IGNITION-TRANSPORT_LIBRARY_DIRS}
   )
 
-add_library(gazeboExperimentalGuiDisplayImage SHARED GuiDisplayImage.cc)
+set (plugins
+  GuiDisplayImage
+  GuiDiagnostics
+)
 
-target_link_libraries(gazeboExperimentalGuiDisplayImage
-  ${IGNITION-MSGS_LIBRARIES}
-  ${IGNITION-TRANSPORT_LIBRARIES}
-  ${IGNITION-GUI_LIBRARIES}
-  ${Qt5Core_LIBRARIES}
-  ${Qt5Widgets_LIBRARIES}
+foreach (plugin ${plugins})
+
+  add_library(gazebo${plugin} SHARED ${plugin}.cc)
+
+  target_link_libraries(gazebo${plugin}
+    ${IGNITION-COMMON_LIBRARIES}
+    ${IGNITION-MSGS_LIBRARIES}
+    ${IGNITION-TRANSPORT_LIBRARIES}
+    ${IGNITION-GUI_LIBRARIES}
+    ${Qt5Core_LIBRARIES}
+    ${Qt5Widgets_LIBRARIES}
   )
 
-add_library(gazeboExperimentalGuiDiagnostics SHARED GuiDiagnostics.cc)
+  install (TARGETS gazebo${plugin} DESTINATION ${GAZEBO_PLUGIN_INSTALL_PATH})
 
-target_link_libraries(gazeboExperimentalGuiDiagnostics
-  ${IGNITION-COMMON_LIBRARIES}
-  ${IGNITION-MSGS_LIBRARIES}
-  ${IGNITION-TRANSPORT_LIBRARIES}
-  ${IGNITION-GUI_LIBRARIES}
-  ${Qt5Core_LIBRARIES}
-  ${Qt5Widgets_LIBRARIES}
-  )
+endforeach ()
 
-gz_install_library(gazeboExperimentalGuiDisplayImage)
-gz_install_library(gazeboExperimentalGuiDiagnostics)
