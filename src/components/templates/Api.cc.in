@@ -37,7 +37,69 @@ using namespace generated_ns;
 
 
 //////////////////////////////////////////////////
-static gazebo::ecs::ComponentType g%%class_name%%ComponentType = gazebo::ecs::NO_COMPONENT;
+gazebo::ecs::ComponentType %%class_name%%::_static%%class_name%%ComponentType = gazebo::ecs::NO_COMPONENT;
+
+//////////////////////////////////////////////////
+%%class_name%%::%%class_name%%()
+  : dataPtr(new %%class_name%%Storage)
+{
+}
+
+//////////////////////////////////////////////////
+%%class_name%%::%%class_name%%(const %%class_name%% &_rhs)
+{
+  this->dataPtr.reset(new %%class_name%%Storage(*(_rhs.dataPtr)));
+}
+
+//////////////////////////////////////////////////
+%%class_name%%::%%class_name%%(%%class_name%% &&_old)
+{
+  this->dataPtr.swap(_old.dataPtr);
+}
+
+//////////////////////////////////////////////////
+%%class_name%% &%%class_name%%::operator=(const %%class_name%% &_rhs)
+{
+  this->dataPtr.reset(new %%class_name%%Storage(*(_rhs.dataPtr)));
+  return *this;
+}
+
+//////////////////////////////////////////////////
+void %%class_name%%::DeepCopy(const gazebo::ecs::Component &_other)
+{
+  if (this->ComponentType() == gazebo::ecs::NO_COMPONENT)
+  {
+    throw gazebo::ecs::NoComponentType();
+  }
+  if (_other.ComponentType() != this->ComponentType())
+  {
+    throw gazebo::ecs::NotSameComponentType();
+  }
+
+  auto const &other = static_cast<const %%class_name%%&>(_other);
+  this->dataPtr.reset(new %%class_name%%Storage(*(other.dataPtr)));
+}
+
+//////////////////////////////////////////////////
+void %%class_name%%::Move(gazebo::ecs::Component &_old)
+{
+  if (this->ComponentType() == gazebo::ecs::NO_COMPONENT)
+  {
+    throw gazebo::ecs::NoComponentType();
+  }
+  if (_old.ComponentType() != this->ComponentType())
+  {
+    throw gazebo::ecs::NotSameComponentType();
+  }
+
+  auto &old = static_cast<%%class_name%%&>(_old);
+  this->dataPtr.swap(old.dataPtr);
+}
+
+//////////////////////////////////////////////////
+%%class_name%%::~%%class_name%%()
+{
+}
 
 //////////////////////////////////////////////////
 const char *%%class_name%%::ComponentName() const
@@ -48,23 +110,32 @@ const char *%%class_name%%::ComponentName() const
 //////////////////////////////////////////////////
 gazebo::ecs::ComponentType %%class_name%%::ComponentType() const
 {
-  return g%%class_name%%ComponentType;
+  return %%class_name%%::StaticComponentType();
+}
+
+//////////////////////////////////////////////////
+gazebo::ecs::ComponentType %%class_name%%::StaticComponentType()
+{
+  return _static%%class_name%%ComponentType;
 }
 
 //////////////////////////////////////////////////
 void %%class_name%%::ComponentType(gazebo::ecs::ComponentType _type)
 {
-  // allow type assignment once per run
-  if (g%%class_name%%ComponentType == gazebo::ecs::NO_COMPONENT)
-    g%%class_name%%ComponentType = _type;
+  %%class_name%%::StaticComponentType(_type);
 }
 
 //////////////////////////////////////////////////
-%%class_name%%::operator bool() const
+void %%class_name%%::StaticComponentType(gazebo::ecs::ComponentType _type)
 {
-  return g%%class_name%%ComponentType != gazebo::ecs::NO_COMPONENT && this->dataPtr;
+  // allow type assignment once per run
+  if (_static%%class_name%%ComponentType == gazebo::ecs::NO_COMPONENT)
+    _static%%class_name%%ComponentType = _type;
 }
 
 %%inline_definitions%%
 
 %%api_definitions%%
+
+IGN_COMMON_REGISTER_SINGLE_PLUGIN(%%full_namespace%%::%%component_name%%,
+    gazebo::ecs::Component)

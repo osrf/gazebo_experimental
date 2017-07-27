@@ -21,11 +21,6 @@
 using namespace gazebo::ecs;
 
 //////////////////////////////////////////////////
-ComponentAPI::~ComponentAPI()
-{
-}
-
-//////////////////////////////////////////////////
-ComponentFactory::~ComponentFactory()
+Component::~Component()
 {
 }

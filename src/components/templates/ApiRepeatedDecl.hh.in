@@ -1,10 +1,10 @@
 %%ns_indent%%  public: class %%field_name%%Repeated
 %%ns_indent%%  {
 %%ns_indent%%    /// \brief constructor
-%%ns_indent%%    public: %%field_name%%Repeated(%%class_name%%Storage *_storage);
+%%ns_indent%%    public: %%field_name%%Repeated(std::shared_ptr<%%class_name%%Storage> &_storage);
 
 %%ns_indent%%    /// \brief private implementation
-%%ns_indent%%    private: %%class_name%%Storage *dataPtr;
+%%ns_indent%%    private: std::shared_ptr<%%class_name%%Storage> dataPtr;
 
 %%ns_indent%%    /// \brief destructor
 %%ns_indent%%    public: ~%%field_name%%Repeated();

@@ -6,7 +6,8 @@
 # Uses PROTOBUF_PROTOC_EXECUTABLE as path to protoc
 # Uses CMAKE_CURRENT_SOURCE_DIR as a protobuf import path
 # Uses GAZEBO_COMPONENT_GENERATOR_DIR as a protobuf import path
-# Uses Extra arguments as dependencies to the generated files
+# If an argument is LIBRARIES the extra arguments become libraries to link
+# If an argument is DEPENDENCIES the Extra arguments become dependencies to the generated files
 # sets GAZEBO_GENERATE_COMPONENT_LIBRARY
 #   A library that should be installed
 #   library is called gazeboComponentX where X is protobuf file name
@@ -19,30 +20,45 @@
 #   X.storage.hh
 #   X.factory.hh
 
-MACRO (GAZEBO_GENERATE_COMPONENT _protobuf)
+function(GAZEBO_GENERATE_COMPONENT _protobuf)
   get_filename_component(rel_dir ${_protobuf} DIRECTORY)
   get_filename_component(abs_path ${_protobuf} ABSOLUTE)
   get_filename_component(abs_dir ${abs_path} DIRECTORY)
   get_filename_component(comp_name ${_protobuf} NAME_WE)
 
   # Headers that should be installed
-  set(GAZEBO_GENERATE_COMPONENT_HEADERS
+  set(public_headers
     ${CMAKE_CURRENT_BINARY_DIR}/${rel_dir}/${comp_name}.api.hh
   )
   # Headers that shouldn't be installed
-  set(GAZEBO_GENERATE_COMPONENT_PRIVATE_HEADERS
+  set(private_headers
     ${CMAKE_CURRENT_BINARY_DIR}/${rel_dir}/${comp_name}.storage.hh
-    ${CMAKE_CURRENT_BINARY_DIR}/${rel_dir}/${comp_name}.factory.hh
   )
   set(gen_hh
-    ${GAZEBO_GENERATE_COMPONENT_HEADERS}
-    ${GAZEBO_GENERATE_COMPONENT_PRIVATE_HEADERS}
+    ${public_headers}
+    ${private_headers}
   )
   # Source files to get linked into a shared library
   set(gen_cc
     ${CMAKE_CURRENT_BINARY_DIR}/${rel_dir}/${comp_name}.api.cc
-    ${CMAKE_CURRENT_BINARY_DIR}/${rel_dir}/${comp_name}.factory.cc
   )
+
+  set(extra_depends "")
+  set(extra_libs "")
+  set(mode "none")
+  foreach(arg ${ARGN})
+    if (arg STREQUAL "LIBRARIES")
+      set(mode "libs")
+    elseif(arg STREQUAL "DEPENDENCIES")
+      set(mode "deps")
+    elseif(mode STREQUAL "libs")
+      set(extra_libs ${extra_libs} ${arg})
+    elseif(mode STREQUAL "deps")
+      set(extra_depends ${extra_depends} ${arg})
+    else()
+      message(FATAL_ERROR "Expected LIBRARIES or DEPENDENCIES but got `${arg}`")
+    endif()
+  endforeach()
 
   set_source_files_properties(${gen_hh} ${gen_cc} PROPERTIES GENERATED TRUE)
 
@@ -50,7 +66,8 @@ MACRO (GAZEBO_GENERATE_COMPONENT _protobuf)
   # If it's not set, then this is the gazebo_experimental repo.
   # Set it to the source directory
   if(NOT DEFINED GAZEBO_COMPONENT_GENERATOR_DIR)
-    set(GAZEBO_COMPONENT_GENERATOR_DIR ${CMAKE_SOURCE_DIR}/src/components)
+    set(GAZEBO_COMPONENT_GENERATOR_DIR ${CMAKE_SOURCE_DIR}/src/components
+      CACHE PATH "Where protoc-gen-PIMPL-CPP and its templates are located")
   endif()
 
   # Generate code using a protobuf plugin
@@ -60,7 +77,7 @@ MACRO (GAZEBO_GENERATE_COMPONENT _protobuf)
       ${gen_cc}
     DEPENDS
       ${abs_path}
-      ${ARGN}
+      ${extra_depends}
     COMMAND  ${PROTOBUF_PROTOC_EXECUTABLE}
     ARGS
       --PIMPL-CPP_out=${CMAKE_CURRENT_BINARY_DIR}
@@ -73,19 +90,29 @@ MACRO (GAZEBO_GENERATE_COMPONENT _protobuf)
   )
 
   # Make a library out of the generated code
-  set(GAZEBO_GENERATE_COMPONENT_LIBRARY gazeboComponent${comp_name})
-  add_library(${GAZEBO_GENERATE_COMPONENT_LIBRARY} SHARED
+  set(lib_name gazeboComponent${comp_name})
+  add_library(${lib_name} SHARED
     ${gen_cc}
   )
 
-  target_include_directories(${GAZEBO_GENERATE_COMPONENT_LIBRARY}
+  target_compile_definitions(${lib_name}
+    PRIVATE
+      BUILDING_COMPONENT_${comp_name}_DLL=1
+  )
+
+  target_include_directories(${lib_name}
     PRIVATE
       ${CMAKE_CURRENT_BINARY_DIR}
   )
-  target_link_libraries(${GAZEBO_GENERATE_COMPONENT_LIBRARY}
+  target_link_libraries(${lib_name}
     GazeboECS
     ${IGNITION-MATH_LIBRARIES}
     ${IGNITION-COMMON_LIBRARIES}
+    ${extra_libs}
   )
-ENDMACRO(GAZEBO_GENERATE_COMPONENT)
+
+  set(GAZEBO_GENERATE_COMPONENT_LIBRARY ${lib_name} PARENT_SCOPE)
+  set(GAZEBO_GENERATE_COMPONENT_HEADERS ${public_headers} PARENT_SCOPE)
+  set(GAZEBO_GENERATE_COMPONENT_PRIVATE_HEADERS ${private_headers} PARENT_SCOPE)
+endfunction()
 

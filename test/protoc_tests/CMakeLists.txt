@@ -15,10 +15,65 @@ include(${CMAKE_SOURCE_DIR}/cmake/GazeboGenerateComponent.cmake)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 
-foreach(protobuf_file ${protoc_tests})
-  GAZEBO_GENERATE_COMPONENT(${protobuf_file} ${GAZEBO_COMPONENT_GENERATOR_FILES})
-  set(protoc_test_libs ${protoc_test_libs} ${GAZEBO_GENERATE_COMPONENT_LIBRARY})
-endforeach()
+GAZEBO_GENERATE_COMPONENT(DefaultValues.proto
+  DEPENDENCIES
+    ${GAZEBO_COMPONENT_GENERATOR_FILES}
+)
+set(protoc_test_libs ${protoc_test_libs} ${GAZEBO_GENERATE_COMPONENT_LIBRARY})
+
+GAZEBO_GENERATE_COMPONENT(EmptyNested.proto
+  DEPENDENCIES
+    ${GAZEBO_COMPONENT_GENERATOR_FILES}
+)
+set(protoc_test_libs ${protoc_test_libs} ${GAZEBO_GENERATE_COMPONENT_LIBRARY})
+
+GAZEBO_GENERATE_COMPONENT(EnumType.proto
+  DEPENDENCIES
+    ${GAZEBO_COMPONENT_GENERATOR_FILES}
+)
+set(protoc_test_libs ${protoc_test_libs} ${GAZEBO_GENERATE_COMPONENT_LIBRARY})
+
+GAZEBO_GENERATE_COMPONENT(NestedMessage.proto
+  DEPENDENCIES
+    ${GAZEBO_COMPONENT_GENERATOR_FILES}
+  LIBRARIES
+    gazeboComponentDefaultValues
+)
+set(protoc_test_libs ${protoc_test_libs} ${GAZEBO_GENERATE_COMPONENT_LIBRARY})
+
+GAZEBO_GENERATE_COMPONENT(NestedOneof.proto
+  DEPENDENCIES
+    ${GAZEBO_COMPONENT_GENERATOR_FILES}
+)
+set(protoc_test_libs ${protoc_test_libs} ${GAZEBO_GENERATE_COMPONENT_LIBRARY})
+
+GAZEBO_GENERATE_COMPONENT(OneofMessage.proto
+  DEPENDENCIES
+    ${GAZEBO_COMPONENT_GENERATOR_FILES}
+  LIBRARIES
+    gazeboComponentDefaultValues
+)
+set(protoc_test_libs ${protoc_test_libs} ${GAZEBO_GENERATE_COMPONENT_LIBRARY})
+
+GAZEBO_GENERATE_COMPONENT(RepeatedMessage.proto
+  DEPENDENCIES
+    ${GAZEBO_COMPONENT_GENERATOR_FILES}
+  LIBRARIES
+    gazeboComponentDefaultValues
+)
+set(protoc_test_libs ${protoc_test_libs} ${GAZEBO_GENERATE_COMPONENT_LIBRARY})
+
+GAZEBO_GENERATE_COMPONENT(SimpleTypes.proto
+  DEPENDENCIES
+    ${GAZEBO_COMPONENT_GENERATOR_FILES}
+)
+set(protoc_test_libs ${protoc_test_libs} ${GAZEBO_GENERATE_COMPONENT_LIBRARY})
+
+GAZEBO_GENERATE_COMPONENT(SubstitutedTypes.proto
+  DEPENDENCIES
+    ${GAZEBO_COMPONENT_GENERATOR_FILES}
+)
+set(protoc_test_libs ${protoc_test_libs} ${GAZEBO_GENERATE_COMPONENT_LIBRARY})
 
 
 set (src_file pimpl-cpp_TEST.cc)

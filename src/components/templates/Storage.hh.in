@@ -39,7 +39,7 @@
 %%inline_storage%%
 
 /// \remarks this class is private, it may change without notice
-class %%full_namespace%%::%%class_name%%Storage
+class %%include_guard%%_HIDDEN %%full_namespace%%::%%class_name%%Storage
 {
 %%storage_fields%%
   /// \brief Only the API class may interact with this storage

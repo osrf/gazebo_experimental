@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////
-%%field_type%% %%full_namespace%%::%%class_name%%::%%field_name%%()
+%%field_type%% &%%full_namespace%%::%%class_name%%::%%field_name%%()
 {
   if (this->dataPtr->%%class_name%%Storage_current_type != %%full_namespace%%::%%class_name%%Storage::enumval_%%class_name%%_%%field_name%%)
   {
@@ -9,13 +9,13 @@
     new (&(this->dataPtr->%%class_name%%Storage_union.%%field_name%%)) decltype(this->dataPtr->%%class_name%%Storage_union.%%field_name%%);
     this->dataPtr->%%class_name%%Storage_current_type = %%full_namespace%%::%%class_name%%Storage::enumval_%%class_name%%_%%field_name%%;
   }
-  return %%field_type%%(&(this->dataPtr->%%class_name%%Storage_union.%%field_name%%));
+  return this->dataPtr->%%class_name%%Storage_union.%%field_name%%;
 }
 
 //////////////////////////////////////////////////
-const %%field_type%% %%full_namespace%%::%%class_name%%::%%field_name%%() const
+const %%field_type%% &%%full_namespace%%::%%class_name%%::%%field_name%%() const
 {
-  return %%field_type%%(&(this->dataPtr->%%class_name%%Storage_union.%%field_name%%));
+  return this->dataPtr->%%class_name%%Storage_union.%%field_name%%;
 }
 
 //////////////////////////////////////////////////

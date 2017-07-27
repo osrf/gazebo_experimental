@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////
-%%full_namespace%%::%%class_name%%::%%field_name%%Repeated::%%field_name%%Repeated(%%class_name%%Storage *_storage) : dataPtr(_storage)
+%%full_namespace%%::%%class_name%%::%%field_name%%Repeated::%%field_name%%Repeated(std::shared_ptr<%%class_name%%Storage> &_storage) : dataPtr(_storage)
 {
 }
 
@@ -65,5 +65,7 @@ const %%field_type%% &%%full_namespace%%::%%class_name%%::%%field_name%%Repeated
 //////////////////////////////////////////////////
 const %%full_namespace%%::%%class_name%%::%%field_name%%Repeated %%full_namespace%%::%%class_name%%::%%field_name%%() const
 {
-  return %%full_namespace%%::%%class_name%%::%%field_name%%Repeated(this->dataPtr);
+  // Const cast to get access to control block on this->dataPtr to create another shared_ptr
+  %%full_namespace%%::%%class_name%% *mutable_this = const_cast<%%full_namespace%%::%%class_name%% *>(this);
+  return %%full_namespace%%::%%class_name%%::%%field_name%%Repeated(mutable_this->dataPtr);
 }
