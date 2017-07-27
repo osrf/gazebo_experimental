@@ -17,7 +17,7 @@
 #ifndef GAZEBO_EXAMPLES_ADD_DIVIDE_COMPONENTS_FRACTION_HH_
 #define GAZEBO_EXAMPLES_ADD_DIVIDE_COMPONENTS_FRACTION_HH_
 
-#include "gazebo/server/ComponentFactory.hh"
+#include "gazebo/server/ComponentManager.hh"
 
 namespace gazebo
 {
@@ -38,12 +38,12 @@ namespace gazebo
       public: float test;
     };
 
-    /// \todo: Create a macro in ComponentFactory for this type of operation.
+    /// \todo: Create a macro in ComponentManager for this type of operation.
     class FractionRegister
     {
       public: FractionRegister()
               {
-                gazebo::server::ComponentFactory::Register<
+                gazebo::server::ComponentManager::Register<
                   gazebo::components::Fraction>(
                       {"fraction", "gazebo::components::Fraction"});
               }

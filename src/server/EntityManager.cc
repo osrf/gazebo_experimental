@@ -218,7 +218,7 @@ bool EntityManager::CreateComponent(EntityId _id, sdf::ElementPtr _elem)
 {
   std::pair<ComponentType, ComponentId> comp;
 
-  comp = ComponentFactory::CreateComponent(_elem);
+  comp = ComponentManager::CreateComponent(_elem);
 
   if (comp.first != NoComponentType && comp.second != NoComponentId)
   {
@@ -244,7 +244,7 @@ bool EntityManager::RemoveComponent(const EntityId _id, ComponentType _type)
   for (auto &ec : it->second)
   {
     if (ec.first == _type)
-      success = success && ComponentFactory::RemoveComponent(_type, ec.second);
+      success = success && ComponentManager::RemoveComponent(_type, ec.second);
   }
   this->UpdateQueries(_id);
 
@@ -259,7 +259,7 @@ bool EntityManager::RemoveComponent(const EntityId _id,
   if (it == this->dataPtr->entityComponentMap.end())
     return false;
 
-  bool success = ComponentFactory::RemoveComponent(_type, _compId);
+  bool success = ComponentManager::RemoveComponent(_type, _compId);
   this->UpdateQueries(_id);
 }
 
@@ -308,7 +308,7 @@ bool EntityManager::RemoveComponents(const EntityId _id)
 
   for (auto &ec : this->dataPtr->entityComponentMap[_id])
   {
-    result = result && ComponentFactory::RemoveComponent(ec.first, ec.second);
+    result = result && ComponentManager::RemoveComponent(ec.first, ec.second);
   }
   this->UpdateQueries(_id);
   return result;

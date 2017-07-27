@@ -17,7 +17,7 @@
 #include <algorithm>
 #include <set>
 
-#include "gazebo/server/ComponentFactory.hh"
+#include "gazebo/server/ComponentManager.hh"
 #include "gazebo/server/EntityQuery.hh"
 
 using namespace gazebo;
@@ -57,7 +57,7 @@ EntityQuery::EntityQuery(EntityQuery &&_query)
 /////////////////////////////////////////////////
 bool EntityQuery::AddComponent(const std::string &_name)
 {
-  return this->AddComponent(ComponentFactory::Type(_name));
+  return this->AddComponent(ComponentManager::Type(_name));
 }
 
 /////////////////////////////////////////////////

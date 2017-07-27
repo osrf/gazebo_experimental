@@ -18,7 +18,7 @@
 #ifndef GAZEBO_EXAMPLES_ADD_DIVIDE_COMPONENTS_TRIPLET_HH_
 #define GAZEBO_EXAMPLES_ADD_DIVIDE_COMPONENTS_TRIPLET_HH_
 
-#include "gazebo/server/ComponentFactory.hh"
+#include "gazebo/server/ComponentManager.hh"
 
 namespace gazebo
 {
@@ -32,12 +32,12 @@ namespace gazebo
       float third;
     };
 
-    /// \todo: Create a macro in ComponentFactory for this type of operation.
+    /// \todo: Create a macro in ComponentManager for this type of operation.
     class TripletRegister
     {
       public: TripletRegister()
               {
-                gazebo::server::ComponentFactory::Register<
+                gazebo::server::ComponentManager::Register<
                   gazebo::components::Triplet>(
                       {"triplet", "gazebo::components::Triplet"});
               }

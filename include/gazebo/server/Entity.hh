@@ -20,7 +20,7 @@
 
 #include <memory>
 #include <ignition/common/Types.hh>
-#include "gazebo/server/ComponentFactory.hh"
+#include "gazebo/server/ComponentManager.hh"
 #include "gazebo/server/Types.hh"
 
 namespace gazebo
@@ -71,12 +71,12 @@ namespace gazebo
               const T *Component()
               {
                 // Get the component type
-                ComponentType type = ComponentFactory::Type<T>();
+                ComponentType type = ComponentManager::Type<T>();
 
                 // Get the component id
                 ComponentId compId = this->ComponentIdMatchingType(type);
 
-                return ComponentFactory::Component<T>(compId);
+                return ComponentManager::Component<T>(compId);
               }
 
 
@@ -86,12 +86,12 @@ namespace gazebo
               T *MutableComponent()
               {
                 // Get the component type
-                ComponentType type = ComponentFactory::Type<T>();
+                ComponentType type = ComponentManager::Type<T>();
 
                 // Get the component id
                 ComponentId compId = this->ComponentIdMatchingType(type);
 
-                return ComponentFactory::MutableComponent<T>(compId);
+                return ComponentManager::MutableComponent<T>(compId);
               }
 
       /// \brief Add a component by type
@@ -100,16 +100,16 @@ namespace gazebo
               T *AddComponent()
               {
                 // Get the component type
-                ComponentType type = ComponentFactory::Type<T>();
+                ComponentType type = ComponentManager::Type<T>();
 
                 // Create the component
-                ComponentId compId = ComponentFactory::CreateComponent(type);
+                ComponentId compId = ComponentManager::CreateComponent(type);
 
                 // Connect this entity to the component
                 this->AddComponent(type, compId);
 
                 // Return the actual component data.
-                return ComponentFactory::MutableComponent<T>(compId);
+                return ComponentManager::MutableComponent<T>(compId);
               }
 
       /// \brief Remove a component from this entity by type
@@ -118,7 +118,7 @@ namespace gazebo
               bool RemoveComponent()
               {
                 // Get the component type
-                ComponentType type = ComponentFactory::Type<T>();
+                ComponentType type = ComponentManager::Type<T>();
 
                 // Get the component id
                 ComponentId compId = this->ComponentIdMatchingType(type);

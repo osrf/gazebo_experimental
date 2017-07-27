@@ -1,8 +1,8 @@
 set(sources
+  ComponentManager.cc
   Entity.cc
   EntityManager.cc
   EntityQuery.cc
-  ComponentFactory.cc
   Manager.cc
   QueryRegistrar.cc
   System.cc

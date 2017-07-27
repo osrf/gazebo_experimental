@@ -21,7 +21,7 @@
 #include <memory>
 #include <sdf/sdf.hh>
 
-#include "gazebo/server/ComponentFactory.hh"
+#include "gazebo/server/ComponentManager.hh"
 #include "gazebo/server/Types.hh"
 #include "gazebo/server/Entity.hh"
 
@@ -106,14 +106,14 @@ namespace gazebo
                 // check for the entity
                 if (this->EntityExists(_id))
                 {
-                  ComponentType type = ComponentFactory::Type<T>();
+                  ComponentType type = ComponentManager::Type<T>();
 
                   // Find the component
                   for (auto const &ec : this->Components(_id))
                   {
                     if (ec.first == type)
                     {
-                      return ComponentFactory::Component<T>(ec.second);
+                      return ComponentManager::Component<T>(ec.second);
                     }
                   }
 
@@ -135,14 +135,14 @@ namespace gazebo
                 // check for the entity
                 if (this->EntityExists(_id))
                 {
-                  ComponentType type = ComponentFactory::Type<T>();
+                  ComponentType type = ComponentManager::Type<T>();
 
                   // Find the component
                   for (auto const &ec : this->Components(_id))
                   {
                     if (ec.first == type)
                     {
-                      return ComponentFactory::MutableComponent<T>(ec.second);
+                      return ComponentManager::MutableComponent<T>(ec.second);
                     }
                   }
 

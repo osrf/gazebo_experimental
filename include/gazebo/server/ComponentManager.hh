@@ -15,8 +15,8 @@
  *
 */
 
-#ifndef GAZEBO_SERVER_COMPONENTFACTORY_HH_
-#define GAZEBO_SERVER_COMPONENTFACTORY_HH_
+#ifndef GAZEBO_SERVER_COMPONENTMANAGER_HH_
+#define GAZEBO_SERVER_COMPONENTMANAGER_HH_
 
 #include <functional>
 #include <map>
@@ -170,8 +170,8 @@ namespace gazebo
       private: std::function<T (sdf::ElementPtr)> sdfCreator;
     };
 
-    /// \brief A factort that registers, creates, and manages components.
-    class ComponentFactory
+    /// \brief A manager that registers, creates, and stores components.
+    class ComponentManager
     {
       /// \brief Register a Component type with a name
       /// \param[in] _name Name(key) of the type to register.

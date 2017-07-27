@@ -20,7 +20,7 @@
 
 #include <sdf/sdf.hh>
 #include <ignition/math/Pose3.hh>
-#include "gazebo/server/ComponentFactory.hh"
+#include "gazebo/server/ComponentManager.hh"
 
 namespace gazebo
 {
@@ -42,12 +42,12 @@ namespace gazebo
       return ignition::math::Pose3d();
     }
 
-    /// \todo: Create a macro in ComponentFactory for this type of operation.
+    /// \todo: Create a macro in ComponentManager for this type of operation.
     class Pose3dRegister
     {
       public: Pose3dRegister()
               {
-                gazebo::server::ComponentFactory::Register<
+                gazebo::server::ComponentManager::Register<
                   ignition::math::Pose3d>({"pose", "ignition::math::Pose3d"},
                       std::bind(&Pose3dFromSDF, std::placeholders::_1));
               }

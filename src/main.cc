@@ -28,7 +28,6 @@
 #include <ignition/common/PluginLoader.hh>
 #include <ignition/common/SystemPaths.hh>
 #include <ignition/math/Rand.hh>
-#include "gazebo/server/ComponentFactory.hh"
 #include "gazebo/server/Manager.hh"
 #include <sdf/sdf.hh>
 

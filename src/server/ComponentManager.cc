@@ -14,16 +14,16 @@
  * limitations under the License.
  *
 */
-#include "gazebo/server/ComponentFactory.hh"
+#include "gazebo/server/ComponentManager.hh"
 
 using namespace gazebo::server;
 
-std::mutex ComponentFactory::mutex;
+std::mutex ComponentManager::mutex;
 
-std::map<std::string, ComponentType> ComponentFactory::componentNameTypeMap;
+std::map<std::string, ComponentType> ComponentManager::componentNameTypeMap;
 
 std::map<ComponentType, std::unique_ptr<ComponentStoreBase>>
-ComponentFactory::componentStores;
+ComponentManager::componentStores;
 
 ComponentType ComponentStoreBase::typeCounter = 0;
 
@@ -39,7 +39,7 @@ ComponentType ComponentStoreBase::Type() const
 }
 
 /////////////////////////////////////////////////
-ComponentType ComponentFactory::Type(const std::string &_name)
+ComponentType ComponentManager::Type(const std::string &_name)
 {
   std::lock_guard<std::mutex> lock(mutex);
 
@@ -50,7 +50,7 @@ ComponentType ComponentFactory::Type(const std::string &_name)
 }
 
 /////////////////////////////////////////////////
-std::pair<ComponentType, ComponentId>  ComponentFactory::CreateComponent(
+std::pair<ComponentType, ComponentId>  ComponentManager::CreateComponent(
     sdf::ElementPtr _elem)
 {
   /// Make sure the component type is known.
@@ -71,7 +71,7 @@ std::pair<ComponentType, ComponentId>  ComponentFactory::CreateComponent(
 }
 
 /////////////////////////////////////////////////
-bool ComponentFactory::RemoveComponent(
+bool ComponentManager::RemoveComponent(
     const ComponentType _type, const ComponentId _id)
 {
   if (componentStores.find(_type) == componentStores.end())
@@ -84,7 +84,7 @@ bool ComponentFactory::RemoveComponent(
 }
 
 /////////////////////////////////////////////////
-ComponentId ComponentFactory::CreateComponent(const ComponentType _type)
+ComponentId ComponentManager::CreateComponent(const ComponentType _type)
 {
   auto it = componentStores.find(_type);
   if (it == componentStores.end())
