@@ -65,7 +65,7 @@ This project makes use of plugins to provide most of its features.
 Currently supported plugin types are:
 
 * Gazebo ECS systems
-* Gazebo ECS components
+* Gazebo ECS componentizers
 * Ignition GUI plugins
 
 ## Finding plugins
