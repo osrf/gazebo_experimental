@@ -25,9 +25,6 @@ std::map<std::string, ComponentType> ComponentFactory::componentNameTypeMap;
 std::map<ComponentType, std::unique_ptr<ComponentStoreBase>>
 ComponentFactory::componentStores;
 
-std::map<EntityId, std::vector<std::pair<ComponentType, ComponentId>>>
-ComponentFactory::entityComponentMap;
-
 ComponentType ComponentStoreBase::typeCounter = 0;
 
 /////////////////////////////////////////////////
@@ -49,11 +46,12 @@ ComponentType ComponentFactory::Type(const std::string &_name)
   if (componentNameTypeMap.find(_name) != componentNameTypeMap.end())
     return componentNameTypeMap[_name];
 
-  return NO_COMPONENT;
+  return NoComponentType;
 }
 
 /////////////////////////////////////////////////
-bool ComponentFactory::CreateComponent(EntityId _id, sdf::ElementPtr _elem)
+std::pair<ComponentType, ComponentId>  ComponentFactory::CreateComponent(
+    sdf::ElementPtr _elem)
 {
   /// Make sure the component type is known.
   if (componentNameTypeMap.find(_elem->GetName()) ==
@@ -61,7 +59,7 @@ bool ComponentFactory::CreateComponent(EntityId _id, sdf::ElementPtr _elem)
       componentStores.find(componentNameTypeMap[_elem->GetName()]) ==
       componentStores.end())
   {
-    return false;
+    return {NoComponentType, NoComponentId};
   }
 
   ComponentType type = componentNameTypeMap[_elem->GetName()];
@@ -69,67 +67,28 @@ bool ComponentFactory::CreateComponent(EntityId _id, sdf::ElementPtr _elem)
   // Create the new component
   auto componentId = componentStores[type]->Create(_elem);
 
-  // Attach the component to the entity
-  entityComponentMap[_id].push_back(std::make_pair(type, componentId));
-
-  return true;
-}
-
-/////////////////////////////////////////////////
-bool ComponentFactory::RemoveComponents(EntityId _id)
-{
-  bool result = true;
-
-  for (auto &ec : entityComponentMap[_id])
-  {
-    result = result && RemoveComponent(ec);
-  }
-
-  return result;
+  return {type, componentId};
 }
 
 /////////////////////////////////////////////////
 bool ComponentFactory::RemoveComponent(
-    const std::pair<ComponentType, ComponentId> &_key)
+    const ComponentType _type, const ComponentId _id)
 {
-  if (componentStores.find(_key.first) == componentStores.end())
-  {
-    return -1;
-  }
-
-  // Remove the component
-  return componentStores[_key.first]->Remove(_key.second);
-}
-
-/////////////////////////////////////////////////
-bool ComponentFactory::EntityMatches(EntityId _id,
-    const std::set<ComponentType> &_types)
-{
-  auto it = entityComponentMap.find(_id);
-
-  if (it != entityComponentMap.end())
-  {
-    for (auto const &componentType : _types)
-    {
-      bool hasComponent = false;
-      for (auto const &componentKey : it->second)
-      {
-        auto type = componentStores[componentKey.first]->Type();
-        if (componentType == type)
-        {
-          hasComponent = true;
-          break;
-        }
-      }
-
-      if (!hasComponent)
-        return false;
-    }
-  }
-  else
+  if (componentStores.find(_type) == componentStores.end())
   {
     return false;
   }
 
-  return true;
+  // Remove the component
+  return componentStores[_type]->Remove(_id);
+}
+
+/////////////////////////////////////////////////
+ComponentId ComponentFactory::CreateComponent(const ComponentType _type)
+{
+  auto it = componentStores.find(_type);
+  if (it == componentStores.end())
+    return NoComponentId;
+
+  return it->second->Create();
 }

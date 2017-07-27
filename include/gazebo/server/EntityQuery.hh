@@ -21,7 +21,6 @@
 #include <vector>
 #include <set>
 #include "gazebo/server/Entity.hh"
-#include "gazebo/server/ComponentFactory.hh"
 
 namespace gazebo
 {
@@ -46,10 +45,8 @@ namespace gazebo
       public: bool IsNull();
 
       /// \brief Add a component based on a name.
-      /// \param[in] _name Name of the component to add. This will look up
-      /// the component in the ComponentFactory.
-      /// \return True on success, which means the component was found in
-      /// the ComponentFactory.
+      /// \param[in] _name Name of the component to add.
+      /// \return True on success, which means the component was registered.
       /// \todo templated version
       public: bool AddComponent(const std::string &_name);
 

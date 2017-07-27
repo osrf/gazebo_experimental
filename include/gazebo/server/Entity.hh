@@ -20,17 +20,19 @@
 
 #include <memory>
 #include <ignition/common/Types.hh>
-#include "gazebo/server/Types.hh"
 #include "gazebo/server/ComponentFactory.hh"
+#include "gazebo/server/Types.hh"
 
 namespace gazebo
 {
   namespace server
   {
+    class EntityManager;
+
     /// \brief Forward Declaration
     class EntityPrivate;
 
-    /// \brief A convenience class for working with entities
+      /// \brief A convenience class for working with entities
     class Entity
     {
       /// \brief Constructor
@@ -68,15 +70,28 @@ namespace gazebo
       public: template <typename T>
               const T *Component()
               {
-                return ComponentFactory::Component<T>(this->Id());
+                // Get the component type
+                ComponentType type = ComponentFactory::Type<T>();
+
+                // Get the component id
+                ComponentId compId = this->ComponentIdMatchingType(type);
+
+                return ComponentFactory::Component<T>(compId);
               }
+
 
       /// \brief Get a component by typename
       /// \returns Mutable pointer to a component or nullptr on error
       public: template <typename T>
               T *MutableComponent()
               {
-                return ComponentFactory::MutableComponent<T>(this->Id());
+                // Get the component type
+                ComponentType type = ComponentFactory::Type<T>();
+
+                // Get the component id
+                ComponentId compId = this->ComponentIdMatchingType(type);
+
+                return ComponentFactory::MutableComponent<T>(compId);
               }
 
       /// \brief Add a component by type
@@ -84,7 +99,17 @@ namespace gazebo
       public: template <typename T>
               T *AddComponent()
               {
-                return ComponentFactory::CreateComponent<T>(this->Id());
+                // Get the component type
+                ComponentType type = ComponentFactory::Type<T>();
+
+                // Create the component
+                ComponentId compId = ComponentFactory::CreateComponent(type);
+
+                // Connect this entity to the component
+                this->AddComponent(type, compId);
+
+                // Return the actual component data.
+                return ComponentFactory::MutableComponent<T>(compId);
               }
 
       /// \brief Remove a component from this entity by type
@@ -92,8 +117,25 @@ namespace gazebo
       public: template <typename T>
               bool RemoveComponent()
               {
-                return ComponentFactory::RemoveComponent<T>(this->Id());
+                // Get the component type
+                ComponentType type = ComponentFactory::Type<T>();
+
+                // Get the component id
+                ComponentId compId = this->ComponentIdMatchingType(type);
+
+                return this->RemoveComponent(type, compId);
               }
+
+      /// \todo: Use a weakpointer here.
+      public: void SetManager(EntityManager *_mgr);
+
+      private: ComponentId ComponentIdMatchingType(const ComponentType _type);
+
+      private: void AddComponent(const ComponentType _type,
+                   const ComponentId _compId);
+
+      private: bool RemoveComponent(const ComponentType _type,
+                   const ComponentId _compId);
 
       /// \brief Private data pointer
       private: std::unique_ptr<EntityPrivate> dataPtr;

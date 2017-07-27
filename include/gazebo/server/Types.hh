@@ -43,8 +43,10 @@ namespace gazebo
     /// a ComponentID==10.
     using ComponentId = int64_t;
 
+    const ComponentId NoComponentId = -1;
+
     /// \brief Special value returned to say there is no component
-    const ComponentType NO_COMPONENT = -1;
+    const ComponentType NoComponentType = -1;
   }
 }
 

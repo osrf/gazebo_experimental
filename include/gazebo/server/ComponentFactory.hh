@@ -272,12 +272,12 @@ namespace gazebo
 
       /// \brief Get a ComponentType that matches a component type name
       /// \param[in] _name Name of a component, such as "pose".
-      /// \return A ComponenType, or NO_COMPONENT if the _name is not known.
+      /// \return A ComponenType, or NoComponentType if the _name is not known.
       public: static ComponentType Type(const std::string &_name);
 
       /// \brief Return a ComponentType for a component by actual type
       /// \return The ComponentType id that matches the provided template
-      /// type, or NO_COMPONENT if the template type is not known.
+      /// type, or NoComponentType if the template type is not known.
       public: template <typename T>
               static ComponentType Type()
               {
@@ -287,17 +287,25 @@ namespace gazebo
                 if (store)
                   return store->Type();
                 else
-                  return NO_COMPONENT;
+                  return NoComponentType;
               }
 
       /// \brief Create a new component, based on information in an SDF
       /// Element
       /// \param[in] _elem The SDF element to create a component from.
-      /// \return True on success
-      public: static bool CreateComponent(EntityId _id, sdf::ElementPtr _elem);
+      /// \return Component information.
+      public: static std::pair<ComponentType, ComponentId> CreateComponent(
+                  sdf::ElementPtr _elem);
 
+      /// \brief Create a componet based on a type.
+      /// \param[in] _type Type of the component to create.
+      /// \return The id of the component that was created.
+      public: static ComponentId CreateComponent(const ComponentType _type);
+
+      /// \brief Create a component of a type.
+      /// \return The new component object, or nullptr on error
       public: template<typename T>
-              static T *CreateComponent(EntityId _id)
+              static T *CreateComponent()
               {
                 ComponentStore<T> *store = RegisteredComponent<T>();
                 if (!store)
@@ -306,39 +314,8 @@ namespace gazebo
                 // Create the component
                 auto id = store->Create();
 
-                // Match the component to the entity, adding the entity if
-                // it doesn't exist
-                entityComponentMap[_id].push_back(
-                    std::make_pair(store->Type(), id));
-
                 // Return a pointer to the new component
                 return store->MutableComponent(id);
-              }
-
-      /// \brief Remove all components that belong to an Entity.
-      /// \param[in] _id Id of the Entity.
-      /// \return True if the components were successfully removed.
-      public: static bool RemoveComponents(EntityId _id);
-
-      /// \brief Remove all components of a type T from an Entity.
-      /// \param[in] _id Id of the Entity.
-      /// \return True if the components were successfully removed.
-      public: template<typename T>
-              static bool RemoveComponent(EntityId _id)
-              {
-                if (entityComponentMap.find(_id) == entityComponentMap.end())
-                  return false;
-
-                bool success = true;
-                ComponentType type = Type<T>();
-
-                for (auto &ec : entityComponentMap[_id])
-                {
-                  if (ec.first == type)
-                    success = success && RemoveComponent(ec);
-                }
-
-                return success;
               }
 
       /// \brief Get a component type that belongs to an entity.
@@ -348,72 +325,43 @@ namespace gazebo
       /// \return Constant pointer to the component, or nullptr if the
       /// component or entity do not exist.
       public: template<typename T>
-              static T const *Component(EntityId _id)
+              static T const *Component(const ComponentId _id)
               {
-                // check for the entity
-                if (entityComponentMap.find(_id) != entityComponentMap.end())
+                auto type = Type<T>();
+                if (componentStores.find(type) != componentStores.end())
                 {
-                  ComponentType type = Type<T>();
-
-                  // Find the component
-                  for (auto &ec : entityComponentMap[_id])
-                  {
-                    if (ec.first == type)
-                    {
-                      return static_cast<ComponentStore<T>*>(
-                          componentStores[type].get())->Component(ec.second);
-                    }
-                  }
-
-                  return nullptr;
+                  return static_cast<ComponentStore<T>*>(
+                      componentStores[type].get())->Component(_id);
                 }
 
                 return nullptr;
               }
 
-      /// \brief Get a component type that belongs to an entity.
+      /// \brief Get a component .
       /// \todo: There could be multiple components of the same type, and
       /// this function should return a list.
       /// \param[in] _id Id of the Entity.
       /// \return Mutable pointer to the component, or nullptr if the
-      /// component or entity do not exist.
+      /// component does not exist.
       public: template<typename T>
-              T *MutableComponent(EntityId _id)
+              static T *MutableComponent(const ComponentId _id)
               {
-                if (entityComponentMap.find(_id) != entityComponentMap.end())
+                auto type = Type<T>();
+                if (componentStores.find(type) != componentStores.end())
                 {
-                  ComponentType type = Type<T>();
-
-                  /// \todo: Check that _id exists
-                  for (auto &ec : entityComponentMap[_id])
-                  {
-                    if (ec.first == type)
-                    {
-                      return static_cast<ComponentStore<T>*>(
-                          componentStores[type].get())->MutableComponent(
-                          ec.second);
-                    }
-                  }
-
-                  return nullptr;
+                  return static_cast<ComponentStore<T>*>(
+                      componentStores[type].get())->MutableComponent(_id);
                 }
 
                 return nullptr;
               }
 
-      /// \brief Checks if an Entity contains the set of components.
-      /// \param[in] _id Id of the entity.
-      /// \param[in] _types A set of types to check.
-      /// \return True if the entity exists and has the specified set of
-      /// components.
-      public: static bool EntityMatches(EntityId _id,
-                  const std::set<ComponentType> &_types);
-
       /// \brief Remove a component.
-      /// \param[in] _key A key into the entityComponentMap vector.
+      /// \param[in] _type Component type.
+      /// \param[in] _id Component id.
       /// \return True on success.
-      private: static bool RemoveComponent(
-                  const std::pair<ComponentType, ComponentId> &_key);
+      public: static bool RemoveComponent(const ComponentType _type,
+                  const ComponentId _id);
 
       /// \brief Get the component store that is associated with the give
       /// typename
@@ -450,13 +398,6 @@ namespace gazebo
       /// \brief The component storage objects.
       private: static std::map<ComponentType,
                std::unique_ptr<ComponentStoreBase>> componentStores;
-
-      /// A map of EntityID to component identifier.
-      /// Key: EntityID
-      /// Data: vector of component information
-      private: static std::map<EntityId,
-               std::vector<
-                 std::pair<ComponentType, ComponentId>>> entityComponentMap;
 
       /// \brief A mape of component names to component types.
       private: static std::map<std::string, ComponentType> componentNameTypeMap;

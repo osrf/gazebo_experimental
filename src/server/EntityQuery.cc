@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <set>
 
+#include "gazebo/server/ComponentFactory.hh"
 #include "gazebo/server/EntityQuery.hh"
 
 using namespace gazebo;
@@ -62,7 +63,7 @@ bool EntityQuery::AddComponent(const std::string &_name)
 /////////////////////////////////////////////////
 bool EntityQuery::AddComponent(ComponentType _type)
 {
-  if (_type != NO_COMPONENT)
+  if (_type != NoComponentType)
   {
     this->dataPtr->componentTypes.insert(_type);
     return true;

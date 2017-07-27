@@ -15,6 +15,7 @@
  *
 */
 
+#include "gazebo/server/EntityManager.hh"
 #include "gazebo/server/Entity.hh"
 
 using namespace gazebo::server;
@@ -22,6 +23,8 @@ using namespace gazebo::server;
 /// \brief Private class for PIMPL
 class gazebo::server::EntityPrivate
 {
+  public: EntityManager *mgr = nullptr;
+
   /// \brief ID of entity
   public: EntityId id = NoEntity;
 };
@@ -70,4 +73,29 @@ bool Entity::operator==(const Entity &_entity) const
 EntityId Entity::Id() const
 {
   return this->dataPtr->id;
+}
+
+/////////////////////////////////////////////////
+ComponentId Entity::ComponentIdMatchingType(const ComponentType _type)
+{
+  return this->dataPtr->mgr->Component(this->Id(), _type);
+}
+
+/////////////////////////////////////////////////
+void Entity::SetManager(EntityManager *_mgr)
+{
+  this->dataPtr->mgr = _mgr;
+}
+
+/////////////////////////////////////////////////
+void Entity::AddComponent(const ComponentType _type, const ComponentId _compId)
+{
+  this->dataPtr->mgr->AddComponent(this->Id(), _type, _compId);
+}
+
+/////////////////////////////////////////////////
+bool Entity::RemoveComponent(const ComponentType _type,
+    const ComponentId _compId)
+{
+  return this->dataPtr->mgr->RemoveComponent(this->Id(), _type, _compId);
 }

@@ -21,18 +21,21 @@
 #include <utility>
 #include <ignition/common/Console.hh>
 
-#include "gazebo/server/EntityManager.hh"
 #include "gazebo/server/EntityQuery.hh"
+#include "gazebo/server/EntityManager.hh"
 
 using namespace gazebo::server;
 
 class gazebo::server::EntityManagerPrivate
 {
+  /// A map of EntityID to component identifier.
+  /// Key: EntityID
+  /// Data: vector of component information
+  public: std::map<EntityId, std::vector<
+          std::pair<ComponentType, ComponentId>>> entityComponentMap;
+
   /// \brief update queries because this entity's components have changed
   public: void UpdateQueries(EntityId _id);
-
-  /// \brief return true iff the entity exists
-  public: bool EntityExists(EntityId _id) const;
 
   /// \brief instances of entities
   public: std::vector<Entity> entities;
@@ -79,6 +82,7 @@ Entity &EntityManager::CreateEntity()
     this->dataPtr->entities.emplace_back(id);
   }
 
+  this->dataPtr->entities[id].SetManager(this);
   return this->dataPtr->entities[id];
 }
 
@@ -88,13 +92,13 @@ bool EntityManager::RemoveEntity(const EntityId _id)
   std::lock_guard<std::mutex> lock(this->dataPtr->mutex);
   bool success = false;
 
-  if (this->dataPtr->EntityExists(_id))
+  if (this->EntityExists(_id))
   {
     // Add the entity to the list of freeIds.
     this->dataPtr->freeIds.insert(_id);
 
     // Remove the components attached to the entity.
-    if (!ComponentFactory::RemoveComponents(_id))
+    if (!this->RemoveComponents(_id))
     {
       ignerr << "Unable to remove components from Entity[" << _id << "]\n";
       success = false;
@@ -135,7 +139,7 @@ EntityQueryId EntityManager::AddQuery(EntityQuery &&_query)
     for (auto const &ent : this->dataPtr->entities)
     {
       // Check that entity exists and has the required components
-      if (ComponentFactory::EntityMatches(ent.Id(), types))
+      if (this->EntityMatches(ent.Id(), types))
         insertedQuery.AddEntity(ent.Id());
     }
   }
@@ -172,18 +176,19 @@ gazebo::server::Entity &EntityManager::EntityById(
     const EntityId _id) const
 {
   std::lock_guard<std::mutex> lock(this->dataPtr->mutex);
-  if (this->dataPtr->EntityExists(_id))
+  if (this->EntityExists(_id))
     return this->dataPtr->entities[_id];
   else
     return NullEntity;
 }
 
 /////////////////////////////////////////////////
-bool EntityManagerPrivate::EntityExists(EntityId _id) const
+bool EntityManager::EntityExists(EntityId _id) const
 {
   // True if the vector is big enough to have used this id
-  bool isWithinRange = _id >= 0 && _id < this->entities.size();
-  bool isNotDeleted = this->freeIds.find(_id) == this->freeIds.end();
+  bool isWithinRange = _id >= 0 && _id < this->dataPtr->entities.size();
+  bool isNotDeleted = this->dataPtr->freeIds.find(_id) ==
+    this->dataPtr->freeIds.end();
   return isWithinRange && isNotDeleted;
 }
 
@@ -201,9 +206,151 @@ void EntityManager::UpdateQueries(EntityId _id)
 {
   for (auto &query : this->dataPtr->queries)
   {
-    if (ComponentFactory::EntityMatches(_id, query.ComponentTypes()))
+    if (this->EntityMatches(_id, query.ComponentTypes()))
       query.AddEntity(_id);
     else if (query.HasEntity(_id))
       query.RemoveEntity(_id);
   }
+}
+
+/////////////////////////////////////////////////
+bool EntityManager::CreateComponent(EntityId _id, sdf::ElementPtr _elem)
+{
+  std::pair<ComponentType, ComponentId> comp;
+
+  comp = ComponentFactory::CreateComponent(_elem);
+
+  if (comp.first != NoComponentType && comp.second != NoComponentId)
+  {
+    // Attach the component to the entity
+    this->dataPtr->entityComponentMap[_id].push_back(
+        std::make_pair(comp.first, comp.second));
+    this->UpdateQueries(_id);
+
+    return true;
+  }
+
+  return false;
+}
+
+/////////////////////////////////////////////////
+bool EntityManager::RemoveComponent(const EntityId _id, ComponentType _type)
+{
+  auto it = this->dataPtr->entityComponentMap.find(_id);
+  if (it == this->dataPtr->entityComponentMap.end())
+    return false;
+
+  bool success = true;
+  for (auto &ec : it->second)
+  {
+    if (ec.first == _type)
+      success = success && ComponentFactory::RemoveComponent(_type, ec.second);
+  }
+  this->UpdateQueries(_id);
+
+  return success;
+}
+
+/////////////////////////////////////////////////
+bool EntityManager::RemoveComponent(const EntityId _id,
+    const ComponentType _type, const ComponentId _compId)
+{
+  auto it = this->dataPtr->entityComponentMap.find(_id);
+  if (it == this->dataPtr->entityComponentMap.end())
+    return false;
+
+  bool success = ComponentFactory::RemoveComponent(_type, _compId);
+  this->UpdateQueries(_id);
+}
+
+/////////////////////////////////////////////////
+bool EntityManager::EntityMatches(const EntityId _id,
+    const std::set<ComponentType> &_types)
+{
+  auto it = this->dataPtr->entityComponentMap.find(_id);
+
+  // Check if the entity exists
+  if (it != this->dataPtr->entityComponentMap.end())
+  {
+    // Loop through the give component types.
+    for (auto const &componentType : _types)
+    {
+      bool hasComponent = false;
+
+      // Check that the entity has a matching component type
+      // This will loop over the vector of
+      // std::pair<ComponentType, ComponentId>
+      for (auto const &componentPair : it->second)
+      {
+        if (componentPair.first == componentType)
+        {
+          hasComponent = true;
+          break;
+        }
+      }
+
+      if (!hasComponent)
+        return false;
+    }
+  }
+  else
+  {
+    return false;
+  }
+
+  return true;
+}
+
+/////////////////////////////////////////////////
+bool EntityManager::RemoveComponents(const EntityId _id)
+{
+  bool result = true;
+
+  for (auto &ec : this->dataPtr->entityComponentMap[_id])
+  {
+    result = result && ComponentFactory::RemoveComponent(ec.first, ec.second);
+  }
+  this->UpdateQueries(_id);
+  return result;
+}
+
+/////////////////////////////////////////////////
+const std::vector<std::pair<ComponentType, ComponentId>> &
+EntityManager::Components(const EntityId _id) const
+{
+  // Note: This internal function assumes that the caller has checked for
+  // the existence of _id
+  return this->dataPtr->entityComponentMap[_id];
+}
+
+/////////////////////////////////////////////////
+void EntityManager::AddComponent(const EntityId _id,
+              const ComponentType _compType, const ComponentId _compId)
+{
+  // Attach the component to the entity. We don't check for the existence of
+  // _id on purpose
+  this->dataPtr->entityComponentMap[_id].push_back(
+      std::make_pair(_compType, _compId));
+  this->UpdateQueries(_id);
+}
+
+/////////////////////////////////////////////////
+ComponentId EntityManager::Component(const EntityId _id,
+              const ComponentType _compType) const
+{
+  auto it = this->dataPtr->entityComponentMap.find(_id);
+
+  if (it != this->dataPtr->entityComponentMap.end() &&
+      _compType != NoComponentType)
+  {
+    // Find the component id
+    for (auto const &p : it->second)
+    {
+      if (p.first == _compType)
+      {
+        return p.second;
+      }
+    }
+  }
+  return NoComponentId;
 }

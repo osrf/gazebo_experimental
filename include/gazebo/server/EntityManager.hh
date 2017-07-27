@@ -19,10 +19,11 @@
 #define GAZEBO_SERVER_ENTITYMANAGER_HH_
 
 #include <memory>
+#include <sdf/sdf.hh>
 
+#include "gazebo/server/ComponentFactory.hh"
 #include "gazebo/server/Types.hh"
 #include "gazebo/server/Entity.hh"
-#include "gazebo/server/ComponentFactory.hh"
 
 namespace gazebo
 {
@@ -85,7 +86,123 @@ namespace gazebo
       /// \brief Update all queries for all entities
       public: void UpdateQueries();
 
-      /// \brief Private IMPLementation pointer
+      /// \brief Create a new component, based on information in an SDF Element
+      /// \param[in] _elem The SDF element to create a component from.
+      /// \return True on success
+      public: bool CreateComponent(EntityId _id, sdf::ElementPtr _elem);
+
+      /// \brief return true iff the entity exists
+      public: bool EntityExists(EntityId _id) const;
+
+      /// \brief Get a component type that belongs to an entity.
+      /// \todo: There could be multiple components of the same type, and
+      /// this function should return a list.
+      /// \param[in] _id Id of the Entity.
+      /// \return Constant pointer to the component, or nullptr if the
+      /// component or entity do not exist.
+      public: template<typename T>
+              T const *Component(EntityId _id)
+              {
+                // check for the entity
+                if (this->EntityExists(_id))
+                {
+                  ComponentType type = ComponentFactory::Type<T>();
+
+                  // Find the component
+                  for (auto const &ec : this->Components(_id))
+                  {
+                    if (ec.first == type)
+                    {
+                      return ComponentFactory::Component<T>(ec.second);
+                    }
+                  }
+
+                  return nullptr;
+                }
+
+                return nullptr;
+              }
+
+      /// \brief Get a mutable component type that belongs to an entity.
+      /// \todo: There could be multiple components of the same type, and
+      /// this function should return a list.
+      /// \param[in] _id Id of the Entity.
+      /// \return Constant pointer to the component, or nullptr if the
+      /// component or entity do not exist.
+      public: template<typename T>
+              T const *MutableComponent(EntityId _id)
+              {
+                // check for the entity
+                if (this->EntityExists(_id))
+                {
+                  ComponentType type = ComponentFactory::Type<T>();
+
+                  // Find the component
+                  for (auto const &ec : this->Components(_id))
+                  {
+                    if (ec.first == type)
+                    {
+                      return ComponentFactory::MutableComponent<T>(ec.second);
+                    }
+                  }
+
+                  return nullptr;
+                }
+
+                return nullptr;
+              }
+
+      /// \brief Checks if an Entity contains the set of components.
+      /// \param[in] _id Id of the entity.
+      /// \param[in] _types A set of types to check.
+      /// \return True if the entity exists and has the specified set of
+      /// components.
+      public: bool EntityMatches(const EntityId _id,
+                  const std::set<ComponentType> &_types);
+
+      /// \brief Remove all components that belong to an Entity.
+      /// \param[in] _id Id of the Entity.
+      /// \return True if the components were successfully removed.
+      public: bool RemoveComponents(const EntityId _id);
+
+      /// \brief Remove all components of a type from an entity.
+      /// \param[in] _id Id of the entity.
+      /// \param[in] _type Component type.
+      /// \return True on success.
+      public: bool RemoveComponent(const EntityId _id,
+                  const ComponentType _type);
+
+      /// \brief Remove a component from an entity.
+      /// \param[in] _id Id of the entity.
+      /// \param[in] _type Component type.
+      /// \param[in] _compId Component id.
+      /// \return True on success.
+      public: bool RemoveComponent(const EntityId _id,
+                  const ComponentType _type, const ComponentId _compId);
+
+      /// \brief Get a component that is attached to an entity.
+      /// \param[in] _id Id of the entity.
+      /// \param[in] _compType Type of component
+      /// \return Id of the component
+      public: ComponentId Component(const EntityId _id,
+                   const ComponentType _compType) const;
+
+      /// \brief Attach a component to an entity.
+      /// \param[in] _id Id of the entity.
+      /// \param[in] _compType Type of component
+      /// \param[in] _compId Id of the component
+      public: void AddComponent(const EntityId _id,
+                   const ComponentType _compType, const ComponentId _compId);
+
+      /// \brief Get the vector of component information associated with an
+      /// entity.
+      /// Note: This internal function assumes that the caller has checked for
+      /// the existence of _id
+      /// \return Component information for the entity.
+      private: const std::vector<std::pair<ComponentType, ComponentId>> &
+               Components(const EntityId _id) const;
+
+      /// \brief Private Implementation pointer
       private: std::unique_ptr<EntityManagerPrivate> dataPtr;
     };
   }

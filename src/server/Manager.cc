@@ -364,8 +364,8 @@ void ManagerPrivate::CreateComponentRecurse(sdf::ElementPtr _elem,
   else
   {
     // Add a component to the entity
-    if (!ComponentFactory::CreateComponent(
-          _graph.VertexFromId(_parent).Data(), _elem))
+    if (!this->entityMgr.CreateComponent(_graph.VertexFromId(_parent).Data(),
+          _elem))
     {
       ignwarn << "Unable to create a component of type[" << _elem->GetName()
         << "] to entity with Id[" << _graph.VertexFromId(_parent).Data()
