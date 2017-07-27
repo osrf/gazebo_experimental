@@ -142,7 +142,6 @@ std::pair<EntityQueryId, bool> EntityComponentDatabase::AddQuery(
       result = i;
       // Already have this query, bail
       isDuplicate = true;
-      ignwarn << "Trying to add a duplicate query" << std::endl;
       break;
     }
   }
