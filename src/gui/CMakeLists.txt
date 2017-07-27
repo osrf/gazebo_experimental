@@ -24,6 +24,7 @@ foreach (plugin ${plugins})
   add_library(gazebo${plugin} SHARED ${plugin}.cc)
 
   target_link_libraries(gazebo${plugin}
+    ${IGNITION-COMMON_LIBRARIES}
     ${IGNITION-MSGS_LIBRARIES}
     ${IGNITION-TRANSPORT_LIBRARIES}
     ${IGNITION-GUI_LIBRARIES}
