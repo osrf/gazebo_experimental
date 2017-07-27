@@ -1,3 +1,9 @@
+set_property(
+  SOURCE gazebo_main.cc
+  PROPERTY COMPILE_DEFINITIONS
+  GAZEBO_PLUGIN_INSTALL_PATH="${GAZEBO_PLUGIN_INSTALL_PATH}"
+)
+
 add_subdirectory(util)
 add_subdirectory(componentizers)
 add_subdirectory(ecs)

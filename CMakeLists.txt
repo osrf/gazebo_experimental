@@ -63,6 +63,8 @@ set (BIN_INSTALL_DIR ${CMAKE_INSTALL_BINDIR})
 set (WORLD_INSTALL_DIR
   ${CMAKE_INSTALL_PREFIX}/share/gazebo-${PROJECT_MAJOR_VERSION}/worlds/)
 
+set(GAZEBO_PLUGIN_INSTALL_PATH ${CMAKE_INSTALL_PREFIX}/${LIB_INSTALL_DIR}/gazebo-${PROJECT_MAJOR_VERSION}/plugins)
+
 if (build_errors)
   message(STATUS "BUILD ERRORS: These must be resolved before compiling.")
   foreach (msg ${build_errors})
@@ -80,3 +82,11 @@ else (build_errors)
   add_subdirectory(examples)
   add_subdirectory(worlds)
 endif (build_errors)
+
+########### Add uninstall target ###############
+configure_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake"
+  IMMEDIATE @ONLY)
+add_custom_target(uninstall
+  "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake")

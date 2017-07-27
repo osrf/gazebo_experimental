@@ -1,13 +1,21 @@
 
-set(sources
-  PhysicsSystem.cc
+set(plugins
+  PhysicsSystem
 )
 
 include_directories(
   .
 )
 
-add_library(gazeboPhysicsSystem SHARED ${sources})
-target_link_libraries(gazeboPhysicsSystem GazeboECS)
+foreach (plugin ${plugins})
 
-gz_install_library(gazeboPhysicsSystem)
+  add_library(gazebo${plugin} SHARED ${plugin}.cc)
+
+  target_link_libraries(gazebo${plugin}
+    GazeboECS
+  )
+
+  install (TARGETS gazebo${plugin} DESTINATION ${GAZEBO_PLUGIN_INSTALL_PATH})
+
+endforeach ()
+
