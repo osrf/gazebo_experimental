@@ -36,9 +36,8 @@ class gazebo::systems::TimeSystemPrivate
   public: ignition::transport::Node::Publisher pub;
 };
 
-namespace gzsys = gazebo::systems;
-using namespace gzsys;
 using namespace gazebo;
+using namespace systems;
 
 /////////////////////////////////////////////////
 TimeSystem::TimeSystem() : dataPtr(new TimeSystemPrivate)

@@ -46,29 +46,16 @@ void CZTimeInfo::FromSDF(ecs::Manager &_mgr, sdf::Element &_elem,
     const std::unordered_map<sdf::Element*, ecs::EntityId> &_ids)
 {
   // Add time info component to a single entity, which represents the world
-  if (_elem.GetName() == "physics")
+  if (_elem.GetName() == "world")
   {
-    sdf::ElementPtr parent = _elem.GetParent();
-    if (!parent)
-    {
-      ignwarn << "No parent of <physics>" << std::endl;
-    }
-    else if (parent->GetName() != "world")
-    {
-      ignwarn << "Parent must be <world>, not " << parent->GetName()
-        << std::endl;
-    }
-    else
-    {
-      // Entity
-      ecs::EntityId id = _ids.at(&_elem);
-      ecs::Entity &entity = _mgr.Entity(id);
+    // Entity
+    ecs::EntityId id = _ids.at(&_elem);
+    ecs::Entity &entity = _mgr.Entity(id);
 
-      // Add component
-      auto comp = entity.AddComponent<components::TimeInfo>();
+    // Add component
+    auto comp = entity.AddComponent<components::TimeInfo>();
 
-      igndbg << "Added TimeInfo to " << id << std::endl;
-    }
+    igndbg << "Added TimeInfo to " << id << std::endl;
   }
 }
 

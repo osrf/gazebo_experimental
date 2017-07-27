@@ -20,6 +20,8 @@
 #include <set>
 #include <utility>
 
+#include <ignition/common/Console.hh>
+
 #include "gazebo/ecs/EntityComponentDatabase.hh"
 #include "gazebo/ecs/EntityQuery.hh"
 
@@ -140,6 +142,7 @@ std::pair<EntityQueryId, bool> EntityComponentDatabase::AddQuery(
       result = i;
       // Already have this query, bail
       isDuplicate = true;
+      ignwarn << "Trying to add a duplicate query" << std::endl;
       break;
     }
   }
@@ -158,6 +161,10 @@ std::pair<EntityQueryId, bool> EntityComponentDatabase::AddQuery(
             this->dataPtr->EntityMatches(id, types))
       {
         nonConstQuery.AddEntity(id);
+      }
+      else
+      {
+        ignerr << "Failed to add query" << std::endl;
       }
     }
   }

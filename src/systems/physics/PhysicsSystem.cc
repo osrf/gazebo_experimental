@@ -47,13 +47,16 @@ void PhysicsSystem::Init(ecs::QueryRegistrar &_registrar)
     _registrar.Register(configQuery,
         std::bind(&PhysicsSystem::UpdateConfig, this, std::placeholders::_1));
   }
-  if (!configQuery.AddComponent("gazebo::components::TimeInfo"))
+
+  // Time query
+  ecs::EntityQuery timeQuery;
+  if (!timeQuery.AddComponent("gazebo::components::TimeInfo"))
   {
     std::cerr << "Undefined component[gazebo::components::TimeInfo]\n";
   }
   else
   {
-    _registrar.Register(configQuery,
+    _registrar.Register(timeQuery,
         std::bind(&PhysicsSystem::UpdateTime, this, std::placeholders::_1));
   }
 
