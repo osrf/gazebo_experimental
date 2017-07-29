@@ -344,6 +344,7 @@ int main(int _argc, char **_argv)
     {
       static const char* pluginStr =
         "<plugin filename=\"libTimePanel.so\">\
+          <has_titlebar>false</has_titlebar>\
           <world_control>\
             <play_pause>true</play_pause>\
             <start_paused>false</start_paused>\
