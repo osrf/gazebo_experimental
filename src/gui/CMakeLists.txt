@@ -15,7 +15,6 @@ link_directories(
   )
 
 set (plugins
-  GuiDisplayImage
   GuiDiagnostics
 )
 

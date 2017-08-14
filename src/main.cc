@@ -163,10 +163,33 @@ int main(int _argc, char **_argv)
     // Initialize the GUI
     ignition::gui::initApp();
 
-    // \todo: Load startup plugins and configuration files here before creating
-    // the window
-    // ignition::gui::loadPlugin("gazeboGuiDisplayImage");
-    // ignition::gui::loadPlugin("gazeboGuiDiagnostics");
+    // Run the ECS in another thread
+    std::atomic<bool> stop(false);
+    std::thread ecsThread(RunECS, std::ref(manager), std::ref(stop));
+
+    // Look for all plugins in the same place
+    ignition::gui::setPluginPathEnv("GAZEBO_PLUGIN_PATH");
+
+    // Then look for plugins on compile-time defined path.
+    // Plugins installed by gazebo end up here
+    ignition::gui::addPluginPath(GAZEBO_PLUGIN_INSTALL_PATH);
+
+    // Image display plugin
+    {
+      static const char* pluginStr =
+        "<plugin filename=\"libImageDisplay.so\">\
+          <has_titlebar>false</has_titlebar>\
+          <topic>/rendering/image</topic>\
+          <topic_picker>false</topic_picker>\
+        </plugin>";
+
+      tinyxml2::XMLDocument pluginDoc;
+      pluginDoc.Parse(pluginStr);
+      ignition::gui::loadPlugin("ImageDisplay",
+                                pluginDoc.FirstChildElement("plugin"));
+    }
+
+    ignition::gui::loadPlugin("gazeboGuiDiagnostics");
 
     // Create main window
     ignition::gui::createMainWindow();

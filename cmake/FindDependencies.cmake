@@ -80,6 +80,17 @@ else()
 endif()
 
 #################################################
+# Ignition rendering
+find_package(ignition-rendering0 QUIET)
+if (NOT ignition-rendering0_FOUND)
+  BUILD_ERROR ("Missing: Ignition Rendering (libignition-rendering0-dev)")
+else()
+  message (STATUS "Found Ignition Rendering")
+  include_directories(${IGNITION-RENDERING_INCLUDE_DIRS})
+  link_directories(${IGNITION-RENDERING_LIBRARY_DIRS})
+endif()
+
+#################################################
 # Find SDFormat
 set (SDFormat_MIN_VERSION 6.0.0)
 find_package(SDFormat ${SDFormat_MIN_VERSION})
