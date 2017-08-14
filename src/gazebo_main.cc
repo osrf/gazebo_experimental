@@ -339,9 +339,21 @@ int main(int _argc, char **_argv)
     // Plugins installed by gazebo end up here
     ignition::gui::addPluginPath(GAZEBO_PLUGIN_INSTALL_PATH);
 
-    // TODO: load startup plugins and configuration files here before creating
-    // the window
-    ignition::gui::loadPlugin("gazeboGuiDisplayImage");
+    // Image display plugin
+    {
+      static const char* pluginStr =
+        "<plugin filename=\"libImageDisplay.so\">\
+          <has_titlebar>false</has_titlebar>\
+          <topic>/rendering/image</topic>\
+          <topic_picker>false</topic_picker>\
+        </plugin>";
+
+      tinyxml2::XMLDocument pluginDoc;
+      pluginDoc.Parse(pluginStr);
+      ignition::gui::loadPlugin("ImageDisplay",
+                                pluginDoc.FirstChildElement("plugin"));
+    }
+
     ignition::gui::loadPlugin("gazeboGuiDiagnostics");
 
     // Create main window
