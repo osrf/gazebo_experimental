@@ -44,6 +44,8 @@ RenderSystem::RenderSystem()
 /////////////////////////////////////////////////
 RenderSystem::~RenderSystem()
 {
+  this->stop = true;
+  this->renderThread->join();
 }
 
 /////////////////////////////////////////////////
@@ -59,61 +61,76 @@ void RenderSystem::Init(ecs::QueryRegistrar &_registrar)
       this->node.Advertise<ignition::msgs::Image>(topic);
   if (!this->pub)
     ignerr << "Error advertising topic [" << topic << "]" << std::endl;
+
+  this->renderThread.reset(
+      new std::thread(std::bind(&RenderSystem::UpdateImpl, this)));
 }
 
+/////////////////////////////////////////////////
+void RenderSystem::Update(const ecs::EntityQuery &/*_result*/)
+{
+  std::lock_guard<std::mutex> lock(this->mutex);
+  this->update = true;
+  auto &mgr = this->Manager();
+  this->currentSimTime = mgr.SimulationTime();
+}
 
 /////////////////////////////////////////////////
-void RenderSystem::Update(const ecs::EntityQuery &_result)
+void RenderSystem::UpdateImpl()
 {
-  if (!this->camera)
+  while (!this->stop)
   {
-    this->camera = this->LoadEngine("ogre");
-    this->image = std::make_shared<ignition::rendering::Image>(
-        this->camera->CreateImage());
+    std::lock_guard<std::mutex> lock(this->mutex);
+    if (!this->update)
+      continue;
+
+    this->update = false;
+
+    if (!this->camera)
+    {
+      this->camera = this->LoadEngine("ogre");
+      this->image = std::make_shared<ignition::rendering::Image>(
+          this->camera->CreateImage());
+    }
+
+    // the render engine should only be responsible for updating the scene tree.
+    // we shouldn't be throttling the update rate based on sim time
+    // because objects can move when simulation is paused!
+    // This is just for demo only
+    double updateRate = 1000.0;
+    if ((this->currentSimTime - this->prevUpdateTime).Double() < 1.0/updateRate)
+      continue;
+    this->prevUpdateTime = this->currentSimTime;
+    // for demo only
+    // move the camera slowly in x, y, and z
+    static double offset = 0.0;
+    this->camera->SetLocalPosition(offset, offset, offset);
+    offset += 0.0001;
+
+    // rendering system should not be controlling the framerate
+    // Most of the logic below should be moved to sensors and gui
+
+    // throttle framerate
+    double framerate = 60.0;
+    auto const &currentTime = ignition::common::Time::SystemTime();
+    if ((currentTime - prevRenderTime).Double() < 1.0/framerate)
+      continue;
+    this->prevRenderTime = currentTime;
+
+    this->camera->Capture(*this->image);
+    unsigned char *data = this->image->Data<unsigned char>();
+
+    // publish
+    ignition::msgs::Image img;
+    img.set_width(this->camera->ImageWidth());
+    img.set_height(this->camera->ImageHeight());
+    img.set_step(this->camera->ImageWidth() *
+        ignition::rendering::PixelUtil::BytesPerPixel(
+        this->camera->ImageFormat()));
+    img.set_pixel_format(3);
+    img.set_data(data, this->camera->ImageMemorySize());
+    this->pub.Publish(img);
   }
-
-  // the render engine should only be responsible for updating the scene tree.
-  // we shouldn't be throttling the update rate based on sim time
-  // because objects can move when simulation is paused!
-  // This is just for demo only
-  auto &mgr = this->Manager();
-  auto const &currentSimTime = mgr.SimulationTime();
-  double updateRate = 1000.0;
-  if ((currentSimTime - this->prevUpdateTime).Double() < 1.0/updateRate)
-    return;
-  this->prevUpdateTime = currentSimTime;
-  // for demo only
-  // move the camera slowly in x, y, and z
-  static double offset = 0.0;
-  this->camera->SetLocalPosition(offset, offset, offset);
-  offset += 0.0001;
-
-  // rendering system should not be controlling the framerate
-  // Most of the logic below should be moved to sensors and gui
-
-  // throttle framerate
-  double framerate = 60.0;
-  auto const &currentTime = ignition::common::Time::SystemTime();
-  if ((currentTime - prevRenderTime).Double() < 1.0/framerate)
-    return;
-  this->prevRenderTime = currentTime;
-
-  this->camera->Capture(*this->image);
-  unsigned char *data = this->image->Data<unsigned char>();
-
-  // publish
-  ignition::msgs::Image img;
-  img.set_width(this->camera->ImageWidth());
-  img.set_height(this->camera->ImageHeight());
-  img.set_step(this->camera->ImageWidth() *
-      this->camera->ImageDepth());
-  img.set_pixel_format(3);
-  img.set_data(data, this->camera->ImageWidth() *
-      this->camera->ImageHeight() *
-      this->camera->ImageDepth());
-  this->pub.Publish(img);
-
-
 }
 
 /////////////////////////////////////////////////
@@ -122,7 +139,7 @@ ignition::rendering::CameraPtr RenderSystem::LoadEngine(
 {
   // create and populate scene
   ignition::rendering::RenderEngine *engine =
-      ignition::rendering::get_engine(_engineName);
+      ignition::rendering::engine(_engineName);
   if (!engine)
   {
     std::cout << "Engine '" << _engineName
@@ -147,7 +164,7 @@ void RenderSystem::BuildScene(ignition::rendering::ScenePtr _scene)
   _scene->SetAmbientLight(0.3, 0.3, 0.3);
   ignition::rendering::VisualPtr root = _scene->RootVisual();
 
-  // create point light
+  // create directional light
   ignition::rendering::DirectionalLightPtr light0 =
       _scene->CreateDirectionalLight();
   light0->SetDirection(-0.5, 0.5, -1);

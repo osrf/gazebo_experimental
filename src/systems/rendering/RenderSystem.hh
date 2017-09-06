@@ -18,6 +18,11 @@
 #ifndef GAZEBO_SYSTEMS_RENDERING_RENDERSYSTEM_HH_
 #define GAZEBO_SYSTEMS_RENDERING_RENDERSYSTEM_HH_
 
+#include <memory>
+#include <mutex>
+#include <string>
+#include <thread>
+
 #include <ignition/transport/Node.hh>
 #include <ignition/rendering/RenderTypes.hh>
 
@@ -42,6 +47,9 @@ namespace gazebo
       /// \param[in] _result EntityQuery with results fromm a registered query
       public: void Update(const ecs::EntityQuery &_result);
 
+      /// \brief Perform the actual render updates
+      private: void UpdateImpl();
+
       /// \brief Load render engine and create a scene
       /// \param[in] _engineName Name of rendering engine
       /// \return a camera for rendering
@@ -53,22 +61,37 @@ namespace gazebo
       private: void BuildScene(ignition::rendering::ScenePtr _scene);
 
       /// \brief Ign transport node
-      public: ignition::transport::Node node;
+      private: ignition::transport::Node node;
 
       /// \brief Publisher to the image toipc
-      public: ignition::transport::Node::Publisher pub;
+      private: ignition::transport::Node::Publisher pub;
 
       /// \brief previous update sim time
-      public: ignition::common::Time prevUpdateTime;
+      private: ignition::common::Time prevUpdateTime;
 
       /// \brief previous render time
-      public: ignition::common::Time prevRenderTime;
+      private: ignition::common::Time prevRenderTime;
+
+      /// \brief Sim time when update is requested.
+      private: ignition::common::Time currentSimTime;
 
       /// \brief Rendering camera
-      public: ignition::rendering::CameraPtr camera;
+      private: ignition::rendering::CameraPtr camera;
 
       /// \brief Pointer to an image to be published
-      public: ignition::rendering::ImagePtr image;
+      private: ignition::rendering::ImagePtr image;
+
+      /// \brief Mutex to protect updates
+      private: std::mutex mutex;
+
+      /// \brief Thread where all rendering updates are performed in
+      private: std::unique_ptr<std::thread> renderThread;
+
+      /// \brief Flag to indicate if update is needed.
+      private: bool update = false;
+
+      /// \brief Flag to indicate if the system is about to shutdown
+      private: bool stop = false;
     };
   }
 }
